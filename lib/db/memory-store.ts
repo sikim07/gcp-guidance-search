@@ -25,7 +25,10 @@ type GlobalStore = {
 const g = globalThis as GlobalStore;
 
 async function load(): Promise<StoreSnapshot> {
-  if (g.__gcpStore && g.__gcpStoreLoaded) return g.__gcpStore;
+  if (g.__gcpStore && g.__gcpStoreLoaded) {
+    g.__gcpStore = migrateSnapshot(g.__gcpStore);
+    return g.__gcpStore;
+  }
   try {
     const raw = await readFile(STORE_PATH, "utf8");
     g.__gcpStore = migrateSnapshot(JSON.parse(raw) as StoreSnapshot);
