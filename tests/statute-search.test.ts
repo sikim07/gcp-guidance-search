@@ -62,11 +62,11 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
     async listFeedback() {
       return [];
     },
-    async getCachedAnswer() {
-      return undefined;
+    async getCachedAnswer(normalized: string) {
+      return snap.queryCache.find((row) => row.normalizedQuery === normalized);
     },
     async listQueryCache() {
-      return [];
+      return snap.queryCache;
     },
     async putQueryCache() {},
     async bumpCacheHit() {},
@@ -212,5 +212,65 @@ describe("search union of guidelines and statutes", () => {
     expect(result.sources.some((s) => s.kind === "statute")).toBe(true);
     expect(result.sources.some((s) => s.title === "old kgcp seed")).toBe(false);
     expect(result.answer).toMatch(/임상시험|별표 4|시험대상자/);
+  });
+
+  it("ignores cached answers that were stored before passages existed", async () => {
+    const statuteText =
+      "임상시험을 하려는 자는 별표 4의 의약품 임상시험 관리기준을 지켜야 한다. 시험대상자의 권리와 안전을 우선한다.";
+    const query = "임상시험 관리기준에서 시험대상자 권리는?";
+    const store = makeStore({
+      statutes: [
+        {
+          id: "st-rule",
+          lawId: "011794",
+          title: "의약품 등의 안전에 관한 규칙",
+          shortTitle: "의약품 등의 안전에 관한 규칙",
+          url: "https://www.law.go.kr/법령/의약품등의안전에관한규칙",
+          currentMst: "284019",
+          promulgatedDate: "2026-03-05",
+          effectiveDate: "2026-03-05",
+          amendmentType: "일부개정",
+          currentRevisionId: "rev-r",
+          status: "active",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      statuteArticles: [
+        {
+          id: "art-30",
+          statuteId: "st-rule",
+          revisionId: "rev-r",
+          articleKey: "0030001",
+          section: "제30조(임상시험의 실시 기준 등)",
+          text: statuteText,
+          embedding: mockEmbed(statuteText),
+          isCurrent: true,
+          kind: "article",
+        },
+      ],
+      queryCache: [
+        {
+          queryHash: "legacy",
+          normalizedQuery: query,
+          embedding: [],
+          answer: "cached without passages",
+          sources: [
+            {
+              title: "의약품 등의 안전에 관한 규칙",
+              section: "제30조",
+              url: "https://www.law.go.kr",
+              kind: "statute",
+            },
+          ],
+          expiresAt: new Date(Date.now() + 86_400_000).toISOString(),
+          hitCount: 3,
+        },
+      ],
+    });
+
+    const result = await searchGuidelines(store, query, "ip");
+    expect(result.cacheHit).toBe(false);
+    expect(result.passages.length).toBeGreaterThan(0);
+    expect(result.answer).not.toBe("cached without passages");
   });
 });

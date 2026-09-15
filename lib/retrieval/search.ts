@@ -22,7 +22,7 @@ export async function searchGuidelines(
   const expanded = expandQuery(query);
   const [queryEmbedding] = await embedTexts([expanded]);
   const cached = await findCache(store, normalized, queryEmbedding ?? []);
-  if (cached) {
+  if (cached?.passages) {
     await store.bumpCacheHit(cached.queryHash);
     const searchLogId = randomUUID();
     await store.addSearchLog({
