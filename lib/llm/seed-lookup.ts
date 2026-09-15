@@ -48,7 +48,6 @@ export function lookupSeedKorean(text: string): string | undefined {
       const contained =
         key.startsWith(seedKey) ||
         seedKey.startsWith(key) ||
-        key.includes(seedKey) ||
         seedKey.includes(key);
       if (!contained) continue;
       const len = Math.min(key.length, seedKey.length);

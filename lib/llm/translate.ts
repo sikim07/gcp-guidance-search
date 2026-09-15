@@ -130,9 +130,6 @@ export async function translateAnswer(text: string): Promise<string> {
   if (!trimmed) return trimmed;
   if (detectPassageLanguage(trimmed) === "ko") return trimmed;
 
-  const fromSeed = lookupSeedKorean(trimmed);
-  if (fromSeed) return fromSeed;
-
   const blocks = trimmed.split(/\n{2,}/);
   const out = await Promise.all(
     blocks.map(async (block) => {

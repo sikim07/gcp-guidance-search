@@ -128,6 +128,19 @@ describe("seed and public translation", () => {
     expect(korean).toMatch(/법적 자문이 아닙니다/);
   });
 
+  it("does not replace a multi-clause extractive answer with one seed paragraph", async () => {
+    const answer = [
+      "Informed Consent of Trial Subjects\n[E6(R2), 4.8]",
+      "The written informed consent form and any other written information to be provided to subjects should be revised whenever important new information becomes available that may be relevant to the subject's consent. Any revised written informed consent form, and written information should receive the IRB/IEC's approval/favourable opinion in advance of use. The subject or the subject's legally acceptable representative should be informed of the new information in a timely manner.\n[E6(R2), 4.8.8]",
+      "법적 자문이 아닙니다. 출처 링크에서 원문을 확인하세요.",
+    ].join("\n\n");
+    const korean = await translateAnswer(answer);
+    expect(korean).toMatch(/시험대상자 동의/);
+    expect(korean).toMatch(/\[E6\(R2\), 4\.8\]/);
+    expect(korean).toMatch(/\[E6\(R2\), 4\.8\.8\]/);
+    expect(korean).toMatch(/법적 자문이 아닙니다/);
+  });
+
   it("matches a clipped extractive snippet inside a longer seed clause", () => {
     const clip =
       "The audit trail should capture who made the change, when the change was made, and why the change was made, without obscuring the original entry.";
