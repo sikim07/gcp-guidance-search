@@ -18,10 +18,25 @@ function matchSection(line: string): { section: string; rest: string } | null {
   for (const pattern of SECTION_PATTERNS) {
     const match = trimmed.match(pattern);
     if (match?.[1]) {
-      return { section: match[1].replace(/\.$/, ""), rest: trimmed.slice(match[0].length).trim() };
+      let section = match[1];
+      let rest = trimmed.slice(match[0].length).trim();
+      if (isHeadingRest(rest)) {
+        section = `${section} ${rest}`.replace(/\s+/g, " ").trim();
+        rest = "";
+      } else {
+        section = section.replace(/\.$/, "");
+      }
+      return { section, rest };
     }
   }
   return null;
+}
+
+function isHeadingRest(rest: string): boolean {
+  if (!rest || rest.length > 42) return false;
+  if (/[.。!?]/.test(rest)) return false;
+  if (!/[\p{Script=Hangul}]/u.test(rest)) return false;
+  return rest.split(/\s+/).length <= 8;
 }
 
 /**

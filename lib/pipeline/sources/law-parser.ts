@@ -35,7 +35,12 @@ function str(value: unknown): string {
 }
 
 export function flattenLawText(value: unknown): string {
-  if (typeof value === "string") return value.replace(/\s+/g, " ").trim();
+  if (typeof value === "string") {
+    return value
+      .replace(/[ \t\u00a0]+/g, " ")
+      .replace(/\n{3,}/g, "\n\n")
+      .trim();
+  }
   if (typeof value === "number") return String(value);
   if (Array.isArray(value)) {
     return value.map(flattenLawText).filter(Boolean).join("\n");

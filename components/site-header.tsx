@@ -1,4 +1,7 @@
+"use client";
+
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 const LINKS = [
   { href: "/", label: "검색" },
@@ -8,27 +11,41 @@ const LINKS = [
 ];
 
 export function SiteHeader() {
+  const pathname = usePathname();
+
   return (
-    <header className="border-rule/80 bg-paper border-b">
-      <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 py-3 md:max-w-5xl md:flex-row md:items-center md:justify-between md:py-4">
+    <header className="border-rule/70 bg-paper/80 sticky top-0 z-20 border-b backdrop-blur-md">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 py-3 md:max-w-5xl md:flex-row md:items-center md:justify-between md:py-3.5">
         <Link
           href="/"
-          className="font-display text-ink flex items-center gap-2 text-base tracking-tight whitespace-nowrap sm:text-lg"
+          className="font-display text-ink flex items-center gap-2.5 text-base tracking-tight whitespace-nowrap sm:text-lg"
         >
           <span
             aria-hidden
-            className="bg-accent text-accent-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] leading-none"
+            className="bg-accent text-accent-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] leading-none shadow-sm"
           >
             規
           </span>
           GCP 가이드라인 검색기
         </Link>
-        <nav className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-sm md:w-auto md:justify-end">
-          {LINKS.map((link) => (
-            <Link key={link.href} href={link.href} className="text-ink/70 hover:text-ink">
-              {link.label}
-            </Link>
-          ))}
+        <nav className="flex w-full flex-wrap items-center gap-1 md:w-auto md:justify-end">
+          {LINKS.map((link) => {
+            const active =
+              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+            return (
+              <Link
+                key={link.href}
+                href={link.href}
+                className={
+                  active
+                    ? "bg-accent/10 text-ink inline-flex h-8 items-center rounded-full px-3 text-sm"
+                    : "text-ink/70 hover:bg-ink/5 hover:text-ink inline-flex h-8 items-center rounded-full px-3 text-sm"
+                }
+              >
+                {link.label}
+              </Link>
+            );
+          })}
         </nav>
       </div>
     </header>

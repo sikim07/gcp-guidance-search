@@ -12,6 +12,7 @@ import { normalizeQuery } from "@/lib/utils";
 
 const CACHE_SIMILARITY = 0.97;
 const TOP_K = 6;
+const CACHE_GEN = "v2:";
 
 export async function searchGuidelines(
   store: AppStore,
@@ -20,9 +21,10 @@ export async function searchGuidelines(
 ): Promise<SearchResponse> {
   const started = Date.now();
   const normalized = normalizeQuery(query);
+  const cacheKey = `${CACHE_GEN}${normalized}`;
   const expanded = expandQuery(query);
   const [queryEmbedding] = await embedTexts([expanded]);
-  const cached = await findCache(store, normalized, queryEmbedding ?? []);
+  const cached = await findCache(store, cacheKey, queryEmbedding ?? []);
   if (cached?.passages) {
     await store.bumpCacheHit(cached.queryHash);
     const searchLogId = randomUUID();
@@ -94,8 +96,9 @@ export async function searchGuidelines(
     .map((item) => ({
       item,
       score:
-        0.55 * cosine(queryEmbedding ?? [], item.chunk.embedding) +
-        0.45 * lexicalScore(expandedTokens, `${item.section} ${item.text}`),
+        0.5 * cosine(queryEmbedding ?? [], item.chunk.embedding) +
+        0.5 * lexicalScore(expandedTokens, item.section, item.text) +
+        phraseBoost(query, item.section, item.text),
     }))
     .filter((row) => row.score > 0.05)
     .sort((a, b) => b.score - a.score)
@@ -119,8 +122,8 @@ export async function searchGuidelines(
     createdAt: new Date().toISOString(),
   });
   await store.putQueryCache({
-    queryHash: sha256(normalized),
-    normalizedQuery: normalized,
+    queryHash: sha256(cacheKey),
+    normalizedQuery: cacheKey,
     embedding: queryEmbedding ?? [],
     answer,
     sources,
@@ -163,15 +166,50 @@ function toPassages(retrieved: Retrieved[]): Passage[] {
 }
 
 function tokenize(text: string): string[] {
-  return text.toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) ?? [];
+  const hangul = text.match(/[\p{Script=Hangul}]{2,}/gu) ?? [];
+  const latin = text.toLowerCase().match(/[a-z0-9]{3,}/g) ?? [];
+  return [...hangul, ...latin];
 }
 
-function lexicalScore(tokens: string[], text: string): number {
+function lexicalScore(tokens: string[], section: string, text: string): number {
   if (tokens.length === 0) return 0;
-  const hay = text.toLowerCase();
+  const hay = `${section} ${text}`.toLowerCase();
+  const sectionHay = section.toLowerCase();
   let hits = 0;
+  let sectionHits = 0;
   for (const token of tokens) {
-    if (hay.includes(token)) hits += 1;
+    const needle = token.toLowerCase();
+    if (hay.includes(needle)) hits += 1;
+    if (sectionHay.includes(needle)) sectionHits += 1;
   }
-  return hits / tokens.length;
+  return Math.min(1, hits / tokens.length + 0.25 * (sectionHits / tokens.length));
+}
+
+function phraseBoost(query: string, section: string, text: string): number {
+  const q = query.toLowerCase();
+  const hay = `${section}\n${text}`.toLowerCase();
+  const head = text.trim().slice(0, 80);
+  let boost = 0;
+  if (
+    /서면\s*동의|informed consent|동의/.test(q) &&
+    /서면\s*동의|informed consent/.test(hay)
+  ) {
+    boost += 0.14;
+  }
+  if (/감사추적|audit trail/.test(q) && /감사추적|audit trail/.test(hay)) {
+    boost += 0.12;
+  }
+  if (/임상시험계획/.test(q) && /임상시험계획/.test(hay)) {
+    boost += 0.1;
+  }
+  if (/4\.8/.test(section) && /동의|consent/.test(q)) {
+    boost += 0.18;
+  }
+  if (
+    (/용어의 정의|definitions/i.test(section) || /^용어의 정의/.test(head)) &&
+    !/정의|definition/i.test(q)
+  ) {
+    boost -= 0.28;
+  }
+  return boost;
 }

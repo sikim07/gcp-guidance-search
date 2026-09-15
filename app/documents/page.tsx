@@ -13,8 +13,10 @@ export default async function DocumentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl sm:text-3xl">문서 카탈로그</h1>
-        <p className="text-ink/70 mt-2 text-sm">
+        <h1 className="font-display text-2xl tracking-tight sm:text-3xl">
+          문서 카탈로그
+        </h1>
+        <p className="text-muted mt-2 text-sm leading-6">
           가이드라인은 발행일·해시, 법령은 MST·공포일·시행일로 현행을 표시합니다.
         </p>
       </div>

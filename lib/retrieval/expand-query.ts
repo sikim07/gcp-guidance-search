@@ -4,7 +4,7 @@ const PAIRS: Array<[RegExp, string]> = [
   [/전자기록/g, "electronic records 전자기록 part 11"],
   [/원자료|원본기록/g, "source data source documents 원자료"],
   [/모니터링/g, "monitoring risk-based 모니터링"],
-  [/동의/g, "informed consent 시험대상자 동의"],
+  [/동의/g, "informed consent 4.8 시험대상자 동의 서면동의"],
   [/검증|밸리데이션/g, "validation 검증"],
   [/필수문서/g, "essential documents TMF 필수문서"],
   [/이탈/g, "protocol deviation 이탈"],

@@ -22,7 +22,25 @@ Source data should be attributable.
 제6호 기록 및 자료
 감사추적을 남긴다.
 `);
-    expect(chunks.map((c) => c.section)).toEqual(["제5호", "제6호"]);
+    expect(chunks.map((c) => c.section)).toEqual([
+      "제5호 시험대상자 동의",
+      "제6호 기록 및 자료",
+    ]);
+  });
+
+  it("keeps KGCP numbered headings in the section label", () => {
+    const chunks = chunkByClause(`
+2. 용어의 정의
+임상시험 대상자란 사람을 말한다.
+
+5. 시험대상자 동의
+서면 동의를 받는다.
+`);
+    expect(chunks.map((c) => c.section)).toEqual([
+      "2. 용어의 정의",
+      "5. 시험대상자 동의",
+    ]);
+    expect(chunks[1]?.text).toContain("서면 동의");
   });
 
   it("splits Q&A identifiers", () => {

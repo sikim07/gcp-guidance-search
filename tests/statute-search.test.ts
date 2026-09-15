@@ -273,4 +273,134 @@ describe("search union of guidelines and statutes", () => {
     expect(result.passages.length).toBeGreaterThan(0);
     expect(result.answer).not.toBe("cached without passages");
   });
+
+  it("ranks the informed-consent article above KGCP definitions for 서면 동의", async () => {
+    const definitions =
+      '용어의 정의. 가. "임상시험"이란 사람을 대상으로 실시하는 시험 또는 연구를 말한다. 나. "다기관임상시험"이란 둘 이상의 실시기관에서 수행되는 임상시험을 말한다.';
+    const consent =
+      "시험책임자는 임상시험 실시 전에 시험대상자 또는 대리인에게 목적과 위험을 설명하고 자발적인 서면 동의를 받아야 한다. 동의서에는 서명과 날짜가 기재되어야 한다.";
+    const store = makeStore({
+      statutes: [
+        {
+          id: "st-rule",
+          lawId: "011794",
+          title: "의약품 등의 안전에 관한 규칙",
+          shortTitle: "의약품 등의 안전에 관한 규칙",
+          url: "https://www.law.go.kr/법령/의약품등의안전에관한규칙",
+          currentMst: "284019",
+          promulgatedDate: "2026-03-05",
+          effectiveDate: "2026-03-05",
+          amendmentType: "일부개정",
+          currentRevisionId: "rev-r",
+          status: "active",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      statuteArticles: [
+        {
+          id: "art-def",
+          statuteId: "st-rule",
+          revisionId: "rev-r",
+          articleKey: "annex-4#2",
+          section: "별표 4 의약품 임상시험 관리기준 · 2. 용어의 정의",
+          text: definitions,
+          embedding: mockEmbed(definitions),
+          isCurrent: true,
+          kind: "annex",
+        },
+        {
+          id: "art-consent",
+          statuteId: "st-rule",
+          revisionId: "rev-r",
+          articleKey: "annex-4#5",
+          section: "별표 4 의약품 임상시험 관리기준 · 5. 시험대상자 동의",
+          text: consent,
+          embedding: mockEmbed(consent),
+          isCurrent: true,
+          kind: "annex",
+        },
+      ],
+    });
+
+    const result = await searchGuidelines(
+      store,
+      "시험대상자 서면 동의는 어떻게 받나?",
+      "ip",
+    );
+    expect(result.passages[0]?.section).toMatch(/시험대상자 동의/);
+    expect(result.answer).toMatch(/서면 동의/);
+    expect(result.answer).not.toMatch(/용어의 정의이/);
+  });
+
+  it("does not lead with a glossary blob when the query is about written consent", async () => {
+    const definitions =
+      '용어의 정의\n이 기준에서 사용하는 용어의 뜻은 다음과 같다. 가. "임상시험"이란 사람을 대상으로 실시하는 시험을 말한다.';
+    const consent =
+      "4.8 Informed Consent of Trial Subjects. The investigator should obtain written informed consent.";
+    const store = makeStore({
+      documents: [
+        {
+          id: "doc-e6",
+          source: "fda-ich",
+          title: "E6(R2) Good Clinical Practice",
+          url: "https://www.fda.gov/media/93884/download",
+          issuedDate: "2018-03-01",
+          fileHash: "x",
+          currentVersionId: "v1",
+          category: "ICH",
+          externalId: "fda-ich:93884",
+          status: "active",
+          createdAt: "2020-01-01T00:00:00.000Z",
+        },
+      ],
+      chunks: [
+        {
+          id: "c-e6",
+          versionId: "v1",
+          documentId: "doc-e6",
+          section: "4.8",
+          text: consent,
+          embedding: mockEmbed(consent),
+          isCurrent: true,
+        },
+      ],
+      statutes: [
+        {
+          id: "st-rule",
+          lawId: "011794",
+          title: "의약품 등의 안전에 관한 규칙",
+          shortTitle: "의약품 등의 안전에 관한 규칙",
+          url: "https://www.law.go.kr/법령/의약품등의안전에관한규칙",
+          currentMst: "284019",
+          promulgatedDate: "2026-03-05",
+          effectiveDate: "2026-03-05",
+          amendmentType: "일부개정",
+          currentRevisionId: "rev-r",
+          status: "active",
+          createdAt: "2026-01-01T00:00:00.000Z",
+        },
+      ],
+      statuteArticles: [
+        {
+          id: "art-def",
+          statuteId: "st-rule",
+          revisionId: "rev-r",
+          articleKey: "annex-4#2",
+          section: "별표 4 의약품 임상시험 관리기준 · 2",
+          text: definitions,
+          embedding: mockEmbed(definitions),
+          isCurrent: true,
+          kind: "annex",
+        },
+      ],
+    });
+
+    const result = await searchGuidelines(
+      store,
+      "시험대상자 서면 동의는 어떻게 받나?",
+      "ip",
+    );
+    expect(result.passages[0]?.section).toBe("4.8");
+    expect(result.answer).toMatch(/informed consent|서면 동의/i);
+  });
 });

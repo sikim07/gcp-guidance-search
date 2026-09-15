@@ -121,7 +121,7 @@ export function SearchPanel() {
       setTranslations(body.translations ?? {});
       if (body.missingKey) {
         setTranslateNote(
-          "영어 조항을 한국어로 아직 옮기지 못했습니다. 원문 탭에서 영어를 보세요.",
+          "영어 조항을 한국어로 옮기지 못했습니다. 원문 탭에서 영어를 확인하세요.",
         );
       }
     } catch {
@@ -148,75 +148,89 @@ export function SearchPanel() {
   const recentChips = visibleRecent(recents, PRESET_QUERIES);
 
   return (
-    <div className="space-y-5 sm:space-y-6">
-      <form onSubmit={onSubmit} className="space-y-4">
-        <div className="space-y-2">
-          <h1 className="font-display text-ink text-xl leading-snug sm:text-3xl">
-            임상시험 규정을 검색합니다
-          </h1>
-          <p className="text-muted max-w-2xl text-sm leading-6">
-            가이드라인과 법령에서 근거 조항을 찾습니다. 공식 해석이 아니니 출처 링크로
-            원문을 확인하세요.{" "}
-            <a className="text-accent underline-offset-2 hover:underline" href="/updates">
-              개정 피드
-            </a>
-          </p>
-        </div>
-        <TextField
-          fullWidth
-          name="query"
-          value={query}
-          onChange={setQuery}
-          aria-label="임상시험 규정을 검색합니다"
-        >
-          <Label className="sr-only">임상시험 규정을 검색합니다</Label>
-          <TextArea
-            id="query"
-            className="min-h-24 sm:min-h-28"
-            placeholder="예: 전자기록 감사추적은 어떤 항목을 남겨야 하나?"
-          />
-        </TextField>
-        <div className="flex flex-wrap gap-2" data-testid="preset-list">
-          {PRESET_QUERIES.map((preset) => (
-            <Button
-              key={preset.id}
-              type="button"
-              size="sm"
-              variant="secondary"
-              data-testid={`preset-${preset.id}`}
-              onPress={() => void runSearch(preset.query)}
+    <div className="space-y-6 sm:space-y-8">
+      <section className="max-w-2xl space-y-3">
+        <Chip color="accent" size="sm" variant="soft">
+          조항 검색
+        </Chip>
+        <h1 className="font-display text-ink text-[1.65rem] leading-tight tracking-tight sm:text-4xl">
+          임상시험 규정을 검색합니다
+        </h1>
+        <p className="text-muted max-w-xl text-sm leading-7 sm:text-[15px]">
+          가이드라인과 법령에서 근거 조항을 찾습니다. 공식 해석이 아니니 출처 링크로
+          원문을 확인하세요.{" "}
+          <a className="text-fda underline-offset-4 hover:underline" href="/updates">
+            개정 피드
+          </a>
+        </p>
+      </section>
+
+      <Card className="search-sheet w-full">
+        <Card.Content className="space-y-4 p-4 sm:p-6">
+          <form onSubmit={onSubmit} className="space-y-4">
+            <TextField
+              fullWidth
+              name="query"
+              value={query}
+              onChange={setQuery}
+              aria-label="임상시험 규정을 검색합니다"
             >
-              {preset.label}
-            </Button>
-          ))}
-        </div>
-        {recentChips.length > 0 ? (
-          <div className="flex flex-wrap gap-2" data-testid="recent-list">
-            {recentChips.map((item) => (
-              <Button
-                key={item}
-                type="button"
-                size="sm"
-                variant="ghost"
-                onPress={() => void runSearch(item)}
-              >
-                {item}
+              <Label className="sr-only">임상시험 규정을 검색합니다</Label>
+              <TextArea
+                id="query"
+                className="min-h-24 sm:min-h-28"
+                placeholder="예: 전자기록 감사추적은 어떤 항목을 남겨야 하나?"
+              />
+            </TextField>
+            <div>
+              <p className="text-muted mb-2 text-xs tracking-wide">자주 찾는 질문</p>
+              <div className="flex flex-wrap gap-2" data-testid="preset-list">
+                {PRESET_QUERIES.map((preset) => (
+                  <Button
+                    key={preset.id}
+                    type="button"
+                    size="sm"
+                    variant="secondary"
+                    data-testid={`preset-${preset.id}`}
+                    onPress={() => void runSearch(preset.query)}
+                  >
+                    {preset.label}
+                  </Button>
+                ))}
+              </div>
+            </div>
+            {recentChips.length > 0 ? (
+              <div>
+                <p className="text-muted mb-2 text-xs tracking-wide">최근 검색</p>
+                <div className="flex flex-wrap gap-2" data-testid="recent-list">
+                  {recentChips.map((item) => (
+                    <Button
+                      key={item}
+                      type="button"
+                      size="sm"
+                      variant="ghost"
+                      onPress={() => void runSearch(item)}
+                    >
+                      {item}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+              <Button type="submit" isPending={loading} className="w-full sm:w-auto">
+                {({ isPending }) => (
+                  <>
+                    {isPending ? <Spinner color="current" size="sm" /> : null}
+                    {isPending ? loadingCopy(loadingPhase(elapsedMs)) : "검색"}
+                  </>
+                )}
               </Button>
-            ))}
-          </div>
-        ) : null}
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
-          <Button type="submit" isPending={loading} className="w-full sm:w-auto">
-            {({ isPending }) => (
-              <>
-                {isPending ? <Spinner color="current" size="sm" /> : null}
-                {isPending ? loadingCopy(loadingPhase(elapsedMs)) : "검색"}
-              </>
-            )}
-          </Button>
-          <p className="text-muted text-xs">하루 20건까지 검색할 수 있습니다</p>
-        </div>
-      </form>
+              <p className="text-muted text-xs">하루 20건까지 검색할 수 있습니다</p>
+            </div>
+          </form>
+        </Card.Content>
+      </Card>
 
       {error ? (
         <Alert status="danger">
@@ -224,24 +238,11 @@ export function SearchPanel() {
         </Alert>
       ) : null}
 
-      {loading ? (
-        <Card className="w-full" data-testid="loading-card">
-          <Card.Header>
-            <Card.Title>{loadingCopy(loadingPhase(elapsedMs))}</Card.Title>
-            <Card.Description>관련 조항을 고른 뒤 답을 정리합니다.</Card.Description>
-          </Card.Header>
-          <Card.Content className="skeleton--shimmer space-y-3 overflow-hidden">
-            <Skeleton animationType="none" className="h-4 w-full rounded-lg" />
-            <Skeleton animationType="none" className="h-4 w-5/6 rounded-lg" />
-            <Skeleton animationType="none" className="h-4 w-4/6 rounded-lg" />
-            <Skeleton animationType="none" className="h-4 w-2/3 rounded-lg" />
-          </Card.Content>
-        </Card>
-      ) : null}
+      {loading ? <ResultSkeleton elapsedMs={elapsedMs} /> : null}
 
       {result && !loading ? (
-        <Card className="w-full" data-testid="answer-card">
-          <Card.Content>
+        <Card className="search-sheet w-full" data-testid="answer-card">
+          <Card.Content className="p-4 sm:p-6">
             <Tabs
               className="w-full"
               selectedKey={tab}
@@ -266,10 +267,12 @@ export function SearchPanel() {
                   ) : null}
                 </Tabs.List>
               </Tabs.ListContainer>
-              <Tabs.Panel className="pt-4" id="answer">
-                <p className="text-sm leading-7 whitespace-pre-wrap">{result.answer}</p>
+              <Tabs.Panel className="pt-5" id="answer">
+                <p className="clause-body text-sm leading-7 whitespace-pre-wrap sm:text-[15px]">
+                  {result.answer}
+                </p>
               </Tabs.Panel>
-              <Tabs.Panel className="pt-4" id="original">
+              <Tabs.Panel className="pt-5" id="original">
                 <PassageList
                   passages={result.passages}
                   textFor={(p) => p.original}
@@ -277,21 +280,20 @@ export function SearchPanel() {
                 />
               </Tabs.Panel>
               {canTranslate ? (
-                <Tabs.Panel className="pt-4" id="translation">
+                <Tabs.Panel className="pt-5" id="translation">
                   {translating ? (
                     <div className="space-y-3">
                       <Skeleton className="h-4 w-full rounded-lg" />
-                      <Skeleton className="h-4 w-4/5 rounded-lg" />
+                      <Skeleton className="h-4 w-5/6 rounded-lg" />
+                      <Skeleton className="h-4 w-2/3 rounded-lg" />
                     </div>
                   ) : (
                     <>
                       {translateNote ? (
-                        <p className="text-muted mb-3 text-xs">{translateNote}</p>
-                      ) : (
-                        <p className="text-muted mb-3 text-xs">
-                          영어 조항만 한국어로 옮깁니다. 한글 조문은 원문과 같습니다.
-                        </p>
-                      )}
+                        <Alert className="mb-4" status="warning">
+                          <Alert.Content>{translateNote}</Alert.Content>
+                        </Alert>
+                      ) : null}
                       <PassageList
                         passages={result.passages.filter(
                           (row) => row.language === "en" || row.language === "mixed",
@@ -305,18 +307,17 @@ export function SearchPanel() {
               ) : null}
             </Tabs>
             {result.cacheHit ? (
-              <p className="text-muted mt-3 text-xs">
+              <p className="text-muted mt-4 text-xs">
                 같은 질문의 답을 다시 보여 줍니다.
               </p>
             ) : null}
-            <ul className="border-border mt-4 space-y-3 border-t pt-4">
+            <ul className="border-border mt-5 space-y-3 border-t pt-5">
               {result.sources.map((source) => (
                 <li
                   key={`${source.url}-${source.section}`}
-                  className="flex flex-col gap-1 text-sm sm:block"
+                  className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-2"
                 >
                   <Chip
-                    className="mr-2"
                     color={source.kind === "statute" ? "accent" : "default"}
                     size="sm"
                     variant="soft"
@@ -325,17 +326,19 @@ export function SearchPanel() {
                   </Chip>
                   <a
                     href={source.url}
-                    className="text-fda break-words underline-offset-2 hover:underline"
+                    className="text-fda min-w-0 text-sm break-words underline-offset-4 hover:underline"
                     target="_blank"
                     rel="noreferrer"
                   >
                     {source.title}
                   </a>
-                  <span className="text-muted"> · {source.section}</span>
+                  <span className="text-muted text-xs sm:text-sm">
+                    · {source.section}
+                  </span>
                 </li>
               ))}
             </ul>
-            <div className="mt-4 flex flex-wrap gap-2">
+            <div className="mt-5 flex flex-wrap gap-2">
               <Button
                 size="sm"
                 variant="outline"
@@ -360,6 +363,38 @@ export function SearchPanel() {
   );
 }
 
+function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
+  return (
+    <Card className="search-sheet w-full" data-testid="loading-card">
+      <Card.Header className="px-4 pt-4 sm:px-6 sm:pt-6">
+        <Card.Title className="flex items-center gap-2 text-base">
+          <Spinner size="sm" />
+          {loadingCopy(loadingPhase(elapsedMs))}
+        </Card.Title>
+        <Card.Description>관련 조항을 고른 뒤 답을 정리합니다.</Card.Description>
+      </Card.Header>
+      <Card.Content className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
+        <div className="flex gap-2">
+          <Skeleton className="h-8 w-16 rounded-full" />
+          <Skeleton className="h-8 w-16 rounded-full" />
+          <Skeleton className="h-8 w-24 rounded-full" />
+        </div>
+        <div className="space-y-3">
+          <Skeleton className="h-4 w-full rounded-lg" />
+          <Skeleton className="h-4 w-11/12 rounded-lg" />
+          <Skeleton className="h-4 w-4/5 rounded-lg" />
+          <Skeleton className="h-4 w-5/6 rounded-lg" />
+          <Skeleton className="h-4 w-2/3 rounded-lg" />
+        </div>
+        <div className="flex gap-2 pt-2">
+          <Skeleton className="h-6 w-14 rounded-full" />
+          <Skeleton className="h-4 w-48 rounded-lg" />
+        </div>
+      </Card.Content>
+    </Card>
+  );
+}
+
 function PassageList({
   passages,
   textFor,
@@ -373,14 +408,17 @@ function PassageList({
     return <p className="text-muted text-sm">{empty}</p>;
   }
   return (
-    <ol className="space-y-5">
+    <ol className="space-y-4">
       {passages.map((passage) => (
-        <li key={passage.chunkId}>
+        <li
+          key={passage.chunkId}
+          className="bg-paper/70 rounded-2xl px-4 py-3 sm:px-5 sm:py-4"
+        >
           <p className="text-muted text-xs break-words">
             {passage.kind === "statute" ? "법령" : "가이드라인"} · {passage.title} ·{" "}
             {passage.section}
           </p>
-          <p className="mt-1 text-sm leading-7 break-words whitespace-pre-wrap">
+          <p className="clause-body mt-2 text-sm leading-7 break-words whitespace-pre-wrap sm:text-[15px]">
             {textFor(passage)}
           </p>
         </li>
