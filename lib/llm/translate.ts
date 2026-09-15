@@ -134,10 +134,9 @@ export async function translateAnswer(text: string): Promise<string> {
   const out = await Promise.all(
     blocks.map(async (block) => {
       if (detectPassageLanguage(block) === "ko") return block;
-      const cited = block.match(/^(.*)(\n\[[^\]]+\])\s*$/su);
-      if (cited) {
-        const body = cited[1].trim();
-        return body ? `${await translateClause(body)}${cited[2]}` : cited[2].trim();
+      const cited = block.match(/^(.*?)\s*(\[[^\]]+\])\s*$/su);
+      if (cited && cited[1].trim()) {
+        return `${await translateClause(cited[1].trim())}\n${cited[2]}`;
       }
       return translateClause(block);
     }),

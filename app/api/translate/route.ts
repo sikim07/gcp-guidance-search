@@ -37,12 +37,13 @@ export async function POST(request: Request) {
     });
     let translatedAnswer: string | undefined;
     if (answer && answer.trim()) {
-      const cached = await store.getTranslation(`answer:${answer.slice(0, 80)}`);
+      const cacheKey = `answer:v3:${answer.slice(0, 80)}`;
+      const cached = await store.getTranslation(cacheKey);
       if (cached) {
         translatedAnswer = cached;
       } else {
         translatedAnswer = await translateAnswer(answer);
-        await store.putTranslation(`answer:${answer.slice(0, 80)}`, translatedAnswer);
+        await store.putTranslation(cacheKey, translatedAnswer);
       }
     }
     return Response.json({ translations, translatedAnswer });

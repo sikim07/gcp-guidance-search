@@ -136,6 +136,7 @@ describe("seed and public translation", () => {
     ].join("\n\n");
     const korean = await translateAnswer(answer);
     expect(korean).toMatch(/시험대상자 동의/);
+    expect(korean).not.toMatch(/시험 대상자의 시험대상자 동의/);
     expect(korean).toMatch(/\[E6\(R2\), 4\.8\]/);
     expect(korean).toMatch(/\[E6\(R2\), 4\.8\.8\]/);
     expect(korean).toMatch(/법적 자문이 아닙니다/);
