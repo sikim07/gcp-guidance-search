@@ -1,5 +1,6 @@
 import { getStore } from "@/lib/db/store";
 import { drainQueue, watchSources } from "@/lib/pipeline/runner";
+import { watchStatutes } from "@/lib/pipeline/statute-runner";
 
 function authorized(request: Request): boolean {
   const secret = process.env.CRON_SECRET;
@@ -15,6 +16,7 @@ export async function GET(request: Request) {
   }
   const store = await getStore();
   const watched = await watchSources(store);
+  const statutes = await watchStatutes(store);
   const processed = await drainQueue(store, 8);
-  return Response.json({ ok: true, ...watched, processed });
+  return Response.json({ ok: true, ...watched, statutes, processed });
 }

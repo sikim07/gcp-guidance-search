@@ -9,6 +9,9 @@ import type {
   IngestJob,
   QueryCacheRecord,
   SearchLogRecord,
+  StatuteArticle,
+  StatuteRecord,
+  StatuteRevision,
 } from "@/lib/types";
 import { emptySnapshot, type AppStore, type StoreSnapshot } from "@/lib/db/types";
 
@@ -25,12 +28,22 @@ async function load(): Promise<StoreSnapshot> {
   if (g.__gcpStore && g.__gcpStoreLoaded) return g.__gcpStore;
   try {
     const raw = await readFile(STORE_PATH, "utf8");
-    g.__gcpStore = JSON.parse(raw) as StoreSnapshot;
+    g.__gcpStore = migrateSnapshot(JSON.parse(raw) as StoreSnapshot);
   } catch {
     g.__gcpStore = emptySnapshot();
   }
   g.__gcpStoreLoaded = true;
   return g.__gcpStore;
+}
+
+function migrateSnapshot(snap: StoreSnapshot): StoreSnapshot {
+  return {
+    ...emptySnapshot(),
+    ...snap,
+    statutes: snap.statutes ?? [],
+    statuteRevisions: snap.statuteRevisions ?? [],
+    statuteArticles: snap.statuteArticles ?? [],
+  };
 }
 
 async function persist(snapshot: StoreSnapshot): Promise<void> {
@@ -46,7 +59,9 @@ async function persist(snapshot: StoreSnapshot): Promise<void> {
 
 export const memoryStore: AppStore = {
   async listDocuments() {
-    return (await load()).documents.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return (await load()).documents
+      .slice()
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
   async getDocument(id) {
     return (await load()).documents.find((d) => d.id === id);
@@ -93,7 +108,9 @@ export const memoryStore: AppStore = {
     await persist(snap);
   },
   async listChangeLogs() {
-    return (await load()).changeLogs.slice().sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    return (await load()).changeLogs
+      .slice()
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
   },
   async addSearchLog(log: SearchLogRecord) {
     const snap = await load();
@@ -161,6 +178,42 @@ export const memoryStore: AppStore = {
     const snap = await load();
     const idx = snap.jobs.findIndex((j) => j.id === job.id);
     if (idx >= 0) snap.jobs[idx] = job;
+    await persist(snap);
+  },
+  async listStatutes() {
+    return (await load()).statutes
+      .slice()
+      .sort((a, b) => a.title.localeCompare(b.title, "ko"));
+  },
+  async getStatute(id) {
+    return (await load()).statutes.find((row) => row.id === id);
+  },
+  async upsertStatute(row: StatuteRecord) {
+    const snap = await load();
+    const idx = snap.statutes.findIndex((item) => item.id === row.id);
+    if (idx >= 0) snap.statutes[idx] = row;
+    else snap.statutes.push(row);
+    await persist(snap);
+  },
+  async listStatuteRevisions(statuteId) {
+    return (await load()).statuteRevisions
+      .filter((row) => !statuteId || row.statuteId === statuteId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+  },
+  async addStatuteRevision(row: StatuteRevision) {
+    const snap = await load();
+    snap.statuteRevisions.push(row);
+    await persist(snap);
+  },
+  async currentStatuteArticles() {
+    return (await load()).statuteArticles.filter((row) => row.isCurrent);
+  },
+  async replaceCurrentStatuteArticles(statuteId: string, articles: StatuteArticle[]) {
+    const snap = await load();
+    for (const article of snap.statuteArticles) {
+      if (article.statuteId === statuteId) article.isCurrent = false;
+    }
+    snap.statuteArticles.push(...articles);
     await persist(snap);
   },
 };

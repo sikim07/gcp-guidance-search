@@ -1,27 +1,47 @@
 import { randomUUID } from "node:crypto";
 import type { AppStore } from "@/lib/db/types";
 import { chunkByClause } from "@/lib/pipeline/chunk";
-import { detectCatalogChanges, detectContentRevision } from "@/lib/pipeline/change-detector";
+import {
+  detectCatalogChanges,
+  detectContentRevision,
+} from "@/lib/pipeline/change-detector";
 import { embedTexts } from "@/lib/pipeline/embed";
-import { fetchBytes, filterCatalog, loadSourceHtml, parseCatalog, seedFallbackCatalog } from "@/lib/pipeline/fetch";
+import {
+  fetchBytes,
+  filterCatalog,
+  loadSourceHtml,
+  parseCatalog,
+  seedFallbackCatalog,
+} from "@/lib/pipeline/fetch";
 import { sha256 } from "@/lib/pipeline/hasher";
 import { notifyAdmin } from "@/lib/pipeline/notify";
 import { extractPdfText } from "@/lib/pipeline/parse-pdf";
 import { SEED_CORPUS } from "@/lib/pipeline/seed/corpus";
 import { diffSections, summarizeDiff } from "@/lib/pipeline/section-diff";
 import { extractKgcpText } from "@/lib/pipeline/sources/kgcp-parser";
-import { SOURCES, type CatalogEntry, type ChangeKind, type ChunkRecord } from "@/lib/types";
+import {
+  SOURCES,
+  type CatalogEntry,
+  type ChangeKind,
+  type ChunkRecord,
+} from "@/lib/types";
 
-export async function watchSources(store: AppStore): Promise<{ queued: number; detections: ChangeKind[] }> {
+export async function watchSources(
+  store: AppStore,
+): Promise<{ queued: number; detections: ChangeKind[] }> {
   const existing = await store.listDocuments();
   let queued = 0;
   const detections: ChangeKind[] = [];
 
   for (const source of SOURCES) {
+    if (source === "kgcp") continue; // KGCP는 법령 별표 4로 옮김. 가이드라인 카탈로그로 다시 넣지 않는다.
     const { html, pageUrl } = await loadSourceHtml(source);
     let catalog = filterCatalog(source, parseCatalog(source, html, pageUrl));
     if (catalog.length === 0) catalog = seedFallbackCatalog(source);
-    const found = detectCatalogChanges(catalog, existing.filter((d) => d.source === source));
+    const found = detectCatalogChanges(
+      catalog,
+      existing.filter((d) => d.source === source),
+    );
     for (const item of found) {
       detections.push(item.kind);
       if (item.kind === "vanished" && item.previous) {
@@ -55,7 +75,9 @@ export async function watchSources(store: AppStore): Promise<{ queued: number; d
   return { queued, detections };
 }
 
-export async function processNextJob(store: AppStore): Promise<{ processed: boolean; kind?: ChangeKind }> {
+export async function processNextJob(
+  store: AppStore,
+): Promise<{ processed: boolean; kind?: ChangeKind }> {
   const job = await store.nextJob();
   if (!job) return { processed: false };
   try {
@@ -120,7 +142,17 @@ export async function ingestEntry(
       ? "고시일/발행일만 변경 (본문 해시 동일 또는 조항 동일)"
       : summarizeDiff(sectionChanges.length ? sectionChanges : []);
 
-  await writeNewVersion(store, catalog, text, hash, kind, summary, existing.id, existing.currentVersionId, sectionChanges);
+  await writeNewVersion(
+    store,
+    catalog,
+    text,
+    hash,
+    kind,
+    summary,
+    existing.id,
+    existing.currentVersionId,
+    sectionChanges,
+  );
   await store.invalidateCache();
   return { kind, title: catalog.title, summary };
 }
@@ -184,7 +216,9 @@ async function writeNewVersion(
       documentId,
       section: clause.section,
       text: clause.text,
-      embedding: changed ? (embedMap.get(clause.section) ?? []) : (reused?.embedding ?? []),
+      embedding: changed
+        ? (embedMap.get(clause.section) ?? [])
+        : (reused?.embedding ?? []),
       isCurrent: true,
     };
   });

@@ -7,6 +7,9 @@ import type {
   IngestJob,
   QueryCacheRecord,
   SearchLogRecord,
+  StatuteArticle,
+  StatuteRecord,
+  StatuteRevision,
 } from "@/lib/types";
 
 export type StoreSnapshot = {
@@ -19,6 +22,9 @@ export type StoreSnapshot = {
   queryCache: QueryCacheRecord[];
   jobs: IngestJob[];
   rateLimits: Record<string, { day: string; count: number }>;
+  statutes: StatuteRecord[];
+  statuteRevisions: StatuteRevision[];
+  statuteArticles: StatuteArticle[];
 };
 
 export interface AppStore {
@@ -46,6 +52,16 @@ export interface AppStore {
   enqueueJob(job: IngestJob): Promise<void>;
   nextJob(): Promise<IngestJob | undefined>;
   updateJob(job: IngestJob): Promise<void>;
+  listStatutes(): Promise<StatuteRecord[]>;
+  getStatute(id: string): Promise<StatuteRecord | undefined>;
+  upsertStatute(row: StatuteRecord): Promise<void>;
+  listStatuteRevisions(statuteId?: string): Promise<StatuteRevision[]>;
+  addStatuteRevision(row: StatuteRevision): Promise<void>;
+  currentStatuteArticles(): Promise<StatuteArticle[]>;
+  replaceCurrentStatuteArticles(
+    statuteId: string,
+    articles: StatuteArticle[],
+  ): Promise<void>;
 }
 
 export function emptySnapshot(): StoreSnapshot {
@@ -59,5 +75,8 @@ export function emptySnapshot(): StoreSnapshot {
     queryCache: [],
     jobs: [],
     rateLimits: {},
+    statutes: [],
+    statuteRevisions: [],
+    statuteArticles: [],
   };
 }

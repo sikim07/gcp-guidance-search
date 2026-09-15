@@ -43,6 +43,8 @@ export function sourceLabel(source: string): string {
       return "식약처 안내서";
     case "kgcp":
       return "KGCP";
+    case "statute":
+      return "법령";
     default:
       return source;
   }

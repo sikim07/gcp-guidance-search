@@ -8,8 +8,13 @@ export type ChangeKind =
   | "revised_date"
   | "revised_hash"
   | "revised_both"
+  | "revised_mst"
   | "unchanged"
   | "vanished";
+
+export type EntityKind = "document" | "statute";
+export type SourceKind = "guideline" | "statute";
+export type StatuteArticleKind = "article" | "annex";
 
 export type CatalogEntry = {
   source: SourceId;
@@ -60,11 +65,50 @@ export type ChunkRecord = {
 export type ChangeLogRecord = {
   id: string;
   documentId: string;
+  entityKind?: EntityKind;
   fromVersionId: string | null;
   toVersionId: string | null;
   changeKind: ChangeKind;
   summary: string;
   createdAt: string;
+};
+
+export type StatuteRecord = {
+  id: string;
+  lawId: string;
+  title: string;
+  shortTitle: string;
+  url: string;
+  currentMst: string;
+  promulgatedDate: string | null;
+  effectiveDate: string | null;
+  amendmentType: string | null;
+  currentRevisionId: string | null;
+  status: DocumentStatus;
+  createdAt: string;
+};
+
+export type StatuteRevision = {
+  id: string;
+  statuteId: string;
+  mst: string;
+  promulgatedDate: string | null;
+  effectiveDate: string | null;
+  amendmentType: string | null;
+  diffSummary: string | null;
+  createdAt: string;
+};
+
+export type StatuteArticle = {
+  id: string;
+  statuteId: string;
+  revisionId: string;
+  articleKey: string;
+  section: string;
+  text: string;
+  embedding: number[];
+  isCurrent: boolean;
+  kind: StatuteArticleKind;
 };
 
 export type SearchLogRecord = {
@@ -103,6 +147,7 @@ export type AnswerSource = {
   title: string;
   section: string;
   url: string;
+  kind?: SourceKind;
 };
 
 export type SearchResponse = {

@@ -82,6 +82,35 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
       return snap.jobs.find((j) => j.status === "queued");
     },
     async updateJob() {},
+    async listStatutes() {
+      return snap.statutes ?? [];
+    },
+    async getStatute(id) {
+      return (snap.statutes ?? []).find((s) => s.id === id);
+    },
+    async upsertStatute(row) {
+      snap.statutes ??= [];
+      const idx = snap.statutes.findIndex((s) => s.id === row.id);
+      if (idx >= 0) snap.statutes[idx] = row;
+      else snap.statutes.push(row);
+    },
+    async listStatuteRevisions() {
+      return snap.statuteRevisions ?? [];
+    },
+    async addStatuteRevision(row) {
+      snap.statuteRevisions ??= [];
+      snap.statuteRevisions.push(row);
+    },
+    async currentStatuteArticles() {
+      return (snap.statuteArticles ?? []).filter((a) => a.isCurrent);
+    },
+    async replaceCurrentStatuteArticles(statuteId, articles) {
+      snap.statuteArticles ??= [];
+      for (const article of snap.statuteArticles) {
+        if (article.statuteId === statuteId) article.isCurrent = false;
+      }
+      snap.statuteArticles.push(...articles);
+    },
   };
 }
 

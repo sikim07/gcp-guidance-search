@@ -3,8 +3,8 @@ import type { AppStore } from "@/lib/db/types";
 import { sha256 } from "@/lib/pipeline/hasher";
 import { embedTexts } from "@/lib/pipeline/embed";
 import { cosine } from "@/lib/retrieval/cosine";
-import { decorateRetrieved, generateAnswer } from "@/lib/llm/answer";
-import type { SearchResponse } from "@/lib/types";
+import { decorateRetrieved, generateAnswer, type Retrieved } from "@/lib/llm/answer";
+import type { SearchResponse, SourceKind } from "@/lib/types";
 import { expandQuery } from "@/lib/retrieval/expand-query";
 import { normalizeQuery } from "@/lib/utils";
 
@@ -45,15 +45,49 @@ export async function searchGuidelines(
   }
 
   const docs = await store.listDocuments();
-  const chunks = (await store.currentChunks()).filter((c) => c.embedding.length > 0);
+  const statutes = await store.listStatutes();
+  const activeDocIds = new Set(
+    docs.filter((d) => d.status === "active").map((d) => d.id),
+  );
+  const activeStatuteIds = new Set(
+    statutes.filter((s) => s.status === "active").map((s) => s.id),
+  );
+  const chunks = (await store.currentChunks()).filter(
+    (c) => c.embedding.length > 0 && activeDocIds.has(c.documentId),
+  );
+  const articles = (await store.currentStatuteArticles()).filter(
+    (a) => a.embedding.length > 0 && activeStatuteIds.has(a.statuteId),
+  );
+  const pool: Retrieved[] = [
+    ...decorateRetrieved(chunks, docs),
+    ...articles.map((article) => {
+      const statute = statutes.find((row) => row.id === article.statuteId);
+      return {
+        title: statute?.title ?? "법령",
+        section: article.section,
+        url: statute?.url ?? "",
+        text: article.text,
+        kind: "statute" as SourceKind,
+        chunk: {
+          id: article.id,
+          versionId: article.revisionId,
+          documentId: article.statuteId,
+          section: article.section,
+          text: article.text,
+          embedding: article.embedding,
+          isCurrent: article.isCurrent,
+        },
+      };
+    }),
+  ];
   const simStarted = Date.now();
   const expandedTokens = tokenize(expanded);
   // Still O(n) over every current chunk — not a vector index.
-  const ranked = chunks
+  const ranked = pool
     .map((item) => ({
       item,
       score:
-        0.55 * cosine(queryEmbedding ?? [], item.embedding) +
+        0.55 * cosine(queryEmbedding ?? [], item.chunk.embedding) +
         0.45 * lexicalScore(expandedTokens, `${item.section} ${item.text}`),
     }))
     .filter((row) => row.score > 0.05)
@@ -61,10 +95,7 @@ export async function searchGuidelines(
     .slice(0, TOP_K);
   const similarityMs = Date.now() - simStarted;
 
-  const retrieved = decorateRetrieved(
-    ranked.map((r) => r.item),
-    docs,
-  );
+  const retrieved = ranked.map((r) => r.item);
   const { answer, sources } = await generateAnswer(query, retrieved);
   const searchLogId = randomUUID();
   await store.addSearchLog({
@@ -75,7 +106,7 @@ export async function searchGuidelines(
     cacheHit: false,
     latencyMs: Date.now() - started,
     similarityMs,
-    topChunkIds: ranked.map((r) => r.item.id),
+    topChunkIds: ranked.map((r) => r.item.chunk.id),
     answer,
     createdAt: new Date().toISOString(),
   });

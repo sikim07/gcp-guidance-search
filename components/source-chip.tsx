@@ -7,8 +7,11 @@ const TONES: Record<string, string> = {
   "fda-guidance": "border-fda/30 bg-fda/10 text-fda",
   mfds: "border-mfds/30 bg-mfds/10 text-mfds",
   kgcp: "border-kgcp/30 bg-kgcp/10 text-kgcp",
+  statute: "border-fda/30 bg-fda/10 text-fda",
 };
 
 export function SourceChip({ source }: { source: string }) {
-  return <Badge className={cn(TONES[source] ?? "", "uppercase")}>{sourceLabel(source)}</Badge>;
+  return (
+    <Badge className={cn(TONES[source] ?? "", "uppercase")}>{sourceLabel(source)}</Badge>
+  );
 }

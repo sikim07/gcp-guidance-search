@@ -4,17 +4,40 @@ import { chunkByClause } from "@/lib/pipeline/chunk";
 import { embedTexts } from "@/lib/pipeline/embed";
 import { sha256 } from "@/lib/pipeline/hasher";
 import { SEED_CORPUS } from "@/lib/pipeline/seed/corpus";
+import { SEED_STATUTES } from "@/lib/pipeline/seed/statutes";
+import { ingestParsedStatute } from "@/lib/pipeline/statute-runner";
 import type { ChunkRecord, DocumentRecord, DocumentVersion } from "@/lib/types";
 
 let seeding: Promise<void> | null = null;
 
 export async function ensureSeeded(store: AppStore): Promise<void> {
-  const existing = await store.listDocuments();
-  if (existing.length > 0) return;
-  if (!seeding) seeding = seedStore(store).finally(() => {
-    seeding = null;
-  });
+  if (!seeding) {
+    seeding = (async () => {
+      const existing = await store.listDocuments();
+      if (existing.length === 0) await seedStore(store);
+      const statutes = await store.listStatutes();
+      if (statutes.length === 0) await seedStatutes(store);
+    })().finally(() => {
+      seeding = null;
+    });
+  }
   await seeding;
+}
+
+export async function seedStatutes(store: AppStore): Promise<void> {
+  for (const seed of SEED_STATUTES) {
+    await ingestParsedStatute(store, {
+      lawId: seed.lawId,
+      mst: seed.mst,
+      title: seed.title,
+      shortTitle: seed.shortTitle,
+      promulgatedDate: seed.promulgatedDate,
+      effectiveDate: seed.effectiveDate,
+      amendmentType: seed.amendmentType,
+      articles: seed.articles,
+      kind: "new",
+    });
+  }
 }
 
 export async function seedStore(store: AppStore): Promise<void> {

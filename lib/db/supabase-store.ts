@@ -9,6 +9,9 @@ import type {
   IngestJob,
   QueryCacheRecord,
   SearchLogRecord,
+  StatuteArticle,
+  StatuteRecord,
+  StatuteRevision,
 } from "@/lib/types";
 
 function client(): SupabaseClient {
@@ -38,33 +41,38 @@ function mapDoc(row: Record<string, unknown>): DocumentRecord {
 
 export const supabaseStore: AppStore = {
   async listDocuments() {
-    const { data, error } = await client().from("documents").select("*").order("created_at", {
-      ascending: false,
-    });
+    const { data, error } = await client()
+      .from("documents")
+      .select("*")
+      .order("created_at", {
+        ascending: false,
+      });
     if (error) throw error;
     return (data ?? []).map(mapDoc);
   },
   async getDocument(id) {
-    const { data, error } = await client().from("documents").select("*").eq("id", id).maybeSingle();
+    const { data, error } = await client()
+      .from("documents")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
     if (error) throw error;
     return data ? mapDoc(data) : undefined;
   },
   async upsertDocument(doc) {
-    const { error } = await client()
-      .from("documents")
-      .upsert({
-        id: doc.id,
-        source: doc.source,
-        title: doc.title,
-        url: doc.url,
-        issued_date: doc.issuedDate,
-        file_hash: doc.fileHash,
-        current_version_id: doc.currentVersionId,
-        category: doc.category,
-        external_id: doc.externalId,
-        status: doc.status,
-        created_at: doc.createdAt,
-      });
+    const { error } = await client().from("documents").upsert({
+      id: doc.id,
+      source: doc.source,
+      title: doc.title,
+      url: doc.url,
+      issued_date: doc.issuedDate,
+      file_hash: doc.fileHash,
+      current_version_id: doc.currentVersionId,
+      category: doc.category,
+      external_id: doc.externalId,
+      status: doc.status,
+      created_at: doc.createdAt,
+    });
     if (error) throw error;
   },
   async listVersions(documentId) {
@@ -74,19 +82,17 @@ export const supabaseStore: AppStore = {
       .eq("document_id", documentId)
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(
-      (row): DocumentVersion => ({
-        id: row.id,
-        documentId: row.document_id,
-        versionLabel: row.version_label,
-        issuedDate: row.issued_date,
-        fileHash: row.file_hash,
-        extractedText: row.extracted_text,
-        parseStatus: row.parse_status,
-        diffSummary: row.diff_summary,
-        createdAt: row.created_at,
-      }),
-    );
+    return (data ?? []).map((row): DocumentVersion => ({
+      id: row.id,
+      documentId: row.document_id,
+      versionLabel: row.version_label,
+      issuedDate: row.issued_date,
+      fileHash: row.file_hash,
+      extractedText: row.extracted_text,
+      parseStatus: row.parse_status,
+      diffSummary: row.diff_summary,
+      createdAt: row.created_at,
+    }));
   },
   async getVersion(id) {
     const { data, error } = await client()
@@ -123,19 +129,20 @@ export const supabaseStore: AppStore = {
     if (error) throw error;
   },
   async currentChunks() {
-    const { data, error } = await client().from("chunks").select("*").eq("is_current", true);
+    const { data, error } = await client()
+      .from("chunks")
+      .select("*")
+      .eq("is_current", true);
     if (error) throw error;
-    return (data ?? []).map(
-      (row): ChunkRecord => ({
-        id: row.id,
-        versionId: row.version_id,
-        documentId: row.document_id,
-        section: row.section,
-        text: row.text,
-        embedding: row.embedding as number[],
-        isCurrent: row.is_current,
-      }),
-    );
+    return (data ?? []).map((row): ChunkRecord => ({
+      id: row.id,
+      versionId: row.version_id,
+      documentId: row.document_id,
+      section: row.section,
+      text: row.text,
+      embedding: row.embedding as number[],
+      isCurrent: row.is_current,
+    }));
   },
   async replaceCurrentChunks(documentId, chunks) {
     const sb = client();
@@ -176,15 +183,18 @@ export const supabaseStore: AppStore = {
     if (error) throw error;
   },
   async addChangeLog(log) {
-    const { error } = await client().from("change_log").insert({
-      id: log.id,
-      document_id: log.documentId,
-      from_version_id: log.fromVersionId,
-      to_version_id: log.toVersionId,
-      change_kind: log.changeKind,
-      summary: log.summary,
-      created_at: log.createdAt,
-    });
+    const { error } = await client()
+      .from("change_log")
+      .insert({
+        id: log.id,
+        document_id: log.documentId,
+        entity_kind: log.entityKind ?? "document",
+        from_version_id: log.fromVersionId,
+        to_version_id: log.toVersionId,
+        change_kind: log.changeKind,
+        summary: log.summary,
+        created_at: log.createdAt,
+      });
     if (error) throw error;
   },
   async listChangeLogs() {
@@ -193,17 +203,16 @@ export const supabaseStore: AppStore = {
       .select("*")
       .order("created_at", { ascending: false });
     if (error) throw error;
-    return (data ?? []).map(
-      (row): ChangeLogRecord => ({
-        id: row.id,
-        documentId: row.document_id,
-        fromVersionId: row.from_version_id,
-        toVersionId: row.to_version_id,
-        changeKind: row.change_kind,
-        summary: row.summary,
-        createdAt: row.created_at,
-      }),
-    );
+    return (data ?? []).map((row): ChangeLogRecord => ({
+      id: row.id,
+      documentId: row.document_id,
+      entityKind: row.entity_kind === "statute" ? "statute" : "document",
+      fromVersionId: row.from_version_id,
+      toVersionId: row.to_version_id,
+      changeKind: row.change_kind,
+      summary: row.summary,
+      createdAt: row.created_at,
+    }));
   },
   async addSearchLog(log) {
     const { error } = await client().from("search_logs").insert({
@@ -227,20 +236,18 @@ export const supabaseStore: AppStore = {
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    return (data ?? []).map(
-      (row): SearchLogRecord => ({
-        id: row.id,
-        query: row.query,
-        normalizedQuery: row.normalized_query,
-        ipHash: row.ip_hash,
-        cacheHit: row.cache_hit,
-        latencyMs: row.latency_ms,
-        similarityMs: row.similarity_ms,
-        topChunkIds: row.top_chunk_ids ?? [],
-        answer: row.answer,
-        createdAt: row.created_at,
-      }),
-    );
+    return (data ?? []).map((row): SearchLogRecord => ({
+      id: row.id,
+      query: row.query,
+      normalizedQuery: row.normalized_query,
+      ipHash: row.ip_hash,
+      cacheHit: row.cache_hit,
+      latencyMs: row.latency_ms,
+      similarityMs: row.similarity_ms,
+      topChunkIds: row.top_chunk_ids ?? [],
+      answer: row.answer,
+      createdAt: row.created_at,
+    }));
   },
   async addFeedback(row) {
     const { error } = await client().from("feedback").insert({
@@ -260,16 +267,14 @@ export const supabaseStore: AppStore = {
       .order("created_at", { ascending: false })
       .limit(200);
     if (error) throw error;
-    return (data ?? []).map(
-      (row): FeedbackRecord => ({
-        id: row.id,
-        searchLogId: row.search_log_id,
-        query: row.query,
-        answer: row.answer,
-        rating: row.rating,
-        createdAt: row.created_at,
-      }),
-    );
+    return (data ?? []).map((row): FeedbackRecord => ({
+      id: row.id,
+      searchLogId: row.search_log_id,
+      query: row.query,
+      answer: row.answer,
+      rating: row.rating,
+      createdAt: row.created_at,
+    }));
   },
   async getCachedAnswer(normalizedQuery) {
     const { data, error } = await client()
@@ -292,17 +297,15 @@ export const supabaseStore: AppStore = {
   async listQueryCache() {
     const { data, error } = await client().from("query_cache").select("*");
     if (error) throw error;
-    return (data ?? []).map(
-      (row): QueryCacheRecord => ({
-        queryHash: row.query_hash,
-        normalizedQuery: row.normalized_query,
-        embedding: row.embedding,
-        answer: row.answer,
-        sources: row.sources,
-        expiresAt: row.expires_at,
-        hitCount: row.hit_count,
-      }),
-    );
+    return (data ?? []).map((row): QueryCacheRecord => ({
+      queryHash: row.query_hash,
+      normalizedQuery: row.normalized_query,
+      embedding: row.embedding,
+      answer: row.answer,
+      sources: row.sources,
+      expiresAt: row.expires_at,
+      hitCount: row.hit_count,
+    }));
   },
   async putQueryCache(row) {
     const { error } = await client().from("query_cache").upsert({
@@ -396,4 +399,133 @@ export const supabaseStore: AppStore = {
       .eq("id", job.id);
     if (error) throw error;
   },
+  async listStatutes() {
+    const { data, error } = await client().from("statutes").select("*").order("title");
+    if (error) throw error;
+    return (data ?? []).map(mapStatute);
+  },
+  async getStatute(id) {
+    const { data, error } = await client()
+      .from("statutes")
+      .select("*")
+      .eq("id", id)
+      .maybeSingle();
+    if (error) throw error;
+    return data ? mapStatute(data) : undefined;
+  },
+  async upsertStatute(row) {
+    const { error } = await client().from("statutes").upsert({
+      id: row.id,
+      law_id: row.lawId,
+      title: row.title,
+      short_title: row.shortTitle,
+      url: row.url,
+      current_mst: row.currentMst,
+      promulgated_date: row.promulgatedDate,
+      effective_date: row.effectiveDate,
+      amendment_type: row.amendmentType,
+      current_revision_id: row.currentRevisionId,
+      status: row.status,
+      created_at: row.createdAt,
+    });
+    if (error) throw error;
+  },
+  async listStatuteRevisions(statuteId) {
+    let query = client()
+      .from("statute_revisions")
+      .select("*")
+      .order("created_at", { ascending: false });
+    if (statuteId) query = query.eq("statute_id", statuteId);
+    const { data, error } = await query;
+    if (error) throw error;
+    return (data ?? []).map(mapStatuteRevision);
+  },
+  async addStatuteRevision(row) {
+    const { error } = await client().from("statute_revisions").insert({
+      id: row.id,
+      statute_id: row.statuteId,
+      mst: row.mst,
+      promulgated_date: row.promulgatedDate,
+      effective_date: row.effectiveDate,
+      amendment_type: row.amendmentType,
+      diff_summary: row.diffSummary,
+      created_at: row.createdAt,
+    });
+    if (error) throw error;
+  },
+  async currentStatuteArticles() {
+    const { data, error } = await client()
+      .from("statute_articles")
+      .select("*")
+      .eq("is_current", true);
+    if (error) throw error;
+    return (data ?? []).map(mapStatuteArticle);
+  },
+  async replaceCurrentStatuteArticles(statuteId, articles) {
+    const sb = client();
+    const { error: updErr } = await sb
+      .from("statute_articles")
+      .update({ is_current: false })
+      .eq("statute_id", statuteId);
+    if (updErr) throw updErr;
+    if (articles.length === 0) return;
+    const { error } = await sb.from("statute_articles").insert(
+      articles.map((row) => ({
+        id: row.id,
+        statute_id: row.statuteId,
+        revision_id: row.revisionId,
+        article_key: row.articleKey,
+        section: row.section,
+        text: row.text,
+        embedding: row.embedding,
+        is_current: row.isCurrent,
+        kind: row.kind,
+      })),
+    );
+    if (error) throw error;
+  },
 };
+
+function mapStatute(row: Record<string, unknown>): StatuteRecord {
+  return {
+    id: String(row.id),
+    lawId: String(row.law_id),
+    title: String(row.title),
+    shortTitle: String(row.short_title ?? row.title),
+    url: String(row.url),
+    currentMst: String(row.current_mst),
+    promulgatedDate: (row.promulgated_date as string | null) ?? null,
+    effectiveDate: (row.effective_date as string | null) ?? null,
+    amendmentType: (row.amendment_type as string | null) ?? null,
+    currentRevisionId: (row.current_revision_id as string | null) ?? null,
+    status: (row.status as StatuteRecord["status"]) ?? "active",
+    createdAt: String(row.created_at),
+  };
+}
+
+function mapStatuteRevision(row: Record<string, unknown>): StatuteRevision {
+  return {
+    id: String(row.id),
+    statuteId: String(row.statute_id),
+    mst: String(row.mst),
+    promulgatedDate: (row.promulgated_date as string | null) ?? null,
+    effectiveDate: (row.effective_date as string | null) ?? null,
+    amendmentType: (row.amendment_type as string | null) ?? null,
+    diffSummary: (row.diff_summary as string | null) ?? null,
+    createdAt: String(row.created_at),
+  };
+}
+
+function mapStatuteArticle(row: Record<string, unknown>): StatuteArticle {
+  return {
+    id: String(row.id),
+    statuteId: String(row.statute_id),
+    revisionId: String(row.revision_id),
+    articleKey: String(row.article_key),
+    section: String(row.section),
+    text: String(row.text),
+    embedding: row.embedding as number[],
+    isCurrent: Boolean(row.is_current),
+    kind: (row.kind as StatuteArticle["kind"]) ?? "article",
+  };
+}

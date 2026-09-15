@@ -55,7 +55,7 @@ export function SearchPanel() {
   return (
     <div className="space-y-6">
       <form onSubmit={onSubmit} className="space-y-3">
-        <h1 className="font-display text-2xl text-ink">규정 조항을 자연어로 묻습니다</h1>
+        <h1 className="font-display text-ink text-2xl">규정 조항을 자연어로 묻습니다</h1>
         <label htmlFor="query" className="sr-only">
           규정 조항을 자연어로 묻습니다
         </label>
@@ -70,7 +70,7 @@ export function SearchPanel() {
           <Button type="submit" disabled={loading}>
             {loading ? "조항을 찾는 중…" : "검색"}
           </Button>
-          <p className="text-xs text-ink/50">IP당 하루 20건 · 공식본이 아닙니다</p>
+          <p className="text-ink/50 text-xs">IP당 하루 20건 · 공식본이 아닙니다</p>
         </div>
       </form>
 
@@ -81,18 +81,29 @@ export function SearchPanel() {
       ) : null}
 
       {loading ? (
-        <Card className="animate-pulse text-ink/50">관련 조항을 대조하는 중입니다.</Card>
+        <Card className="text-ink/50 animate-pulse">관련 조항을 대조하는 중입니다.</Card>
       ) : null}
 
       {result ? (
         <Card data-testid="answer-card">
-          <p className="whitespace-pre-wrap text-sm leading-7 text-ink">{result.answer}</p>
+          <p className="text-ink text-sm leading-7 whitespace-pre-wrap">
+            {result.answer}
+          </p>
           {result.cacheHit ? (
-            <p className="mt-3 text-xs text-ink/40">캐시된 답변을 재사용했습니다.</p>
+            <p className="text-ink/40 mt-3 text-xs">캐시된 답변을 재사용했습니다.</p>
           ) : null}
-          <ul className="mt-4 space-y-2 border-t border-rule pt-3">
+          <ul className="border-rule mt-4 space-y-2 border-t pt-3">
             {result.sources.map((source) => (
               <li key={`${source.url}-${source.section}`} className="text-sm">
+                <span
+                  className={
+                    source.kind === "statute"
+                      ? "border-fda/30 bg-fda/10 text-fda mr-2 inline-flex rounded-full border px-2 py-0.5 text-[10px]"
+                      : "border-kgcp/30 bg-kgcp/10 text-kgcp mr-2 inline-flex rounded-full border px-2 py-0.5 text-[10px]"
+                  }
+                >
+                  {source.kind === "statute" ? "법령" : "가이드라인"}
+                </span>
                 <a
                   href={source.url}
                   className="text-fda underline-offset-2 hover:underline"
