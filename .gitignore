@@ -34,6 +34,10 @@ yarn-error.log*
 .env*
 !.env.example
 
+# keep local-only notes off GitHub
+PORTFOLIO.md
+
+
 # local store / hook state
 .data/
 .claude/review-log.jsonl

@@ -36,8 +36,12 @@ async function load(): Promise<StoreSnapshot> {
 async function persist(snapshot: StoreSnapshot): Promise<void> {
   g.__gcpStore = snapshot;
   g.__gcpStoreLoaded = true;
-  await mkdir(path.dirname(STORE_PATH), { recursive: true });
-  await writeFile(STORE_PATH, JSON.stringify(snapshot, null, 2), "utf8");
+  try {
+    await mkdir(path.dirname(STORE_PATH), { recursive: true });
+    await writeFile(STORE_PATH, JSON.stringify(snapshot, null, 2), "utf8");
+  } catch {
+    // Vercel 등 읽기 전용 파일시스템에서는 메모리만 사용
+  }
 }
 
 export const memoryStore: AppStore = {
