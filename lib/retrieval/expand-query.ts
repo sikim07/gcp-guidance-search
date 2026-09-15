@@ -8,7 +8,8 @@ const PAIRS: Array<[RegExp, string]> = [
   [/검증|밸리데이션/g, "validation 검증"],
   [/필수문서/g, "essential documents TMF 필수문서"],
   [/이탈/g, "protocol deviation 이탈"],
-  [/이상반응|sae/gi, "serious adverse event 중대한 이상반응"],
+  [/의료기기/g, "의료기기법 제10조 임상시험계획 식품의약품안전처 승인"],
+  [/식약처/g, "식품의약품안전처"],
 ];
 
 /** Expand Korean regulatory terms so they retrieve English FDA chunks. */

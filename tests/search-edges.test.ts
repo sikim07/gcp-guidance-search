@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { generateAnswer, SYSTEM_PROMPT } from "@/lib/llm/answer";
+import { generateAnswer, extractiveAnswer, SYSTEM_PROMPT } from "@/lib/llm/answer";
 import type { ChunkRecord } from "@/lib/types";
 
 const chunk: ChunkRecord = {
@@ -41,5 +41,17 @@ describe("search edge cases", () => {
     const result = await generateAnswer("오늘 서울 날씨 알려줘", retrieved);
     expect(result.answer).toMatch(/확인되지 않습니다/);
     expect(result.sources).toEqual([]);
+  });
+
+  it("formats extractive answers with sentence breaks instead of glued page numbers", () => {
+    const messy = {
+      ...retrieved[0],
+      text: "BACKGROUND59 60 In March of 1997, FDA issued part 11 regulations. Audit trails capture who changed a record.\n.................................. 54",
+    };
+    const result = extractiveAnswer("전자기록 감사추적은?", [messy]);
+    expect(result).not.toMatch(/BACKGROUND59/);
+    expect(result).not.toMatch(/\.{5,}/);
+    expect(result).toMatch(/In March of 1997/);
+    expect(result).toMatch(/\[E6\(R2\) Good Clinical Practice, 4\.8\]/);
   });
 });

@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 import type { AnswerSource, ChunkRecord, SourceKind } from "@/lib/types";
 import { expandQuery } from "@/lib/retrieval/expand-query";
+import { clipAtSentence, readableText } from "@/lib/text/readable";
 
 export const SYSTEM_PROMPT = `당신은 임상시험 GCP/규제 가이드라인과 관련 법령 조항을 찾아 인용하는 검색 보조기다.
 규칙은 절대적이다:
@@ -14,7 +15,7 @@ export function buildUserPrompt(question: string, chunks: Retrieved[]): string {
   const block = chunks
     .map(
       (c, i) =>
-        `[CHUNK ${i + 1}]\n문서: ${c.title}\n조항: ${c.section}\nURL: ${c.url}\n내용:\n${c.text}`,
+        `[CHUNK ${i + 1}]\n문서: ${c.title}\n조항: ${c.section}\nURL: ${c.url}\n내용:\n${readableText(c.text)}`,
     )
     .join("\n\n");
   return `질문:\n${question}\n\n아래 청크만 사용하라.\n\n${block}`;
@@ -89,11 +90,11 @@ export async function generateAnswer(
 }
 
 export function extractiveAnswer(question: string, retrieved: Retrieved[]): string {
-  const lines = retrieved.slice(0, 4).map((r) => {
-    const snippet = r.text.replace(/\s+/g, " ").slice(0, 420);
-    return `${snippet} [${r.title}, ${r.section}]`;
+  const lines = retrieved.slice(0, 3).map((r) => {
+    const snippet = clipAtSentence(readableText(r.text), 520);
+    return `${snippet}\n[${r.title}, ${r.section}]`;
   });
-  return `${lines.join("\n\n")}\n\n법적 자문이 아닙니다. 공식본은 각 출처 URL을 확인하세요.`;
+  return `${lines.join("\n\n")}\n\n법적 자문이 아닙니다. 출처 링크에서 원문을 확인하세요.`;
 }
 
 function uniqueSources(retrieved: Retrieved[]): AnswerSource[] {

@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { detectPassageLanguage, resolveTranslations } from "@/lib/llm/translate";
+import {
+  detectPassageLanguage,
+  needsEnglishTranslation,
+  resolveTranslations,
+} from "@/lib/llm/translate";
 import type { Passage } from "@/lib/types";
 
 const en: Passage = {
@@ -28,6 +32,11 @@ describe("passage language", () => {
   it("labels FDA English as en and statute Korean as ko", () => {
     expect(detectPassageLanguage(en.original)).toBe("en");
     expect(detectPassageLanguage(ko.original)).toBe("ko");
+  });
+
+  it("only offers English-to-Korean conversion when a passage is English", () => {
+    expect(needsEnglishTranslation([ko])).toBe(false);
+    expect(needsEnglishTranslation([en, ko])).toBe(true);
   });
 });
 

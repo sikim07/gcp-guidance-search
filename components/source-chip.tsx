@@ -1,17 +1,13 @@
-import { Badge } from "@/components/ui/badge";
-import { sourceLabel } from "@/lib/utils";
-import { cn } from "@/lib/utils";
+"use client";
 
-const TONES: Record<string, string> = {
-  "fda-ich": "border-kgcp/30 bg-kgcp/10 text-kgcp",
-  "fda-guidance": "border-kgcp/30 bg-kgcp/10 text-kgcp",
-  mfds: "border-kgcp/30 bg-kgcp/10 text-kgcp",
-  kgcp: "border-kgcp/30 bg-kgcp/10 text-kgcp",
-  statute: "border-fda/30 bg-fda/10 text-fda",
-};
+import { Chip } from "@heroui/react";
+import { sourceLabel } from "@/lib/utils";
 
 export function SourceChip({ source }: { source: string }) {
+  const isStatute = source === "statute";
   return (
-    <Badge className={cn(TONES[source] ?? "", "uppercase")}>{sourceLabel(source)}</Badge>
+    <Chip color={isStatute ? "accent" : "default"} size="sm" variant="soft">
+      {sourceLabel(source)}
+    </Chip>
   );
 }

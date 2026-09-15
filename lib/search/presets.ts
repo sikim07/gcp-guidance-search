@@ -22,6 +22,6 @@ export const PRESET_QUERIES = [
   {
     id: "device-trial",
     label: "의료기기 임상시험 승인",
-    query: "의료기기 임상시험계획은 식약처 승인이 필요한가?",
+    query: "의료기기 임상시험계획은 식품의약품안전처장의 승인이 필요한가?",
   },
 ] as const;

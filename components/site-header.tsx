@@ -17,7 +17,7 @@ export function SiteHeader() {
         >
           <span
             aria-hidden
-            className="border-seal text-seal inline-flex size-7 shrink-0 items-center justify-center rounded-full border-2 text-[10px] leading-none"
+            className="bg-accent text-accent-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] leading-none"
           >
             規
           </span>

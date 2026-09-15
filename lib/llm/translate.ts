@@ -1,5 +1,9 @@
 import type { Passage } from "@/lib/types";
 
+export function needsEnglishTranslation(passages: Passage[]): boolean {
+  return passages.some((row) => row.language === "en" || row.language === "mixed");
+}
+
 export type TranslateDeps = {
   get: (chunkId: string) => Promise<string | undefined>;
   put: (chunkId: string, text: string) => Promise<void>;

@@ -7,6 +7,7 @@ import { decorateRetrieved, generateAnswer, type Retrieved } from "@/lib/llm/ans
 import type { Passage, SearchResponse, SourceKind } from "@/lib/types";
 import { detectPassageLanguage } from "@/lib/llm/translate";
 import { expandQuery } from "@/lib/retrieval/expand-query";
+import { readableText } from "@/lib/text/readable";
 import { normalizeQuery } from "@/lib/utils";
 
 const CACHE_SIMILARITY = 0.97;
@@ -38,9 +39,13 @@ export async function searchGuidelines(
       createdAt: new Date().toISOString(),
     });
     return {
-      answer: cached.answer,
+      answer: readableText(cached.answer),
       sources: cached.sources,
-      passages: cached.passages ?? [],
+      passages: (cached.passages ?? []).map((row) => ({
+        ...row,
+        original: readableText(row.original),
+        language: detectPassageLanguage(readableText(row.original)),
+      })),
       cacheHit: true,
       searchLogId,
     };
@@ -152,8 +157,8 @@ function toPassages(retrieved: Retrieved[]): Passage[] {
     section: row.section,
     url: row.url,
     kind: row.kind ?? "guideline",
-    original: row.text,
-    language: detectPassageLanguage(row.text),
+    original: readableText(row.text),
+    language: detectPassageLanguage(readableText(row.text)),
   }));
 }
 

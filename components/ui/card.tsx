@@ -1,10 +1,12 @@
+"use client";
+
+import { Card as HeroCard } from "@heroui/react";
 import { cn } from "@/lib/utils";
 
-export function Card({ className, ...props }: React.ComponentProps<"div">) {
+export function Card({ className, children, ...props }: React.ComponentProps<"div">) {
   return (
-    <div
-      className={cn("border-rule bg-sheet rounded-sm border p-4 sm:p-5", className)}
-      {...props}
-    />
+    <HeroCard className={cn("w-full shadow-none", className)} {...props}>
+      <HeroCard.Content>{children}</HeroCard.Content>
+    </HeroCard>
   );
 }
