@@ -10,10 +10,10 @@ const LINKS = [
 export function SiteHeader() {
   return (
     <header className="border-rule/80 bg-paper border-b">
-      <div className="mx-auto flex max-w-3xl flex-col gap-3 px-4 py-3 sm:max-w-5xl sm:flex-row sm:items-center sm:justify-between sm:py-4">
+      <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 py-3 md:max-w-5xl md:flex-row md:items-center md:justify-between md:py-4">
         <Link
           href="/"
-          className="font-display text-ink flex items-center gap-2 text-base tracking-tight sm:text-lg"
+          className="font-display text-ink flex items-center gap-2 text-base tracking-tight whitespace-nowrap sm:text-lg"
         >
           <span
             aria-hidden
@@ -23,7 +23,7 @@ export function SiteHeader() {
           </span>
           GCP 가이드라인 검색기
         </Link>
-        <nav className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
+        <nav className="flex w-full flex-wrap items-center gap-x-4 gap-y-1 text-sm md:w-auto md:justify-end">
           {LINKS.map((link) => (
             <Link key={link.href} href={link.href} className="text-ink/70 hover:text-ink">
               {link.label}

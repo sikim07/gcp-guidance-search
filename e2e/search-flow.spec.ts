@@ -20,6 +20,18 @@ test("question → answer → feedback", async ({ page }) => {
   await page.getByTestId("feedback-up").click();
 });
 
+test("mobile header stacks title above nav", async ({ page }) => {
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.goto("/");
+  const title = page.getByRole("link", { name: "GCP 가이드라인 검색기" });
+  const navSearch = page.locator("header nav").getByRole("link", { name: "검색" });
+  const titleBox = await title.boundingBox();
+  const navBox = await navSearch.boundingBox();
+  expect(titleBox).toBeTruthy();
+  expect(navBox).toBeTruthy();
+  expect(navBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height - 1);
+});
+
 test("updates feed renders seeded corpus", async ({ page }) => {
   await page.goto("/updates");
   await expect(page.getByRole("heading", { name: "개정 피드" })).toBeVisible();
