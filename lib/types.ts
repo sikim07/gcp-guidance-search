@@ -139,6 +139,7 @@ export type QueryCacheRecord = {
   embedding: number[];
   answer: string;
   sources: AnswerSource[];
+  passages?: Passage[];
   expiresAt: string;
   hitCount: number;
 };
@@ -150,9 +151,20 @@ export type AnswerSource = {
   kind?: SourceKind;
 };
 
+export type Passage = {
+  chunkId: string;
+  title: string;
+  section: string;
+  url: string;
+  kind: SourceKind;
+  original: string;
+  language: "en" | "ko" | "mixed";
+};
+
 export type SearchResponse = {
   answer: string;
   sources: AnswerSource[];
+  passages: Passage[];
   cacheHit: boolean;
   searchLogId: string;
 };

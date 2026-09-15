@@ -290,6 +290,7 @@ export const supabaseStore: AppStore = {
       embedding: data.embedding,
       answer: data.answer,
       sources: data.sources as QueryCacheRecord["sources"],
+      passages: (data.passages as QueryCacheRecord["passages"]) ?? [],
       expiresAt: data.expires_at,
       hitCount: data.hit_count,
     };
@@ -303,20 +304,24 @@ export const supabaseStore: AppStore = {
       embedding: row.embedding,
       answer: row.answer,
       sources: row.sources,
+      passages: row.passages ?? [],
       expiresAt: row.expires_at,
       hitCount: row.hit_count,
     }));
   },
   async putQueryCache(row) {
-    const { error } = await client().from("query_cache").upsert({
-      query_hash: row.queryHash,
-      normalized_query: row.normalizedQuery,
-      embedding: row.embedding,
-      answer: row.answer,
-      sources: row.sources,
-      expires_at: row.expiresAt,
-      hit_count: row.hitCount,
-    });
+    const { error } = await client()
+      .from("query_cache")
+      .upsert({
+        query_hash: row.queryHash,
+        normalized_query: row.normalizedQuery,
+        embedding: row.embedding,
+        answer: row.answer,
+        sources: row.sources,
+        passages: row.passages ?? [],
+        expires_at: row.expiresAt,
+        hit_count: row.hitCount,
+      });
     if (error) throw error;
   },
   async bumpCacheHit(queryHash) {
@@ -333,8 +338,14 @@ export const supabaseStore: AppStore = {
     if (error) throw error;
   },
   async invalidateCache() {
-    const { error } = await client().from("query_cache").delete().neq("query_hash", "");
+    const sb = client();
+    const { error } = await sb.from("query_cache").delete().neq("query_hash", "");
     if (error) throw error;
+    const { error: trErr } = await sb
+      .from("translated_chunks")
+      .delete()
+      .neq("chunk_id", "");
+    if (trErr) throw trErr;
   },
   async incrementRateLimit(bucket, day) {
     const sb = client();
@@ -482,6 +493,22 @@ export const supabaseStore: AppStore = {
         kind: row.kind,
       })),
     );
+    if (error) throw error;
+  },
+  async getTranslation(chunkId) {
+    const { data, error } = await client()
+      .from("translated_chunks")
+      .select("text")
+      .eq("chunk_id", chunkId)
+      .maybeSingle();
+    if (error) throw error;
+    return data?.text as string | undefined;
+  },
+  async putTranslation(chunkId, text) {
+    const { error } = await client().from("translated_chunks").upsert({
+      chunk_id: chunkId,
+      text,
+    });
     if (error) throw error;
   },
 };

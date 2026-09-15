@@ -25,6 +25,7 @@ export type StoreSnapshot = {
   statutes: StatuteRecord[];
   statuteRevisions: StatuteRevision[];
   statuteArticles: StatuteArticle[];
+  translations: Record<string, string>;
 };
 
 export interface AppStore {
@@ -62,6 +63,8 @@ export interface AppStore {
     statuteId: string,
     articles: StatuteArticle[],
   ): Promise<void>;
+  getTranslation(chunkId: string): Promise<string | undefined>;
+  putTranslation(chunkId: string, text: string): Promise<void>;
 }
 
 export function emptySnapshot(): StoreSnapshot {
@@ -78,5 +81,6 @@ export function emptySnapshot(): StoreSnapshot {
     statutes: [],
     statuteRevisions: [],
     statuteArticles: [],
+    translations: {},
   };
 }

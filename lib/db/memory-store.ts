@@ -46,6 +46,7 @@ function migrateSnapshot(snap: StoreSnapshot): StoreSnapshot {
     statutes: snap.statutes ?? [],
     statuteRevisions: snap.statuteRevisions ?? [],
     statuteArticles: snap.statuteArticles ?? [],
+    translations: snap.translations ?? {},
   };
 }
 
@@ -153,6 +154,7 @@ export const memoryStore: AppStore = {
   async invalidateCache() {
     const snap = await load();
     snap.queryCache = [];
+    snap.translations = {};
     await persist(snap);
   },
   async incrementRateLimit(bucket: string, day: string) {
@@ -217,6 +219,14 @@ export const memoryStore: AppStore = {
       if (article.statuteId === statuteId) article.isCurrent = false;
     }
     snap.statuteArticles.push(...articles);
+    await persist(snap);
+  },
+  async getTranslation(chunkId) {
+    return (await load()).translations[chunkId];
+  },
+  async putTranslation(chunkId, text) {
+    const snap = await load();
+    snap.translations[chunkId] = text;
     await persist(snap);
   },
 };

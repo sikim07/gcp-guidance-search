@@ -4,7 +4,8 @@ import { sha256 } from "@/lib/pipeline/hasher";
 import { embedTexts } from "@/lib/pipeline/embed";
 import { cosine } from "@/lib/retrieval/cosine";
 import { decorateRetrieved, generateAnswer, type Retrieved } from "@/lib/llm/answer";
-import type { SearchResponse, SourceKind } from "@/lib/types";
+import type { Passage, SearchResponse, SourceKind } from "@/lib/types";
+import { detectPassageLanguage } from "@/lib/llm/translate";
 import { expandQuery } from "@/lib/retrieval/expand-query";
 import { normalizeQuery } from "@/lib/utils";
 
@@ -39,6 +40,7 @@ export async function searchGuidelines(
     return {
       answer: cached.answer,
       sources: cached.sources,
+      passages: cached.passages ?? [],
       cacheHit: true,
       searchLogId,
     };
@@ -96,6 +98,7 @@ export async function searchGuidelines(
   const similarityMs = Date.now() - simStarted;
 
   const retrieved = ranked.map((r) => r.item);
+  const passages = toPassages(retrieved);
   const { answer, sources } = await generateAnswer(query, retrieved);
   const searchLogId = randomUUID();
   await store.addSearchLog({
@@ -116,10 +119,11 @@ export async function searchGuidelines(
     embedding: queryEmbedding ?? [],
     answer,
     sources,
+    passages,
     expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(),
     hitCount: 0,
   });
-  return { answer, sources, cacheHit: false, searchLogId };
+  return { answer, sources, passages, cacheHit: false, searchLogId };
 }
 
 async function findCache(store: AppStore, normalized: string, embedding: number[]) {
@@ -139,6 +143,18 @@ async function findCache(store: AppStore, normalized: string, embedding: number[
     }
   }
   return best;
+}
+
+function toPassages(retrieved: Retrieved[]): Passage[] {
+  return retrieved.map((row) => ({
+    chunkId: row.chunk.id,
+    title: row.title,
+    section: row.section,
+    url: row.url,
+    kind: row.kind ?? "guideline",
+    original: row.text,
+    language: detectPassageLanguage(row.text),
+  }));
 }
 
 function tokenize(text: string): string[] {

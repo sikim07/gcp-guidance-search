@@ -111,6 +111,10 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
       }
       snap.statuteArticles.push(...articles);
     },
+    async getTranslation() {
+      return undefined;
+    },
+    async putTranslation() {},
   };
 }
 

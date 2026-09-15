@@ -5,15 +5,17 @@ test("question → answer → feedback", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "규정 조항을 자연어로 묻습니다" }),
   ).toBeVisible();
-  await page
-    .getByLabel("규정 조항을 자연어로 묻습니다")
-    .fill("전자기록 감사추적은 무엇을 남기나?");
-  await page.getByRole("button", { name: "검색" }).click();
+  await page.getByTestId("preset-audit-trail").click();
   const answer = page.getByTestId("answer-card");
   await expect(answer).toBeVisible({ timeout: 60_000 });
   await expect(answer).toContainText(
     /감사추적|audit trail|확인되지 않습니다|Part 11|5\.5/i,
   );
+  await page.getByTestId("tab-original").click();
+  await expect(answer).toContainText(
+    /Part 11|감사추적|audit trail|전자|5\.5|확인되지 않습니다/i,
+  );
+  await page.getByTestId("tab-answer").click();
   await page.getByTestId("feedback-up").click();
 });
 
