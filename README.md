@@ -1,5 +1,7 @@
 # GCP 가이드라인 검색기
 
+쓰는 곳: https://gcp-guidance-search.vercel.app
+
 EDC 프론트를 만들다 보면 필드 검증이든 감사추적이든, “이거 GCP나 식약처에 근거가 있나?”를 자주 찾게 됩니다. 문서는 FDA ICH, FDA 가이던스, 식약처 안내서, KGCP에 흩어져 있고 개정되면 예전에 열어둔 PDF가 맞는지부터 불안합니다.
 
 검색창보다 먼저 만들고 싶었던 건 **문서가 바뀌었는지 알아채는 쪽**입니다. 그다음에 자연어로 조항을 물어보는 화면이 붙습니다.
@@ -27,22 +29,11 @@ npm test
 npm run bench   # 벡터 검색을 안 쓰는 이유, BENCHMARK.md
 ```
 
-## Vercel에 올리기
+## Vercel
 
-GitHub 레포를 Vercel에 Import 하면 됩니다. Hobby 플랜이면 됩니다.
+공개 주소는 https://gcp-guidance-search.vercel.app 입니다. GitHub `main`에 푸시하면 다시 배포됩니다.
 
-1. https://vercel.com/new 에서 `sikim07/gcp-guidance-search` 를 Import
-2. Root는 저장소 루트 그대로
-3. 환경변수는 아래만 있으면 일단 사이트가 뜹니다. 키는 나중에 넣어도 됩니다.
-
-| 이름 | 없어도 되나 | 용도 |
-| --- | --- | --- |
-| `OPENAI_API_KEY` | 예 (시드+목 임베딩) | 질문 임베딩 |
-| `ANTHROPIC_API_KEY` | 예 (추출형 답변) | Haiku 답변 |
-| `CRON_SECRET` | 가능하면 넣기 | 매일 개정 크론 |
-| `SUPABASE_URL` / `SUPABASE_SERVICE_ROLE_KEY` | 예 | 없으면 인스턴스 메모리. 재시작하면 시드부터 다시 |
-
-키를 넣을 거면 OpenAI·Anthropic 콘솔에서 월 한도를 걸어 두는 게 안전합니다. Cron은 `vercel.json`에 들어 있습니다.
+키 없이 시드 문서로 검색·개정 피드는 됩니다. 답변을 키로 돌리려면 Vercel 프로젝트 Environment Variables에 `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`를 넣고 재배포하면 됩니다. 월 한도는 각 콘솔에서 거는 게 안전합니다.
 
 ## 출처
 
