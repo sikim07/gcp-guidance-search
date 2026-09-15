@@ -5,6 +5,7 @@ test("question → answer → feedback", async ({ page }) => {
   await expect(
     page.getByRole("heading", { name: "규정 조항을 자연어로 묻습니다" }),
   ).toBeVisible();
+  await expect(page.getByText(/검색은 조회용입니다/)).toBeVisible();
   await page.getByTestId("preset-audit-trail").click();
   const answer = page.getByTestId("answer-card");
   await expect(answer).toBeVisible({ timeout: 60_000 });

@@ -3,9 +3,9 @@ import { sourceLabel } from "@/lib/utils";
 import { cn } from "@/lib/utils";
 
 const TONES: Record<string, string> = {
-  "fda-ich": "border-fda/30 bg-fda/10 text-fda",
-  "fda-guidance": "border-fda/30 bg-fda/10 text-fda",
-  mfds: "border-mfds/30 bg-mfds/10 text-mfds",
+  "fda-ich": "border-kgcp/30 bg-kgcp/10 text-kgcp",
+  "fda-guidance": "border-kgcp/30 bg-kgcp/10 text-kgcp",
+  mfds: "border-kgcp/30 bg-kgcp/10 text-kgcp",
   kgcp: "border-kgcp/30 bg-kgcp/10 text-kgcp",
   statute: "border-fda/30 bg-fda/10 text-fda",
 };

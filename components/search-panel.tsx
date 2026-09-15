@@ -1,11 +1,18 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Textarea } from "@/components/ui/input";
+import { loadingCopy, loadingPhase } from "@/lib/search/loading";
 import { PRESET_QUERIES } from "@/lib/search/presets";
+import {
+  parseStoredRecents,
+  pushRecentQuery,
+  RECENT_STORAGE_KEY,
+  visibleRecent,
+} from "@/lib/search/recent";
 import type { SearchResponse } from "@/lib/types";
 
 type Tab = "answer" | "original" | "translation";
@@ -13,12 +20,34 @@ type Tab = "answer" | "original" | "translation";
 export function SearchPanel() {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [elapsedMs, setElapsedMs] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [tab, setTab] = useState<Tab>("answer");
   const [translations, setTranslations] = useState<Record<string, string> | null>(null);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
+  const [recents, setRecents] = useState<string[]>([]);
+
+  useEffect(() => {
+    setRecents(parseStoredRecents(window.localStorage.getItem(RECENT_STORAGE_KEY)));
+  }, []);
+
+  useEffect(() => {
+    if (!loading) {
+      setElapsedMs(0);
+      return;
+    }
+    const started = Date.now();
+    const timer = window.setInterval(() => setElapsedMs(Date.now() - started), 200);
+    return () => window.clearInterval(timer);
+  }, [loading]);
+
+  function remember(nextQuery: string) {
+    const next = pushRecentQuery(nextQuery, recents);
+    setRecents(next);
+    window.localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
+  }
 
   async function runSearch(nextQuery: string) {
     const trimmed = nextQuery.trim();
@@ -42,6 +71,7 @@ export function SearchPanel() {
         return;
       }
       setResult(body);
+      remember(trimmed);
     } catch {
       setError("네트워크 오류가 발생했습니다.");
     } finally {
@@ -100,16 +130,31 @@ export function SearchPanel() {
     });
   }
 
+  const recentChips = visibleRecent(recents, PRESET_QUERIES);
+
   return (
-    <div className="space-y-6">
+    <div className="space-y-5 sm:space-y-6">
       <form onSubmit={onSubmit} className="space-y-3">
-        <h1 className="font-display text-ink text-2xl">규정 조항을 자연어로 묻습니다</h1>
+        <h1 className="font-display text-ink text-xl leading-snug sm:text-2xl">
+          규정 조항을 자연어로 묻습니다
+        </h1>
+        <p className="text-ink/60 max-w-2xl text-xs leading-5 sm:text-sm">
+          검색은 조회용입니다. 본체는 개정 감지이고, 답변은 공식 해석이 아닙니다.{" "}
+          <a className="text-seal underline-offset-2 hover:underline" href="/updates">
+            개정 피드
+          </a>
+          {" · "}
+          <a className="text-seal underline-offset-2 hover:underline" href="/about">
+            안내
+          </a>
+        </p>
         <label htmlFor="query" className="sr-only">
           규정 조항을 자연어로 묻습니다
         </label>
         <Textarea
           id="query"
           name="query"
+          className="min-h-24 sm:min-h-28"
           placeholder="예: 전자기록 감사추적은 어떤 항목을 남겨야 하나?"
           value={query}
           onChange={(e) => setQuery(e.target.value)}
@@ -120,16 +165,35 @@ export function SearchPanel() {
               key={preset.id}
               type="button"
               data-testid={`preset-${preset.id}`}
-              className="border-rule text-ink/80 hover:border-ink hover:text-ink bg-paper rounded-full border px-3 py-1 text-xs"
+              className="border-rule text-ink/80 hover:border-ink hover:text-ink rounded-full border bg-transparent px-2.5 py-1 text-[11px] sm:px-3 sm:text-xs"
               onClick={() => void runSearch(preset.query)}
             >
               {preset.label}
             </button>
           ))}
         </div>
-        <div className="flex items-center gap-3">
-          <Button type="submit" disabled={loading}>
-            {loading ? "조항을 찾는 중…" : "검색"}
+        {recentChips.length > 0 ? (
+          <div className="flex flex-wrap gap-2" data-testid="recent-list">
+            {recentChips.map((item) => (
+              <button
+                key={item}
+                type="button"
+                className="text-seal/80 hover:text-seal border-seal/30 rounded-full border border-dashed px-2.5 py-1 text-[11px] sm:text-xs"
+                onClick={() => void runSearch(item)}
+              >
+                {item}
+              </button>
+            ))}
+          </div>
+        ) : null}
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:gap-3">
+          <Button
+            type="submit"
+            variant="seal"
+            disabled={loading}
+            className="w-full sm:w-auto"
+          >
+            {loading ? loadingCopy(loadingPhase(elapsedMs)) : "검색"}
           </Button>
           <p className="text-ink/50 text-xs">IP당 하루 20건 · 공식본이 아닙니다</p>
         </div>
@@ -142,12 +206,14 @@ export function SearchPanel() {
       ) : null}
 
       {loading ? (
-        <Card className="text-ink/50 animate-pulse">관련 조항을 대조하는 중입니다.</Card>
+        <Card className="text-ink/50" data-testid="loading-card">
+          {loadingCopy(loadingPhase(elapsedMs))}
+        </Card>
       ) : null}
 
-      {result ? (
+      {result && !loading ? (
         <Card data-testid="answer-card">
-          <div className="border-rule mb-4 flex gap-1 border-b pb-2">
+          <div className="border-rule mb-4 flex gap-1 overflow-x-auto border-b pb-2">
             {(
               [
                 ["answer", "답변"],
@@ -161,8 +227,8 @@ export function SearchPanel() {
                 data-testid={`tab-${id}`}
                 className={
                   tab === id
-                    ? "text-seal border-seal border-b-2 px-3 py-1 text-sm"
-                    : "text-ink/50 px-3 py-1 text-sm"
+                    ? "text-seal border-seal shrink-0 border-b-2 px-3 py-1 text-sm"
+                    : "text-ink/50 shrink-0 px-3 py-1 text-sm"
                 }
                 onClick={() => void openTab(id)}
               >
@@ -203,19 +269,22 @@ export function SearchPanel() {
           ) : null}
           <ul className="border-rule mt-4 space-y-2 border-t pt-3">
             {result.sources.map((source) => (
-              <li key={`${source.url}-${source.section}`} className="text-sm">
+              <li
+                key={`${source.url}-${source.section}`}
+                className="flex flex-col gap-1 text-sm sm:block"
+              >
                 <span
                   className={
                     source.kind === "statute"
-                      ? "border-fda/30 bg-fda/10 text-fda mr-2 inline-flex rounded-full border px-2 py-0.5 text-[10px]"
-                      : "border-kgcp/30 bg-kgcp/10 text-kgcp mr-2 inline-flex rounded-full border px-2 py-0.5 text-[10px]"
+                      ? "border-fda/30 bg-fda/10 text-fda mr-2 inline-flex w-fit rounded-full border px-2 py-0.5 text-[10px]"
+                      : "border-kgcp/30 bg-kgcp/10 text-kgcp mr-2 inline-flex w-fit rounded-full border px-2 py-0.5 text-[10px]"
                   }
                 >
                   {source.kind === "statute" ? "법령" : "가이드라인"}
                 </span>
                 <a
                   href={source.url}
-                  className="text-fda underline-offset-2 hover:underline"
+                  className="text-fda break-words underline-offset-2 hover:underline"
                   target="_blank"
                   rel="noreferrer"
                 >
@@ -225,7 +294,7 @@ export function SearchPanel() {
               </li>
             ))}
           </ul>
-          <div className="mt-4 flex gap-2">
+          <div className="mt-4 flex flex-wrap gap-2">
             <Button
               type="button"
               variant="outline"
@@ -267,11 +336,11 @@ function PassageList({
     <ol className="space-y-4">
       {passages.map((passage) => (
         <li key={passage.chunkId}>
-          <p className="text-ink/50 text-xs">
+          <p className="text-ink/50 text-xs break-words">
             {passage.kind === "statute" ? "법령" : "가이드라인"} · {passage.title} ·{" "}
             {passage.section}
           </p>
-          <p className="text-ink mt-1 text-sm leading-7 whitespace-pre-wrap">
+          <p className="text-ink mt-1 text-sm leading-7 break-words whitespace-pre-wrap">
             {textFor(passage)}
           </p>
         </li>

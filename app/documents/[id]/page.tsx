@@ -22,7 +22,7 @@ export default async function DocumentDetailPage({
       <div className="space-y-6">
         <div>
           <SourceChip source="statute" />
-          <h1 className="font-display mt-3 text-3xl">{statute.title}</h1>
+          <h1 className="font-display mt-3 text-2xl sm:text-3xl">{statute.title}</h1>
           <a
             href={statute.url}
             className="text-fda mt-2 inline-block text-sm underline"
@@ -61,7 +61,7 @@ export default async function DocumentDetailPage({
     <div className="space-y-6">
       <div>
         <SourceChip source={doc.source} />
-        <h1 className="font-display mt-3 text-3xl">{doc.title}</h1>
+        <h1 className="font-display mt-3 text-2xl sm:text-3xl">{doc.title}</h1>
         <a
           href={doc.url}
           className="text-fda mt-2 inline-block text-sm underline"

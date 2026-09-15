@@ -50,6 +50,9 @@ PORTFOLIO.md
 # vercel
 .vercel
 
+# agent scratch
+agent-tools/
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

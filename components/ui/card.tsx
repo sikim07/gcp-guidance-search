@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 export function Card({ className, ...props }: React.ComponentProps<"div">) {
   return (
     <div
-      className={cn("rounded-xl border border-rule/80 bg-white/70 p-5 shadow-sm", className)}
+      className={cn("border-rule bg-sheet rounded-sm border p-4 sm:p-5", className)}
       {...props}
     />
   );

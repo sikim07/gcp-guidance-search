@@ -15,7 +15,7 @@ export default async function UpdatesPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-3xl">개정 피드</h1>
+        <h1 className="font-display text-2xl sm:text-3xl">개정 피드</h1>
         <p className="text-ink/70 mt-2 text-sm">
           카탈로그 비교, 고시일, SHA-256 해시, 그리고 법령은 MST·공포일·시행일로 감지한
           신규·개정·철회입니다.
