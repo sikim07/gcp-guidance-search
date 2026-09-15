@@ -1,3 +1,6 @@
+import { applyGcpKoreanTerms } from "@/lib/llm/gcp-terms";
+import { publicTranslateEnToKo } from "@/lib/llm/public-translate";
+import { lookupSeedKorean } from "@/lib/llm/seed-lookup";
 import type { Passage } from "@/lib/types";
 
 export function needsEnglishTranslation(passages: Passage[]): boolean {
@@ -91,11 +94,61 @@ export async function openaiTranslate(text: string): Promise<string> {
 }
 
 export async function translateClause(text: string): Promise<string> {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+  if (detectPassageLanguage(trimmed) === "ko") return trimmed;
+
+  const fromSeed = lookupSeedKorean(trimmed);
+  if (fromSeed) return fromSeed;
+
   if (process.env.ANTHROPIC_API_KEY) {
-    return haikuTranslate(text);
+    try {
+      const out = (await haikuTranslate(trimmed)).trim();
+      if (out) return out;
+    } catch {
+      // fall through to other translators
+    }
   }
   if (process.env.OPENAI_API_KEY) {
-    return openaiTranslate(text);
+    try {
+      const out = (await openaiTranslate(trimmed)).trim();
+      if (out) return out;
+    } catch {
+      // fall through to public machine translation
+    }
   }
-  throw new Error("no-translate-key");
+
+  const machine = await publicTranslateEnToKo(trimmed);
+  return applyGcpKoreanTerms(machine);
+}
+
+/** Translate English blocks in an extractive answer; keep Korean disclaimers and citations. */
+export async function translateAnswer(text: string): Promise<string> {
+  const trimmed = text.trim();
+  if (!trimmed) return trimmed;
+  if (detectPassageLanguage(trimmed) === "ko") return trimmed;
+
+  const fromSeed = lookupSeedKorean(trimmed);
+  if (fromSeed) return fromSeed;
+
+  const blocks = trimmed.split(/\n{2,}/);
+  const out: string[] = [];
+  for (const block of blocks) {
+    if (detectPassageLanguage(block) === "ko") {
+      out.push(block);
+      continue;
+    }
+    const cited = block.match(/^(.*)(\n\[[^\]]+\])\s*$/su);
+    if (cited) {
+      const body = cited[1].trim();
+      out.push(
+        body
+          ? `${await translateClause(body)}${cited[2]}`
+          : cited[2].trim(),
+      );
+      continue;
+    }
+    out.push(await translateClause(block));
+  }
+  return out.join("\n\n");
 }

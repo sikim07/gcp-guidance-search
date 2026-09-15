@@ -51,8 +51,13 @@ export default async function AdminPage({
         <h2 className="mb-3 font-medium">피드백</h2>
         <ul className="space-y-2 text-sm">
           {feedback.map((row) => (
-            <li key={row.id}>
-              {row.rating} · {row.query}
+            <li key={row.id} className="space-y-1">
+              <p>
+                {row.rating === "up" ? "도움됨" : "도움되지 않음"} · {row.query}
+              </p>
+              {row.comment ? (
+                <p className="text-muted text-xs whitespace-pre-wrap">{row.comment}</p>
+              ) : null}
             </li>
           ))}
         </ul>

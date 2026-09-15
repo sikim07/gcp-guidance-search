@@ -1,6 +1,10 @@
 import { z } from "zod";
 import { getStore } from "@/lib/db/store";
-import { resolveTranslations, translateClause } from "@/lib/llm/translate";
+import {
+  resolveTranslations,
+  translateAnswer,
+  translateClause,
+} from "@/lib/llm/translate";
 import type { Passage } from "@/lib/types";
 
 const Body = z.object({
@@ -26,36 +30,29 @@ export async function POST(request: Request) {
       answer?: string;
     };
     const store = await getStore();
-    try {
-      const translations = await resolveTranslations(passages, {
-        get: (id) => store.getTranslation(id),
-        put: (id, text) => store.putTranslation(id, text),
-        translate: translateClause,
-      });
-      let translatedAnswer: string | undefined;
-      if (answer && answer.trim()) {
-        const cached = await store.getTranslation(`answer:${answer.slice(0, 80)}`);
-        if (cached) {
-          translatedAnswer = cached;
-        } else {
-          translatedAnswer = await translateClause(answer);
-          await store.putTranslation(`answer:${answer.slice(0, 80)}`, translatedAnswer);
-        }
+    const translations = await resolveTranslations(passages, {
+      get: (id) => store.getTranslation(id),
+      put: (id, text) => store.putTranslation(id, text),
+      translate: translateClause,
+    });
+    let translatedAnswer: string | undefined;
+    if (answer && answer.trim()) {
+      const cached = await store.getTranslation(`answer:${answer.slice(0, 80)}`);
+      if (cached) {
+        translatedAnswer = cached;
+      } else {
+        translatedAnswer = await translateAnswer(answer);
+        await store.putTranslation(`answer:${answer.slice(0, 80)}`, translatedAnswer);
       }
-      return Response.json({ translations, translatedAnswer, missingKey: false });
-    } catch (error) {
-      if (
-        error instanceof Error &&
-        (error.message === "no-translate-key" || error.message === "no-anthropic-key")
-      ) {
-        const translations = Object.fromEntries(
-          passages.map((row) => [row.chunkId, row.original]),
-        );
-        return Response.json({ translations, missingKey: true });
-      }
-      throw error;
     }
-  } catch {
-    return Response.json({ error: "번역 요청이 올바르지 않습니다." }, { status: 400 });
+    return Response.json({ translations, translatedAnswer });
+  } catch (error) {
+    if (error instanceof z.ZodError) {
+      return Response.json({ error: "번역 요청이 올바르지 않습니다." }, { status: 400 });
+    }
+    return Response.json(
+      { error: "지금은 번역을 할 수 없습니다. 잠시 후 다시 시도해 주세요." },
+      { status: 502 },
+    );
   }
 }

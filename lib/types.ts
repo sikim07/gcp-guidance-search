@@ -130,6 +130,7 @@ export type FeedbackRecord = {
   query: string;
   answer: string;
   rating: "up" | "down";
+  comment?: string;
   createdAt: string;
 };
 

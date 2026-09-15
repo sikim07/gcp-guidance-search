@@ -1,8 +1,13 @@
 import { describe, expect, it } from "vitest";
+import { applyGcpKoreanTerms } from "@/lib/llm/gcp-terms";
+import { parsePublicTranslation, splitForPublicTranslate } from "@/lib/llm/public-translate";
+import { lookupSeedKorean } from "@/lib/llm/seed-lookup";
 import {
   detectPassageLanguage,
   needsEnglishTranslation,
   resolveTranslations,
+  translateAnswer,
+  translateClause,
 } from "@/lib/llm/translate";
 import type { Passage } from "@/lib/types";
 
@@ -73,5 +78,59 @@ describe("resolveTranslations", () => {
     expect(calls).toBe(1);
     expect(first["en-1"]).toMatch(/^KO:/);
     expect(second["en-1"]).toBe(first["en-1"]);
+  });
+});
+
+describe("seed and public translation", () => {
+  it("rewrites machine-translation GCP wording", () => {
+    expect(applyGcpKoreanTerms("고지된 동의와 감사 추적, 인간 피험자")).toBe(
+      "시험대상자 동의와 감사추적, 시험대상자",
+    );
+  });
+
+  it("parses dict-chrome-ex and gtx payloads", () => {
+    expect(parsePublicTranslation(["감사 추적"])).toBe("감사 추적");
+    expect(
+      parsePublicTranslation([
+        [
+          ["전자 시스템은 감사 추적을 생성해야 합니다.", "Electronic systems"],
+          [" 원래 항목을 가리지 않습니다.", " without obscuring"],
+        ],
+        null,
+        "en",
+      ]),
+    ).toBe("전자 시스템은 감사 추적을 생성해야 합니다. 원래 항목을 가리지 않습니다.");
+  });
+
+  it("splits long text under the public-translate URL budget", () => {
+    const chunks = splitForPublicTranslate("alpha. ".repeat(400), 80);
+    expect(chunks.length).toBeGreaterThan(1);
+    expect(chunks.every((chunk) => chunk.length <= 80)).toBe(true);
+  });
+
+  it("looks up seed English without a model key", async () => {
+    const source =
+      "Electronic systems should be designed to generate audit trails that record changes to data. The audit trail should capture who made the change, when the change was made, and why the change was made, without obscuring the original entry.";
+    expect(lookupSeedKorean(source)).toMatch(/감사추적/);
+    const korean = await translateClause(source);
+    expect(korean).toMatch(/감사추적/);
+    expect(korean).not.toMatch(/Electronic systems/);
+  });
+
+  it("keeps Korean disclaimers when translating extractive answers", async () => {
+    const answer = [
+      "The audit trail should capture who made the change, when the change was made, and why the change was made, without obscuring the original entry.\n[Part 11 Q&A, Q8]",
+      "법적 자문이 아닙니다. 출처 링크에서 원문을 확인하세요.",
+    ].join("\n\n");
+    const korean = await translateAnswer(answer);
+    expect(korean).toMatch(/감사추적/);
+    expect(korean).toMatch(/\[Part 11 Q&A, Q8\]/);
+    expect(korean).toMatch(/법적 자문이 아닙니다/);
+  });
+
+  it("matches a clipped extractive snippet inside a longer seed clause", () => {
+    const clip =
+      "The audit trail should capture who made the change, when the change was made, and why the change was made, without obscuring the original entry.";
+    expect(lookupSeedKorean(clip)).toMatch(/감사추적/);
   });
 });

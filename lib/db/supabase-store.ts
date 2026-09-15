@@ -250,15 +250,27 @@ export const supabaseStore: AppStore = {
     }));
   },
   async addFeedback(row) {
-    const { error } = await client().from("feedback").insert({
+    const payload = {
       id: row.id,
       search_log_id: row.searchLogId,
       query: row.query,
       answer: row.answer,
       rating: row.rating,
+      comment: row.comment ?? null,
+      created_at: row.createdAt,
+    };
+    const { error } = await client().from("feedback").insert(payload);
+    if (!error) return;
+    if (!/comment|schema cache|column/i.test(error.message)) throw error;
+    const { error: retryError } = await client().from("feedback").insert({
+      id: row.id,
+      search_log_id: row.searchLogId,
+      query: row.query,
+      answer: row.comment ? `${row.answer}\n\n[의견] ${row.comment}` : row.answer,
+      rating: row.rating,
       created_at: row.createdAt,
     });
-    if (error) throw error;
+    if (retryError) throw retryError;
   },
   async listFeedback() {
     const { data, error } = await client()
@@ -273,6 +285,7 @@ export const supabaseStore: AppStore = {
       query: row.query,
       answer: row.answer,
       rating: row.rating,
+      comment: typeof row.comment === "string" ? row.comment : undefined,
       createdAt: row.created_at,
     }));
   },

@@ -9,7 +9,9 @@ async function main() {
   }
   console.info("=== feedback ===");
   for (const row of feedback.slice(0, 20)) {
-    console.info(`${row.createdAt} ${row.rating} :: ${row.query}`);
+    console.info(
+      `${row.createdAt} ${row.rating} :: ${row.query}${row.comment ? ` :: ${row.comment}` : ""}`,
+    );
   }
 }
 

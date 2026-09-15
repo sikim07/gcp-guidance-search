@@ -40,6 +40,10 @@ export function SearchPanel() {
   const [translating, setTranslating] = useState(false);
   const [showKorean, setShowKorean] = useState(false);
   const [recents, setRecents] = useState<string[]>([]);
+  const [feedbackSent, setFeedbackSent] = useState<"up" | "down" | null>(null);
+  const [showDownForm, setShowDownForm] = useState(false);
+  const [downComment, setDownComment] = useState("");
+  const [feedbackBusy, setFeedbackBusy] = useState(false);
 
   const canTranslate = useMemo(
     () =>
@@ -87,6 +91,9 @@ export function SearchPanel() {
     setTranslatedAnswer(null);
     setTranslateNote(null);
     setShowKorean(false);
+    setFeedbackSent(null);
+    setShowDownForm(false);
+    setDownComment("");
     try {
       const response = await fetch("/api/search", {
         method: "POST",
@@ -138,15 +145,12 @@ export function SearchPanel() {
       const body = (await response.json()) as {
         translations?: Record<string, string>;
         translatedAnswer?: string;
-        missingKey?: boolean;
         error?: string;
       };
       if (!response.ok) {
-        setTranslateNote(body.error ?? "지금은 번역을 할 수 없습니다.");
-        return;
-      }
-      if (body.missingKey) {
-        setTranslateNote("지금은 번역을 할 수 없습니다. 영어 원문을 그대로 보여 줍니다.");
+        setTranslateNote(
+          body.error ?? "지금은 번역을 할 수 없습니다. 영어 원문을 그대로 보여 줍니다.",
+        );
         return;
       }
       setTranslations(body.translations ?? {});
@@ -159,18 +163,26 @@ export function SearchPanel() {
     }
   }
 
-  async function sendFeedback(rating: "up" | "down") {
-    if (!result) return;
-    await fetch("/api/feedback", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        searchLogId: result.searchLogId,
-        query,
-        answer: result.answer,
-        rating,
-      }),
-    });
+  async function sendFeedback(rating: "up" | "down", comment?: string) {
+    if (!result || feedbackSent || feedbackBusy) return;
+    setFeedbackBusy(true);
+    try {
+      await fetch("/api/feedback", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          searchLogId: result.searchLogId,
+          query,
+          answer: result.answer,
+          rating,
+          comment: comment?.trim() || undefined,
+        }),
+      });
+      setFeedbackSent(rating);
+      setShowDownForm(false);
+    } finally {
+      setFeedbackBusy(false);
+    }
   }
 
   const recentChips = visibleRecent(recents, query);
@@ -370,23 +382,57 @@ export function SearchPanel() {
                 </li>
               ))}
             </ul>
-            <div className="mt-5 flex flex-wrap gap-2">
-              <Button
-                size="sm"
-                variant="outline"
-                data-testid="feedback-up"
-                onPress={() => void sendFeedback("up")}
-              >
-                <ThumbsUp className="size-4" /> 도움됨
-              </Button>
-              <Button
-                size="sm"
-                variant="outline"
-                data-testid="feedback-down"
-                onPress={() => void sendFeedback("down")}
-              >
-                <ThumbsDown className="size-4" /> 아님
-              </Button>
+            <div className="mt-5 space-y-3">
+              <div className="flex flex-wrap gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  data-testid="feedback-up"
+                  isDisabled={Boolean(feedbackSent) || feedbackBusy}
+                  onPress={() => void sendFeedback("up")}
+                >
+                  <ThumbsUp className="size-4" /> 도움됨
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  data-testid="feedback-down"
+                  isDisabled={Boolean(feedbackSent) || feedbackBusy}
+                  onPress={() => setShowDownForm(true)}
+                >
+                  <ThumbsDown className="size-4" /> 도움되지 않음
+                </Button>
+              </div>
+              {showDownForm && !feedbackSent ? (
+                <div className="space-y-2">
+                  <TextField
+                    fullWidth
+                    name="feedback-comment"
+                    value={downComment}
+                    onChange={setDownComment}
+                  >
+                    <Label>어떤 점이 도움이 되지 않았나요?</Label>
+                    <TextArea
+                      className="min-h-20"
+                      data-testid="feedback-comment"
+                      placeholder="빠진 조항, 엉뚱한 문서, 번역이 어색한 부분 등을 적어 주세요."
+                    />
+                  </TextField>
+                  <Button
+                    size="sm"
+                    data-testid="feedback-submit"
+                    isPending={feedbackBusy}
+                    onPress={() => void sendFeedback("down", downComment)}
+                  >
+                    의견 보내기
+                  </Button>
+                </div>
+              ) : null}
+              {feedbackSent ? (
+                <p className="text-muted text-xs" data-testid="feedback-thanks">
+                  의견을 반영해 검색을 다듬겠습니다. 감사합니다.
+                </p>
+              ) : null}
             </div>
           </Card.Content>
         </Card>

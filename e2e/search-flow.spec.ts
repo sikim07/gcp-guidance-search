@@ -19,7 +19,16 @@ test("question → answer → feedback", async ({ page }) => {
     /Part 11|감사추적|audit trail|전자|5\.5|확인되지 않습니다/i,
   );
   await page.getByTestId("tab-answer").click();
+  const toggle = page.getByTestId("toggle-translation");
+  if (await toggle.isVisible()) {
+    await toggle.click();
+    await expect(answer).not.toContainText("지금은 번역을 할 수 없습니다");
+    await expect(answer).toContainText(/감사추적|시험대상자|의뢰자|원본자료|전자/);
+  }
+  await page.getByTestId("feedback-down").click();
+  await expect(page.getByTestId("feedback-comment")).toBeVisible();
   await page.getByTestId("feedback-up").click();
+  await expect(page.getByTestId("feedback-thanks")).toBeVisible();
 });
 
 test("mobile header stacks title above nav", async ({ page }) => {
