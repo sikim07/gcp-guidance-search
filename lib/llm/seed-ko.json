@@ -93,7 +93,7 @@
   ],
   [
     "What is FDA's expectation for audit trails in electronic systems used in clinical investigations?\nElectronic systems should be designed to generate audit trails that record changes to data. The audit trail should capture who made the change, when the change was made, and why the change was made, without obscuring the original entry. Sponsors and other regulated entities should ensure that audit trail functionality is enabled and that users cannot disable it. FDA may inspect audit trail records to reconstruct the data lifecycle.",
-    "임상시험에 사용되는 전자 시스템의 감사추적에 대한 FDA의 기대는 무엇입니까?\n전자 시스템은 데이터 변경 사항을 기록하는 감사추적을 생성하도록 설계되어야 합니다. 감사추적은 원래 항목을 모호하게 하지 않으면서 변경한 사람, 변경 시기, 변경 이유를 캡처해야 합니다. 후원자 및 기타 규제 기관은 감사추적 기능이 활성화되어 있고 사용자가 이를 비활성화할 수 없도록 해야 합니다. FDA는 데이터 수명주기를 재구성하기 위해 감사추적 기록을 검사할 수 있습니다."
+    "임상시험에 사용되는 전자 시스템의 감사추적에 대한 FDA의 기대는 무엇입니까?\n전자 시스템은 데이터 변경 사항을 기록하는 감사추적을 생성하도록 설계되어야 합니다. 감사추적은 원래 항목을 모호하게 하지 않으면서 변경한 사람, 변경 시기, 변경 이유를 캡처해야 합니다. 의뢰자 및 기타 규제 기관은 감사추적 기능이 활성화되어 있고 사용자가 이를 비활성화할 수 없도록 해야 합니다. FDA는 데이터 수명주기를 재구성하기 위해 감사추적 기록을 검사할 수 있습니다."
   ],
   [
     "What agreements should be in place with IT service providers?\nWhen an IT service provider deploys or hosts electronic systems used in a clinical investigation, the regulated entity remains responsible for the reliability of the records and for compliance with applicable predicate rules and part 11. Agreements should address data ownership, access for FDA inspection, validation documentation, security, backup, and procedures for change control.",
@@ -113,11 +113,11 @@
   ],
   [
     "DATA ELEMENT IDENTIFIERS\nEach data element in the eCRF should be associated with an identifier that includes the originator of the data element, the date and time the data element was entered or generated, and the subject to whom the data element belongs. These identifiers facilitate examination of the audit trail by sponsors, FDA, and other authorized parties.",
-    "데이터 요소 식별자\neCRF의 각 데이터 항목은 데이터 항목의 작성자, 데이터 항목이 입력되거나 생성된 날짜 및 시간, 데이터 항목이 속한 주체를 포함하는 식별자와 연결되어야 합니다. 이러한 식별자는 후원자, FDA 및 기타 승인된 당사자의 감사추적 조사를 용이하게 합니다."
+    "데이터 요소 식별자\neCRF의 각 데이터 항목은 데이터 항목의 작성자, 데이터 항목이 입력되거나 생성된 날짜 및 시간, 데이터 항목이 속한 주체를 포함하는 식별자와 연결되어야 합니다. 이러한 식별자는 의뢰자, FDA 및 기타 승인된 당사자의 감사추적 조사를 용이하게 합니다."
   ],
   [
     "DATA ELEMENT IDENTIFIERS Each data element in the eCRF should be associated with an identifier that includes the originator of the data element, the date and time the data element was entered or generated, and the subject to whom the data element belongs. These identifiers facilitate examination of the audit trail by sponsors, FDA, and other authorized parties.",
-    "데이터 요소 식별자\neCRF의 각 데이터 항목은 데이터 항목의 작성자, 데이터 항목이 입력되거나 생성된 날짜 및 시간, 데이터 항목이 속한 주체를 포함하는 식별자와 연결되어야 합니다. 이러한 식별자는 후원자, FDA 및 기타 승인된 당사자의 감사추적 조사를 용이하게 합니다."
+    "데이터 요소 식별자\neCRF의 각 데이터 항목은 데이터 항목의 작성자, 데이터 항목이 입력되거나 생성된 날짜 및 시간, 데이터 항목이 속한 주체를 포함하는 식별자와 연결되어야 합니다. 이러한 식별자는 의뢰자, FDA 및 기타 승인된 당사자의 감사추적 조사를 용이하게 합니다."
   ],
   [
     "MODIFICATIONS AND CORRECTIONS\nOnly a clinical investigator or delegated clinical study staff should perform modifications or corrections to eCRF data. Modified and/or corrected data elements must have data element identifiers that reflect the date, time, originator and reason for the change and must not obscure the original entry (i.e., an audit trail must preserve the original value).",
@@ -205,11 +205,11 @@
   ],
   [
     "Determine Monitoring Methods\nNo single approach to monitoring is appropriate for every clinical trial. Sponsors may use a combination of centralized monitoring, on-site monitoring, and other methods. Centralized monitoring can identify missing data, inconsistent data, data outliers, and protocol deviations across sites in near real time. On-site monitoring remains important for processes that cannot be assessed remotely, including assessment of the consent process and review of source records that are not available electronically.",
-    "모니터링 방법 결정\n모니터링에 대한 단일 접근 방식은 모든 임상 시험에 적합하지 않습니다. 후원자는 중앙 집중식 모니터링, 현장 모니터링 및 기타 방법을 조합하여 사용할 수 있습니다. 중앙 집중식 모니터링을 통해 사이트 전체에서 누락된 데이터, 일관성 없는 데이터, 데이터 이상치 및 프로토콜 편차를 거의 실시간으로 식별할 수 있습니다. 현장 모니터링은 동의 프로세스 평가 및 전자적으로 이용할 수 없는 원본 기록 검토를 포함하여 원격으로 평가할 수 없는 프로세스에 대해 여전히 중요합니다."
+    "모니터링 방법 결정\n모니터링에 대한 단일 접근 방식은 모든 임상 시험에 적합하지 않습니다. 의뢰자는 중앙 집중식 모니터링, 현장 모니터링 및 기타 방법을 조합하여 사용할 수 있습니다. 중앙 집중식 모니터링을 통해 사이트 전체에서 누락된 데이터, 일관성 없는 데이터, 데이터 이상치 및 프로토콜 편차를 거의 실시간으로 식별할 수 있습니다. 현장 모니터링은 동의 프로세스 평가 및 전자적으로 이용할 수 없는 원본 기록 검토를 포함하여 원격으로 평가할 수 없는 프로세스에 대해 여전히 중요합니다."
   ],
   [
     "Determine Monitoring Methods No single approach to monitoring is appropriate for every clinical trial. Sponsors may use a combination of centralized monitoring, on-site monitoring, and other methods. Centralized monitoring can identify missing data, inconsistent data, data outliers, and protocol deviations across sites in near real time. On-site monitoring remains important for processes that cannot be assessed remotely, including assessment of the consent process and review of source records that are not available electronically.",
-    "모니터링 방법 결정\n모니터링에 대한 단일 접근 방식은 모든 임상 시험에 적합하지 않습니다. 후원자는 중앙 집중식 모니터링, 현장 모니터링 및 기타 방법을 조합하여 사용할 수 있습니다. 중앙 집중식 모니터링을 통해 사이트 전체에서 누락된 데이터, 일관성 없는 데이터, 데이터 이상치 및 프로토콜 편차를 거의 실시간으로 식별할 수 있습니다. 현장 모니터링은 동의 프로세스 평가 및 전자적으로 이용할 수 없는 원본 기록 검토를 포함하여 원격으로 평가할 수 없는 프로세스에 대해 여전히 중요합니다."
+    "모니터링 방법 결정\n모니터링에 대한 단일 접근 방식은 모든 임상 시험에 적합하지 않습니다. 의뢰자는 중앙 집중식 모니터링, 현장 모니터링 및 기타 방법을 조합하여 사용할 수 있습니다. 중앙 집중식 모니터링을 통해 사이트 전체에서 누락된 데이터, 일관성 없는 데이터, 데이터 이상치 및 프로토콜 편차를 거의 실시간으로 식별할 수 있습니다. 현장 모니터링은 동의 프로세스 평가 및 전자적으로 이용할 수 없는 원본 기록 검토를 포함하여 원격으로 평가할 수 없는 프로세스에 대해 여전히 중요합니다."
   ],
   [
     "Factors That Influence Monitoring\nFactors include the complexity of study design, types of endpoints, clinical complexity of the study population, geography, relative experience of the investigator, electronic data capture capability, and the safety of the investigational product.",
@@ -269,10 +269,10 @@
   ],
   [
     "SPONSOR AND IRB RESPONSIBILITIES\nSponsors should ensure that investigators understand consent requirements and that monitoring includes verification that consent was obtained prior to study-specific procedures. IRBs must review the consent form and the process for obtaining consent, including how information will be presented to subjects with limited English proficiency or impaired decision-making capacity.",
-    "후원자와 IRB의 책임\n의뢰자는 시험자가 동의 요건을 이해하고 모니터링에 연구별 절차 이전에 동의를 얻었는지 확인하는 것이 포함되도록 해야 합니다. IRB는 영어 능력이 제한적이거나 의사 결정 능력이 손상된 시험대상자에게 정보가 제공되는 방법을 포함하여 동의 양식과 동의를 얻기 위한 절차를 검토해야 합니다."
+    "의뢰자와 IRB의 책임\n의뢰자는 시험자가 동의 요건을 이해하고 모니터링에 연구별 절차 이전에 동의를 얻었는지 확인하는 것이 포함되도록 해야 합니다. IRB는 영어 능력이 제한적이거나 의사 결정 능력이 손상된 시험대상자에게 정보가 제공되는 방법을 포함하여 동의 양식과 동의를 얻기 위한 절차를 검토해야 합니다."
   ],
   [
     "SPONSOR AND IRB RESPONSIBILITIES Sponsors should ensure that investigators understand consent requirements and that monitoring includes verification that consent was obtained prior to study-specific procedures. IRBs must review the consent form and the process for obtaining consent, including how information will be presented to subjects with limited English proficiency or impaired decision-making capacity.",
-    "후원자와 IRB의 책임\n의뢰자는 시험자가 동의 요건을 이해하고 모니터링에 연구별 절차 이전에 동의를 얻었는지 확인하는 것이 포함되도록 해야 합니다. IRB는 영어 능력이 제한적이거나 의사 결정 능력이 손상된 시험대상자에게 정보가 제공되는 방법을 포함하여 동의 양식과 동의를 얻기 위한 절차를 검토해야 합니다."
+    "의뢰자와 IRB의 책임\n의뢰자는 시험자가 동의 요건을 이해하고 모니터링에 연구별 절차 이전에 동의를 얻었는지 확인하는 것이 포함되도록 해야 합니다. IRB는 영어 능력이 제한적이거나 의사 결정 능력이 손상된 시험대상자에게 정보가 제공되는 방법을 포함하여 동의 양식과 동의를 얻기 위한 절차를 검토해야 합니다."
   ]
 ]

@@ -83,8 +83,8 @@ describe("resolveTranslations", () => {
 
 describe("seed and public translation", () => {
   it("rewrites machine-translation GCP wording", () => {
-    expect(applyGcpKoreanTerms("고지된 동의와 감사 추적, 인간 피험자")).toBe(
-      "시험대상자 동의와 감사추적, 시험대상자",
+    expect(applyGcpKoreanTerms("고지된 동의와 감사 추적, 인간 피험자, 후원자")).toBe(
+      "시험대상자 동의와 감사추적, 시험대상자, 의뢰자",
     );
   });
 

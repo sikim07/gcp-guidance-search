@@ -31,20 +31,22 @@ export async function resolveTranslations(
   deps: TranslateDeps,
 ): Promise<Record<string, string>> {
   const out: Record<string, string> = {};
-  for (const passage of passages) {
-    if (passage.language === "ko") {
-      out[passage.chunkId] = passage.original;
-      continue;
-    }
-    const cached = await deps.get(passage.chunkId);
-    if (cached) {
-      out[passage.chunkId] = cached;
-      continue;
-    }
-    const translated = await deps.translate(passage.original);
-    await deps.put(passage.chunkId, translated);
-    out[passage.chunkId] = translated;
-  }
+  await Promise.all(
+    passages.map(async (passage) => {
+      if (passage.language === "ko") {
+        out[passage.chunkId] = passage.original;
+        return;
+      }
+      const cached = await deps.get(passage.chunkId);
+      if (cached) {
+        out[passage.chunkId] = cached;
+        return;
+      }
+      const translated = await deps.translate(passage.original);
+      await deps.put(passage.chunkId, translated);
+      out[passage.chunkId] = translated;
+    }),
+  );
   return out;
 }
 
@@ -132,23 +134,16 @@ export async function translateAnswer(text: string): Promise<string> {
   if (fromSeed) return fromSeed;
 
   const blocks = trimmed.split(/\n{2,}/);
-  const out: string[] = [];
-  for (const block of blocks) {
-    if (detectPassageLanguage(block) === "ko") {
-      out.push(block);
-      continue;
-    }
-    const cited = block.match(/^(.*)(\n\[[^\]]+\])\s*$/su);
-    if (cited) {
-      const body = cited[1].trim();
-      out.push(
-        body
-          ? `${await translateClause(body)}${cited[2]}`
-          : cited[2].trim(),
-      );
-      continue;
-    }
-    out.push(await translateClause(block));
-  }
+  const out = await Promise.all(
+    blocks.map(async (block) => {
+      if (detectPassageLanguage(block) === "ko") return block;
+      const cited = block.match(/^(.*)(\n\[[^\]]+\])\s*$/su);
+      if (cited) {
+        const body = cited[1].trim();
+        return body ? `${await translateClause(body)}${cited[2]}` : cited[2].trim();
+      }
+      return translateClause(block);
+    }),
+  );
   return out.join("\n\n");
 }
