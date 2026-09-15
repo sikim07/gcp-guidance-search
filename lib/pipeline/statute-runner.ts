@@ -22,6 +22,8 @@ export async function watchStatutes(
   }
 
   let ingested = 0;
+  // Vercel cron 제한: 본문 JSON이 큰 법령(규칙)은 한 번에 하나만 받는다.
+  const maxBodies = Number.parseInt(process.env.LAW_MAX_BODIES_PER_WATCH ?? "1", 10);
   for (const watched of WATCHED_STATUTES) {
     const list = await fetchLawSearch(watched.query);
     const hit = pickExactLaw(list, watched.exactTitle);
@@ -54,6 +56,7 @@ export async function watchStatutes(
       kind,
     });
     ingested += 1;
+    if (ingested >= maxBodies) break;
   }
   return { checked: WATCHED_STATUTES.length, ingested, skipped: false };
 }
