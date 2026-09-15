@@ -4,6 +4,11 @@ FDA·ICH·식약처에 흩어진 임상시험 가이드라인의 **개정을 자
 
 우선순위는 고정입니다: **개정 감지 파이프라인 > 검색/답변 품질 > UI**.
 
+- Claude Code에 붙여 넣을 단계별 프롬프트: [`docs/IMPLEMENTATION_PROMPTS.md`](docs/IMPLEMENTATION_PROMPTS.md)
+- 이력서/포트폴리오 STAR 정리: [`PORTFOLIO.md`](PORTFOLIO.md)
+- 벡터DB 미사용 근거: [`BENCHMARK.md`](BENCHMARK.md)
+
+
 ## 아키텍처
 
 ```mermaid
