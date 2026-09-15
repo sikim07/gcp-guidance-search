@@ -1,5 +1,6 @@
 import { diffLines } from "diff";
 import { chunkByClause, type ClauseChunk } from "@/lib/pipeline/chunk";
+import { summarizeDiffGroups } from "@/lib/text/change-copy";
 
 export type SectionChange = {
   section: string;
@@ -42,14 +43,11 @@ export function diffSections(previousText: string, currentText: string): Section
 }
 
 export function summarizeDiff(changes: SectionChange[]): string {
-  const added = changes.filter((c) => c.kind === "added").map((c) => c.section);
-  const removed = changes.filter((c) => c.kind === "removed").map((c) => c.section);
-  const changed = changes.filter((c) => c.kind === "changed").map((c) => c.section);
-  const parts: string[] = [];
-  if (changed.length) parts.push(`변경 ${changed.join(", ")}`);
-  if (added.length) parts.push(`추가 ${added.join(", ")}`);
-  if (removed.length) parts.push(`삭제 ${removed.join(", ")}`);
-  return parts.join(" / ") || "조항 단위 변경 없음";
+  return summarizeDiffGroups({
+    changed: changes.filter((c) => c.kind === "changed").map((c) => c.section),
+    added: changes.filter((c) => c.kind === "added").map((c) => c.section),
+    removed: changes.filter((c) => c.kind === "removed").map((c) => c.section),
+  });
 }
 
 export function lineDiff(previousText: string, currentText: string): string {

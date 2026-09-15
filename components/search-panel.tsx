@@ -5,7 +5,6 @@ import {
   Alert,
   Button,
   Card,
-  Chip,
   Label,
   Skeleton,
   Spinner,
@@ -22,10 +21,11 @@ import {
   RECENT_STORAGE_KEY,
   visibleRecent,
 } from "@/lib/search/recent";
-import { needsEnglishTranslation } from "@/lib/llm/translate";
+import { detectPassageLanguage, needsEnglishTranslation } from "@/lib/llm/translate";
+import { normalizeQuery } from "@/lib/utils";
 import type { SearchResponse } from "@/lib/types";
 
-type Tab = "answer" | "original" | "translation";
+type Tab = "answer" | "original";
 
 export function SearchPanel() {
   const [query, setQuery] = useState("");
@@ -35,14 +35,24 @@ export function SearchPanel() {
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [tab, setTab] = useState<Tab>("answer");
   const [translations, setTranslations] = useState<Record<string, string> | null>(null);
+  const [translatedAnswer, setTranslatedAnswer] = useState<string | null>(null);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
+  const [showKorean, setShowKorean] = useState(false);
   const [recents, setRecents] = useState<string[]>([]);
 
   const canTranslate = useMemo(
-    () => (result ? needsEnglishTranslation(result.passages) : false),
+    () =>
+      result
+        ? needsEnglishTranslation(result.passages) ||
+          detectPassageLanguage(result.answer) !== "ko"
+        : false,
     [result],
   );
+
+  const activePresetId = PRESET_QUERIES.find(
+    (preset) => normalizeQuery(preset.query) === normalizeQuery(query),
+  )?.id;
 
   useEffect(() => {
     setRecents(parseStoredRecents(window.localStorage.getItem(RECENT_STORAGE_KEY)));
@@ -59,9 +69,11 @@ export function SearchPanel() {
   }, [loading]);
 
   function remember(nextQuery: string) {
-    const next = pushRecentQuery(nextQuery, recents);
-    setRecents(next);
-    window.localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
+    setRecents((prev) => {
+      const next = pushRecentQuery(nextQuery, prev);
+      window.localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
+      return next;
+    });
   }
 
   async function runSearch(nextQuery: string) {
@@ -72,7 +84,9 @@ export function SearchPanel() {
     setError(null);
     setTab("answer");
     setTranslations(null);
+    setTranslatedAnswer(null);
     setTranslateNote(null);
+    setShowKorean(false);
     try {
       const response = await fetch("/api/search", {
         method: "POST",
@@ -99,31 +113,45 @@ export function SearchPanel() {
     await runSearch(query);
   }
 
-  async function openTab(next: Tab) {
-    setTab(next);
-    if (next !== "translation" || !result || translations) return;
+  async function toggleTranslation() {
+    if (!result || !canTranslate) return;
+    if (showKorean) {
+      setShowKorean(false);
+      return;
+    }
+    if (translations) {
+      setShowKorean(true);
+      return;
+    }
     setTranslating(true);
+    setTranslateNote(null);
     try {
       const response = await fetch("/api/translate", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ passages: result.passages }),
+        body: JSON.stringify({
+          passages: result.passages,
+          answer:
+            detectPassageLanguage(result.answer) === "ko" ? undefined : result.answer,
+        }),
       });
       const body = (await response.json()) as {
         translations?: Record<string, string>;
+        translatedAnswer?: string;
         missingKey?: boolean;
         error?: string;
       };
       if (!response.ok) {
-        setTranslateNote(body.error ?? "영어 조항을 한국어로 옮기지 못했습니다.");
+        setTranslateNote(body.error ?? "지금은 번역을 할 수 없습니다.");
+        return;
+      }
+      if (body.missingKey) {
+        setTranslateNote("지금은 번역을 할 수 없습니다. 영어 원문을 그대로 보여 줍니다.");
         return;
       }
       setTranslations(body.translations ?? {});
-      if (body.missingKey) {
-        setTranslateNote(
-          "영어 조항을 한국어로 옮기지 못했습니다. 원문 탭에서 영어를 확인하세요.",
-        );
-      }
+      setTranslatedAnswer(body.translatedAnswer ?? null);
+      setShowKorean(true);
     } catch {
       setTranslateNote("번역 요청 중 네트워크 오류가 났습니다.");
     } finally {
@@ -145,23 +173,17 @@ export function SearchPanel() {
     });
   }
 
-  const recentChips = visibleRecent(recents, PRESET_QUERIES);
+  const recentChips = visibleRecent(recents, query);
+  const submitLabel = loading ? loadingCopy(loadingPhase(elapsedMs)) : "검색";
 
   return (
     <div className="space-y-6 sm:space-y-8">
-      <section className="max-w-2xl space-y-3">
-        <Chip color="accent" size="sm" variant="soft">
-          조항 검색
-        </Chip>
-        <h1 className="font-display text-ink text-[1.65rem] leading-tight tracking-tight sm:text-4xl">
+      <section className="space-y-2">
+        <h1 className="text-ink text-[1.65rem] leading-tight font-semibold tracking-tight sm:text-4xl">
           임상시험 규정을 검색합니다
         </h1>
-        <p className="text-muted max-w-xl text-sm leading-7 sm:text-[15px]">
-          가이드라인과 법령에서 근거 조항을 찾습니다. 공식 해석이 아니니 출처 링크로
-          원문을 확인하세요.{" "}
-          <a className="text-fda underline-offset-4 hover:underline" href="/updates">
-            개정 피드
-          </a>
+        <p className="text-muted text-sm leading-6">
+          가이드라인과 법령에서 근거 조항을 찾습니다. 공식 해석이 아닙니다.
         </p>
       </section>
 
@@ -185,18 +207,22 @@ export function SearchPanel() {
             <div>
               <p className="text-muted mb-2 text-xs tracking-wide">자주 찾는 질문</p>
               <div className="flex flex-wrap gap-2" data-testid="preset-list">
-                {PRESET_QUERIES.map((preset) => (
-                  <Button
-                    key={preset.id}
-                    type="button"
-                    size="sm"
-                    variant="secondary"
-                    data-testid={`preset-${preset.id}`}
-                    onPress={() => void runSearch(preset.query)}
-                  >
-                    {preset.label}
-                  </Button>
-                ))}
+                {PRESET_QUERIES.map((preset) => {
+                  const active = preset.id === activePresetId;
+                  return (
+                    <Button
+                      key={preset.id}
+                      type="button"
+                      size="sm"
+                      variant={active ? "primary" : "secondary"}
+                      isDisabled={active}
+                      data-testid={`preset-${preset.id}`}
+                      onPress={() => void runSearch(preset.query)}
+                    >
+                      {preset.label}
+                    </Button>
+                  );
+                })}
               </div>
             </div>
             {recentChips.length > 0 ? (
@@ -218,11 +244,16 @@ export function SearchPanel() {
               </div>
             ) : null}
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-              <Button type="submit" isPending={loading} className="w-full sm:w-auto">
+              <Button
+                type="submit"
+                isPending={loading}
+                data-busy={loading ? "true" : "false"}
+                className="search-submit w-full sm:w-auto"
+              >
                 {({ isPending }) => (
                   <>
                     {isPending ? <Spinner color="current" size="sm" /> : null}
-                    {isPending ? loadingCopy(loadingPhase(elapsedMs)) : "검색"}
+                    <span className="search-submit-label">{submitLabel}</span>
                   </>
                 )}
               </Button>
@@ -243,44 +274,49 @@ export function SearchPanel() {
       {result && !loading ? (
         <Card className="search-sheet w-full" data-testid="answer-card">
           <Card.Content className="p-4 sm:p-6">
-            <Tabs
-              className="w-full"
-              selectedKey={tab}
-              variant="secondary"
-              onSelectionChange={(key) => void openTab(String(key) as Tab)}
-            >
-              <Tabs.ListContainer>
-                <Tabs.List aria-label="검색 결과">
-                  <Tabs.Tab data-testid="tab-answer" id="answer">
-                    답변
-                    <Tabs.Indicator />
-                  </Tabs.Tab>
-                  <Tabs.Tab data-testid="tab-original" id="original">
-                    원문
-                    <Tabs.Indicator />
-                  </Tabs.Tab>
+            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+              <Tabs
+                className="w-full min-w-0"
+                selectedKey={tab}
+                variant="secondary"
+                onSelectionChange={(key) => setTab(String(key) as Tab)}
+              >
+                <div className="flex flex-wrap items-center justify-between gap-2">
+                  <Tabs.ListContainer>
+                    <Tabs.List aria-label="검색 결과">
+                      <Tabs.Tab data-testid="tab-answer" id="answer">
+                        답변
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                      <Tabs.Tab data-testid="tab-original" id="original">
+                        원문
+                        <Tabs.Indicator />
+                      </Tabs.Tab>
+                    </Tabs.List>
+                  </Tabs.ListContainer>
                   {canTranslate ? (
-                    <Tabs.Tab data-testid="tab-translation" id="translation">
-                      영문 → 한국어
-                      <Tabs.Indicator />
-                    </Tabs.Tab>
+                    <Button
+                      size="sm"
+                      variant="outline"
+                      className="shrink-0"
+                      data-testid="toggle-translation"
+                      isPending={translating}
+                      onPress={() => void toggleTranslation()}
+                    >
+                      {translating
+                        ? "번역하는 중"
+                        : showKorean
+                          ? "영어 원문 보기"
+                          : "한국어로 보기"}
+                    </Button>
                   ) : null}
-                </Tabs.List>
-              </Tabs.ListContainer>
-              <Tabs.Panel className="pt-5" id="answer">
-                <p className="clause-body text-sm leading-7 whitespace-pre-wrap sm:text-[15px]">
-                  {result.answer}
-                </p>
-              </Tabs.Panel>
-              <Tabs.Panel className="pt-5" id="original">
-                <PassageList
-                  passages={result.passages}
-                  textFor={(p) => p.original}
-                  empty="적재된 조항 원문이 없습니다."
-                />
-              </Tabs.Panel>
-              {canTranslate ? (
-                <Tabs.Panel className="pt-5" id="translation">
+                </div>
+                <Tabs.Panel className="pt-5" id="answer">
+                  <p className="clause-body text-sm leading-7 whitespace-pre-wrap sm:text-[15px]">
+                    {showKorean && translatedAnswer ? translatedAnswer : result.answer}
+                  </p>
+                </Tabs.Panel>
+                <Tabs.Panel className="pt-5" id="original">
                   {translating ? (
                     <div className="space-y-3">
                       <Skeleton className="h-4 w-full rounded-lg" />
@@ -288,24 +324,24 @@ export function SearchPanel() {
                       <Skeleton className="h-4 w-2/3 rounded-lg" />
                     </div>
                   ) : (
-                    <>
-                      {translateNote ? (
-                        <Alert className="mb-4" status="warning">
-                          <Alert.Content>{translateNote}</Alert.Content>
-                        </Alert>
-                      ) : null}
-                      <PassageList
-                        passages={result.passages.filter(
-                          (row) => row.language === "en" || row.language === "mixed",
-                        )}
-                        textFor={(p) => translations?.[p.chunkId] ?? p.original}
-                        empty="번역할 영어 조항이 없습니다."
-                      />
-                    </>
+                    <PassageList
+                      passages={result.passages}
+                      textFor={(p) =>
+                        showKorean
+                          ? (translations?.[p.chunkId] ?? p.original)
+                          : p.original
+                      }
+                      empty="적재된 조항 원문이 없습니다."
+                    />
                   )}
                 </Tabs.Panel>
-              ) : null}
-            </Tabs>
+              </Tabs>
+            </div>
+            {translateNote ? (
+              <Alert className="mt-4" status="warning">
+                <Alert.Content>{translateNote}</Alert.Content>
+              </Alert>
+            ) : null}
             {result.cacheHit ? (
               <p className="text-muted mt-4 text-xs">
                 같은 질문의 답을 다시 보여 줍니다.
@@ -317,13 +353,9 @@ export function SearchPanel() {
                   key={`${source.url}-${source.section}`}
                   className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-2"
                 >
-                  <Chip
-                    color={source.kind === "statute" ? "accent" : "default"}
-                    size="sm"
-                    variant="soft"
-                  >
+                  <span className="text-muted text-xs">
                     {source.kind === "statute" ? "법령" : "가이드라인"}
-                  </Chip>
+                  </span>
                   <a
                     href={source.url}
                     className="text-fda min-w-0 text-sm break-words underline-offset-4 hover:underline"
@@ -377,7 +409,6 @@ function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
         <div className="flex gap-2">
           <Skeleton className="h-8 w-16 rounded-full" />
           <Skeleton className="h-8 w-16 rounded-full" />
-          <Skeleton className="h-8 w-24 rounded-full" />
         </div>
         <div className="space-y-3">
           <Skeleton className="h-4 w-full rounded-lg" />
@@ -385,10 +416,6 @@ function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
           <Skeleton className="h-4 w-4/5 rounded-lg" />
           <Skeleton className="h-4 w-5/6 rounded-lg" />
           <Skeleton className="h-4 w-2/3 rounded-lg" />
-        </div>
-        <div className="flex gap-2 pt-2">
-          <Skeleton className="h-6 w-14 rounded-full" />
-          <Skeleton className="h-4 w-48 rounded-lg" />
         </div>
       </Card.Content>
     </Card>

@@ -13,7 +13,7 @@ export default async function DocumentsPage() {
   return (
     <div className="space-y-6">
       <div>
-        <h1 className="font-display text-2xl tracking-tight sm:text-3xl">
+        <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
           문서 카탈로그
         </h1>
         <p className="text-muted mt-2 text-sm leading-6">

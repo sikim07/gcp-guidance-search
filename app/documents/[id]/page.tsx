@@ -2,6 +2,7 @@ import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { SourceChip } from "@/components/source-chip";
 import { getStore } from "@/lib/db/store";
+import { humanizeChangeSummary } from "@/lib/text/change-copy";
 
 export const dynamic = "force-dynamic";
 
@@ -22,7 +23,9 @@ export default async function DocumentDetailPage({
       <div className="space-y-6">
         <div>
           <SourceChip source="statute" />
-          <h1 className="font-display mt-3 text-2xl sm:text-3xl">{statute.title}</h1>
+          <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+            {statute.title}
+          </h1>
           <a
             href={statute.url}
             className="text-fda mt-2 inline-block text-sm underline"
@@ -42,10 +45,12 @@ export default async function DocumentDetailPage({
             <li key={version.id}>
               <Card>
                 <p className="text-sm font-medium">
-                  MST {version.mst}
-                  {version.id === statute.currentRevisionId ? " · 현행" : ""}
+                  {version.id === statute.currentRevisionId ? "현행" : "이전 본"}
+                  {version.promulgatedDate ? ` · 공포 ${version.promulgatedDate}` : ""}
                 </p>
-                <p className="text-ink/70 mt-1 text-sm">{version.diffSummary}</p>
+                <p className="text-ink/70 mt-1 text-sm leading-6">
+                  {humanizeChangeSummary(version.diffSummary ?? "")}
+                </p>
               </Card>
             </li>
           ))}
@@ -61,7 +66,9 @@ export default async function DocumentDetailPage({
     <div className="space-y-6">
       <div>
         <SourceChip source={doc.source} />
-        <h1 className="font-display mt-3 text-2xl sm:text-3xl">{doc.title}</h1>
+        <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
+          {doc.title}
+        </h1>
         <a
           href={doc.url}
           className="text-fda mt-2 inline-block text-sm underline"
@@ -79,8 +86,9 @@ export default async function DocumentDetailPage({
                 {version.versionLabel}
                 {version.id === doc.currentVersionId ? " · 현행" : ""}
               </p>
-              <p className="text-ink/70 mt-1 text-sm">{version.diffSummary}</p>
-              <p className="text-ink/40 mt-2 text-xs">{version.fileHash}</p>
+              <p className="text-ink/70 mt-1 text-sm leading-6">
+                {humanizeChangeSummary(version.diffSummary ?? "")}
+              </p>
             </Card>
           </li>
         ))}

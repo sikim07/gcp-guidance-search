@@ -70,3 +70,32 @@ export async function haikuTranslate(text: string): Promise<string> {
     .join("\n")
     .trim();
 }
+
+export async function openaiTranslate(text: string): Promise<string> {
+  const key = process.env.OPENAI_API_KEY;
+  if (!key) {
+    throw new Error("no-openai-key");
+  }
+  const OpenAI = (await import("openai")).default;
+  const client = new OpenAI({ apiKey: key });
+  const response = await client.chat.completions.create({
+    model: process.env.OPENAI_TRANSLATE_MODEL ?? "gpt-4o-mini",
+    temperature: 0,
+    max_tokens: 1200,
+    messages: [
+      { role: "system", content: TRANSLATE_SYSTEM_PROMPT },
+      { role: "user", content: text.slice(0, 4000) },
+    ],
+  });
+  return response.choices[0]?.message?.content?.trim() ?? "";
+}
+
+export async function translateClause(text: string): Promise<string> {
+  if (process.env.ANTHROPIC_API_KEY) {
+    return haikuTranslate(text);
+  }
+  if (process.env.OPENAI_API_KEY) {
+    return openaiTranslate(text);
+  }
+  throw new Error("no-translate-key");
+}

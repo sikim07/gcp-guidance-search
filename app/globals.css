@@ -39,8 +39,8 @@
   --color-fda: var(--fda);
   --color-mfds: var(--mfds);
   --color-kgcp: var(--kgcp);
-  --font-sans: var(--font-ibm-plex-sans);
-  --font-display: var(--font-noto-serif);
+  --font-sans: var(--font-noto-sans);
+  --font-display: var(--font-noto-sans);
 }
 
 body {
@@ -73,4 +73,24 @@ body > * {
 
 .clause-body {
   overflow-wrap: anywhere;
+}
+
+.search-submit {
+  interpolate-size: allow-keywords;
+  overflow: hidden;
+  transition:
+    width 320ms cubic-bezier(0.22, 1, 0.36, 1),
+    min-width 320ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.search-submit[data-busy="false"] {
+  min-width: 5.75rem;
+}
+
+.search-submit[data-busy="true"] {
+  min-width: 10.5rem;
+}
+
+.search-submit-label {
+  white-space: nowrap;
 }

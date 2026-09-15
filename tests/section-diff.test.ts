@@ -10,5 +10,6 @@ describe("section-diff", () => {
     expect(changed).toHaveLength(1);
     expect(changed[0]?.section).toBe("4.9");
     expect(summarizeDiff(changes)).toContain("4.9");
+    expect(summarizeDiff(changes)).toMatch(/바뀐 조항/);
   });
 });

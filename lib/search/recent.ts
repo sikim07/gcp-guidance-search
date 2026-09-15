@@ -7,12 +7,9 @@ export function pushRecentQuery(query: string, existing: string[]): string[] {
   return [trimmed, ...rest].slice(0, MAX_RECENT);
 }
 
-export function visibleRecent(
-  recents: string[],
-  presets: readonly { query: string }[],
-): string[] {
-  const presetQueries = new Set(presets.map((row) => row.query));
-  return recents.filter((row) => !presetQueries.has(row));
+export function visibleRecent(recents: string[], currentQuery: string): string[] {
+  const current = currentQuery.trim();
+  return recents.filter((row) => row !== current);
 }
 
 export const RECENT_STORAGE_KEY = "gcp-recent-queries";

@@ -1,18 +1,12 @@
 import "./globals.css";
 import type { Metadata } from "next";
-import { IBM_Plex_Sans_KR, Noto_Serif_KR } from "next/font/google";
+import { Noto_Sans_KR } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 
-const sans = IBM_Plex_Sans_KR({
-  variable: "--font-ibm-plex-sans",
+const sans = Noto_Sans_KR({
+  variable: "--font-noto-sans",
   subsets: ["latin"],
-  weight: ["400", "500", "600"],
-});
-
-const display = Noto_Serif_KR({
-  variable: "--font-noto-serif",
-  subsets: ["latin"],
-  weight: ["500", "600", "700"],
+  weight: ["400", "500", "600", "700"],
 });
 
 export const metadata: Metadata = {
@@ -26,7 +20,7 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`${sans.variable} ${display.variable} h-full antialiased`}>
+    <html lang="ko" className={`${sans.variable} h-full antialiased`}>
       <body className="bg-paper text-ink min-h-full font-sans">
         <SiteHeader />
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 sm:max-w-5xl sm:py-8">

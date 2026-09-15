@@ -19,13 +19,13 @@ export default async function AdminPage({
 
   return (
     <div className="space-y-8">
-      <h1 className="font-display text-3xl">검색 로그 / 피드백</h1>
+      <h1 className="text-3xl font-semibold tracking-tight">검색 로그 / 피드백</h1>
       <section>
         <h2 className="mb-3 font-medium">최근 검색</h2>
         <div className="overflow-x-auto">
           <table className="w-full text-left text-xs">
             <thead>
-              <tr className="border-b border-rule text-ink/50">
+              <tr className="border-rule text-ink/50 border-b">
                 <th className="py-2">시각</th>
                 <th>질문</th>
                 <th>캐시</th>
@@ -34,8 +34,10 @@ export default async function AdminPage({
             </thead>
             <tbody>
               {logs.map((log) => (
-                <tr key={log.id} className="border-b border-rule/60">
-                  <td className="py-2 pr-3 whitespace-nowrap">{log.createdAt.slice(0, 19)}</td>
+                <tr key={log.id} className="border-rule/60 border-b">
+                  <td className="py-2 pr-3 whitespace-nowrap">
+                    {log.createdAt.slice(0, 19)}
+                  </td>
                   <td className="pr-3">{log.query}</td>
                   <td>{log.cacheHit ? "Y" : ""}</td>
                   <td>{log.latencyMs}</td>

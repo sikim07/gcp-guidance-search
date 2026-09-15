@@ -18,14 +18,15 @@ export function SiteHeader() {
       <div className="mx-auto flex w-full max-w-3xl flex-col items-start gap-3 px-4 py-3 md:max-w-5xl md:flex-row md:items-center md:justify-between md:py-3.5">
         <Link
           href="/"
-          className="font-display text-ink flex items-center gap-2.5 text-base tracking-tight whitespace-nowrap sm:text-lg"
+          className="text-ink flex items-center gap-2.5 text-base font-semibold tracking-tight whitespace-nowrap sm:text-lg"
         >
-          <span
-            aria-hidden
-            className="bg-accent text-accent-foreground inline-flex size-8 shrink-0 items-center justify-center rounded-full text-[11px] leading-none shadow-sm"
-          >
-            規
-          </span>
+          <img
+            src="/favicon.svg"
+            alt=""
+            width={32}
+            height={32}
+            className="size-8 rounded-md"
+          />
           GCP 가이드라인 검색기
         </Link>
         <nav className="flex w-full flex-wrap items-center gap-1 md:w-auto md:justify-end">

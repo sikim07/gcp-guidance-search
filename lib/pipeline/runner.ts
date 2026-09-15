@@ -139,7 +139,7 @@ export async function ingestEntry(
   const sectionChanges = previousText ? diffSections(previousText, text) : [];
   const summary =
     kind === "revised_date" && !sectionChanges.some((c) => c.kind !== "unchanged")
-      ? "고시일/발행일만 변경 (본문 해시 동일 또는 조항 동일)"
+      ? "발행일만 바뀌고 본문은 같습니다."
       : summarizeDiff(sectionChanges.length ? sectionChanges : []);
 
   await writeNewVersion(

@@ -191,18 +191,31 @@ function diffArticles(
   previous: StatuteArticle[],
   next: ParsedArticle[],
 ): SectionChange[] {
-  const prev = new Map(previous.map((row) => [row.articleKey, row.text]));
-  const keys = new Set([...prev.keys(), ...next.map((row) => row.articleKey)]);
+  const prev = new Map(previous.map((row) => [row.articleKey, row]));
+  const nextByKey = new Map(next.map((row) => [row.articleKey, row]));
+  const keys = new Set([...prev.keys(), ...nextByKey.keys()]);
   const changes: SectionChange[] = [];
   for (const key of keys) {
     const a = prev.get(key);
-    const b = next.find((row) => row.articleKey === key)?.text;
-    if (a && !b) changes.push({ section: key, kind: "removed", previousText: a });
-    else if (!a && b) changes.push({ section: key, kind: "added", currentText: b });
-    else if (a && b && a.trim() !== b.trim()) {
-      changes.push({ section: key, kind: "changed", previousText: a, currentText: b });
+    const b = nextByKey.get(key);
+    const label = b?.section ?? a?.section ?? key;
+    if (a && !b) changes.push({ section: label, kind: "removed", previousText: a.text });
+    else if (!a && b)
+      changes.push({ section: label, kind: "added", currentText: b.text });
+    else if (a && b && a.text.trim() !== b.text.trim()) {
+      changes.push({
+        section: label,
+        kind: "changed",
+        previousText: a.text,
+        currentText: b.text,
+      });
     } else if (a && b) {
-      changes.push({ section: key, kind: "unchanged", previousText: a, currentText: b });
+      changes.push({
+        section: label,
+        kind: "unchanged",
+        previousText: a.text,
+        currentText: b.text,
+      });
     }
   }
   return changes;
