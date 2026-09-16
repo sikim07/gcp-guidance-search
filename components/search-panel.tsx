@@ -391,7 +391,7 @@ export function SearchPanel() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className={`shrink-0 justify-center ${canTranslate ? "" : "invisible"}`}
+                    className={`translate-toggle shrink-0 ${canTranslate ? "" : "invisible"}`}
                     data-testid="toggle-translation"
                     isDisabled={!canTranslate}
                     aria-busy={translating}

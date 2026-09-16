@@ -84,6 +84,11 @@ body > * {
   justify-content: center;
 }
 
+.translate-toggle {
+  justify-content: center;
+  min-width: 8.5rem;
+}
+
 .stable-label {
   position: relative;
   display: inline-grid;
