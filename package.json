@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "next dev --port 43123",
     "build": "next build",
+    "verify": "npm run lint && npm test && npm run build",
     "start": "next start --port 43123",
     "lint": "eslint .",
     "format": "prettier --write .",

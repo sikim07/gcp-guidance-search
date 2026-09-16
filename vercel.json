@@ -1,4 +1,5 @@
 {
+  "buildCommand": "npm run verify",
   "crons": [
     {
       "path": "/api/cron/watch",

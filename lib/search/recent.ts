@@ -38,3 +38,54 @@ export function parseStoredRecents(raw: string | null): string[] {
     return [];
   }
 }
+
+const EMPTY_RECENTS: string[] = [];
+let recentsSnapshot: string[] = EMPTY_RECENTS;
+let recentsRaw: string | null = null;
+const recentsListeners = new Set<() => void>();
+
+function notifyRecents() {
+  recentsListeners.forEach((listener) => listener());
+}
+
+export function subscribeRecents(onStoreChange: () => void): () => void {
+  recentsListeners.add(onStoreChange);
+  if (typeof window !== "undefined") {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key !== null && event.key !== RECENT_STORAGE_KEY) return;
+      recentsRaw = null;
+      onStoreChange();
+    };
+    window.addEventListener("storage", onStorage);
+    return () => {
+      recentsListeners.delete(onStoreChange);
+      window.removeEventListener("storage", onStorage);
+    };
+  }
+  return () => {
+    recentsListeners.delete(onStoreChange);
+  };
+}
+
+export function getRecentsSnapshot(): string[] {
+  if (typeof window === "undefined") return EMPTY_RECENTS;
+  const raw = window.localStorage.getItem(RECENT_STORAGE_KEY);
+  if (raw === recentsRaw) return recentsSnapshot;
+  recentsRaw = raw;
+  recentsSnapshot = parseStoredRecents(raw);
+  return recentsSnapshot;
+}
+
+export function getRecentsServerSnapshot(): string[] {
+  return EMPTY_RECENTS;
+}
+
+export function writeStoredRecents(next: string[]): string[] {
+  recentsSnapshot = next;
+  recentsRaw = JSON.stringify(next);
+  if (typeof window !== "undefined") {
+    window.localStorage.setItem(RECENT_STORAGE_KEY, recentsRaw);
+  }
+  notifyRecents();
+  return next;
+}

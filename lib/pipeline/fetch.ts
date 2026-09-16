@@ -15,12 +15,17 @@ export const SOURCE_URLS: Record<SourceId, string> = {
   kgcp: "https://www.law.go.kr/법령/의약품등의안전에관한규칙",
 };
 
-const FIXTURE_FILES: Record<SourceId, string> = {
-  "fda-ich": "tests/fixtures/fda-ich.html",
-  "fda-guidance": "tests/fixtures/fda-guidance.html",
-  mfds: "tests/fixtures/mfds-list.html",
-  kgcp: "tests/fixtures/kgcp.html",
+const FIXTURE_NAMES: Record<SourceId, string> = {
+  "fda-ich": "fda-ich.html",
+  "fda-guidance": "fda-guidance.html",
+  mfds: "mfds-list.html",
+  kgcp: "kgcp.html",
 };
+
+async function readFixtureHtml(source: SourceId): Promise<string> {
+  const file = path.join(process.cwd(), "tests", "fixtures", FIXTURE_NAMES[source]);
+  return readFile(file, "utf8");
+}
 
 export async function fetchHtml(url: string): Promise<string> {
   const response = await fetch(url, {
@@ -50,14 +55,15 @@ export async function fetchBytes(url: string): Promise<Buffer> {
 export async function loadSourceHtml(source: SourceId): Promise<{ html: string; pageUrl: string }> {
   const pageUrl = SOURCE_URLS[source];
   if (process.env.USE_FIXTURE_SOURCES === "true") {
-    const file = path.join(process.cwd(), FIXTURE_FILES[source]);
-    return { html: await readFile(file, "utf8"), pageUrl };
+    return { html: await readFixtureHtml(source), pageUrl };
   }
   try {
     return { html: await fetchHtml(pageUrl), pageUrl };
   } catch {
-    const file = path.join(process.cwd(), FIXTURE_FILES[source]);
-    return { html: await readFile(file, "utf8"), pageUrl };
+    if (process.env.NODE_ENV !== "production") {
+      return { html: await readFixtureHtml(source), pageUrl };
+    }
+    return { html: "", pageUrl };
   }
 }
 

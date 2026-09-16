@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
 import {
   Button,
   Card,
@@ -24,10 +24,12 @@ import { loadingCopy, loadingPhase } from "@/lib/search/loading";
 import { PRESET_QUERIES } from "@/lib/search/presets";
 import {
   customRecents,
-  parseStoredRecents,
+  getRecentsServerSnapshot,
+  getRecentsSnapshot,
   pushRecentQuery,
-  RECENT_STORAGE_KEY,
   removeRecentQuery,
+  subscribeRecents,
+  writeStoredRecents,
 } from "@/lib/search/recent";
 import { detectPassageLanguage, needsEnglishTranslation } from "@/lib/llm/translate";
 import { normalizeQuery } from "@/lib/utils";
@@ -48,13 +50,16 @@ export function SearchPanel() {
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
   const [showKorean, setShowKorean] = useState(false);
-  const [recents, setRecents] = useState<string[]>([]);
   const [feedbackSent, setFeedbackSent] = useState<"up" | "down" | null>(null);
   const [showDownForm, setShowDownForm] = useState(false);
   const [downComment, setDownComment] = useState("");
   const [feedbackBusy, setFeedbackBusy] = useState(false);
   const [feedbackError, setFeedbackError] = useState(false);
-
+  const recents = useSyncExternalStore(
+    subscribeRecents,
+    getRecentsSnapshot,
+    getRecentsServerSnapshot,
+  );
   const canTranslate = useMemo(
     () =>
       result
@@ -69,30 +74,18 @@ export function SearchPanel() {
   )?.id;
 
   useEffect(() => {
-    setRecents(parseStoredRecents(window.localStorage.getItem(RECENT_STORAGE_KEY)));
-  }, []);
-
-  useEffect(() => {
-    if (!loading) {
-      setElapsedMs(0);
-      return;
-    }
+    if (!loading) return;
     const started = Date.now();
     const timer = window.setInterval(() => setElapsedMs(Date.now() - started), 200);
     return () => window.clearInterval(timer);
   }, [loading]);
 
-  function persistRecents(next: string[]) {
-    window.localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
-    return next;
-  }
-
   function remember(nextQuery: string) {
-    setRecents((prev) => persistRecents(pushRecentQuery(nextQuery, prev)));
+    writeStoredRecents(pushRecentQuery(nextQuery, recents));
   }
 
   function forget(nextQuery: string) {
-    setRecents((prev) => persistRecents(removeRecentQuery(nextQuery, prev)));
+    writeStoredRecents(removeRecentQuery(nextQuery, recents));
   }
 
   async function runSearch(nextQuery: string) {
@@ -100,6 +93,7 @@ export function SearchPanel() {
     if (!trimmed) return;
     setQuery(nextQuery);
     remember(trimmed);
+    setElapsedMs(0);
     setLoading(true);
     setError(null);
     setErrorKind(null);
@@ -260,7 +254,7 @@ export function SearchPanel() {
     <div className="space-y-6 sm:space-y-8">
       <section className="space-y-2">
         <h1 className="text-ink text-[1.65rem] leading-tight font-semibold tracking-tight sm:text-4xl">
-          임상시험 규정을 검색합니다
+          임상시험 규정을 검색
         </h1>
         <p className="text-muted text-sm leading-6">
           가이드라인과 법령에서 근거 조항을 찾습니다. 공식 해석이 아닙니다.
@@ -275,9 +269,9 @@ export function SearchPanel() {
               name="query"
               value={query}
               onChange={setQuery}
-              aria-label="임상시험 규정을 검색합니다"
+              aria-label="임상시험 규정을 검색"
             >
-              <Label className="sr-only">임상시험 규정을 검색합니다</Label>
+              <Label className="sr-only">임상시험 규정을 검색</Label>
               <TextArea
                 id="query"
                 className="min-h-24 sm:min-h-28"

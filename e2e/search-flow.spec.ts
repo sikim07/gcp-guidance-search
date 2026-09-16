@@ -3,7 +3,7 @@ import { test, expect } from "@playwright/test";
 test("question → answer → feedback", async ({ page }) => {
   await page.goto("/");
   await expect(
-    page.getByRole("heading", { name: "임상시험 규정을 검색합니다" }),
+    page.getByRole("heading", { name: "임상시험 규정을 검색" }),
   ).toBeVisible();
   await expect(
     page.getByText(/가이드라인과 법령에서 근거 조항을 찾습니다/),

@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { usePathname } from "next/navigation";
 import { NavLink } from "@/components/nav-link";
 import { NAV_ITEMS, isNavActive } from "@/lib/nav";
@@ -17,12 +18,13 @@ export function SiteHeader() {
           href="/"
           className="text-ink flex items-center gap-2.5 text-base font-semibold tracking-tight whitespace-nowrap sm:text-lg"
         >
-          <img
+          <Image
             src="/favicon.svg"
             alt=""
             width={32}
             height={32}
             className="size-8 rounded-md"
+            unoptimized
           />
           GCP 가이드라인 검색기
         </NavLink>

@@ -2,10 +2,12 @@ import { describe, expect, it } from "vitest";
 import { PRESET_QUERIES } from "@/lib/search/presets";
 import {
   customRecents,
+  getRecentsSnapshot,
   isPresetQuery,
   parseStoredRecents,
   pushRecentQuery,
   removeRecentQuery,
+  writeStoredRecents,
 } from "@/lib/search/recent";
 
 describe("recent queries", () => {
@@ -48,5 +50,26 @@ describe("recent queries", () => {
     expect(parseStoredRecents(null)).toEqual([]);
     expect(parseStoredRecents("{")).toEqual([]);
     expect(parseStoredRecents('["ok", 1, ""]')).toEqual(["ok"]);
+  });
+
+  it("writeStoredRecents keeps a stable snapshot until the stored string changes", () => {
+    const store = new Map<string, string>();
+    const windowStub = {
+      localStorage: {
+        getItem: (key: string) => store.get(key) ?? null,
+        setItem: (key: string, value: string) => {
+          store.set(key, value);
+        },
+      },
+      addEventListener: () => {},
+      removeEventListener: () => {},
+    };
+    Object.defineProperty(globalThis, "window", {
+      configurable: true,
+      value: windowStub,
+    });
+    const first = writeStoredRecents(["감사추적은?"]);
+    expect(getRecentsSnapshot()).toBe(first);
+    expect(getRecentsSnapshot()).toEqual(["감사추적은?"]);
   });
 });
