@@ -254,7 +254,7 @@ export function SearchPanel() {
     <div className="space-y-6 sm:space-y-8">
       <section className="space-y-2">
         <h1 className="text-ink text-[1.65rem] leading-tight font-semibold tracking-tight sm:text-4xl">
-          임상시험 규정을 검색합니다
+          임상시험 규정을 검색
         </h1>
         <p className="text-muted text-sm leading-6">
           가이드라인과 법령에서 근거 조항을 찾습니다. 공식 해석이 아닙니다.
