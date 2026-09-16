@@ -1,6 +1,12 @@
 "use client";
 
-import { useEffect, useMemo, useState, useSyncExternalStore, type ReactNode } from "react";
+import {
+  useEffect,
+  useMemo,
+  useState,
+  useSyncExternalStore,
+  type ReactNode,
+} from "react";
 import {
   Button,
   Card,
@@ -144,8 +150,7 @@ export function SearchPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           passages: body.passages,
-          answer:
-            detectPassageLanguage(body.answer) === "ko" ? undefined : body.answer,
+          answer: detectPassageLanguage(body.answer) === "ko" ? undefined : body.answer,
         }),
       });
       const translated = (await response.json()) as {
@@ -274,13 +279,13 @@ export function SearchPanel() {
               <Label className="sr-only">임상시험 규정을 검색</Label>
               <TextArea
                 id="query"
-                className="min-h-24 sm:min-h-28"
+                className="min-h-28 sm:min-h-32"
                 placeholder="예: 전자기록 감사추적은 어떤 항목을 남겨야 하나?"
               />
             </TextField>
             <div>
-              <p className="text-muted mb-2 text-xs tracking-wide">자주 찾는 질문</p>
-              <div className="flex flex-wrap gap-2" data-testid="preset-list">
+              <p className="text-muted mb-3 text-xs tracking-wide">자주 찾는 질문</p>
+              <div className="flex flex-wrap gap-3" data-testid="preset-list">
                 {PRESET_QUERIES.map((preset) => {
                   const active = preset.id === activePresetId;
                   return (
@@ -302,8 +307,8 @@ export function SearchPanel() {
             </div>
             {recentChips.length > 0 ? (
               <div>
-                <p className="text-muted mb-2 text-xs tracking-wide">최근 검색</p>
-                <div className="flex flex-wrap gap-2" data-testid="recent-list">
+                <p className="text-muted mb-3 text-xs tracking-wide">최근 검색</p>
+                <div className="flex flex-wrap gap-3" data-testid="recent-list">
                   {recentChips.map((item) => (
                     <span key={item} className="recent-chip max-w-full">
                       <Button
@@ -352,9 +357,7 @@ export function SearchPanel() {
           busy={loading}
           pulseBar={errorKind === "network" || errorKind === "server"}
           onRetry={
-            searchFailureCopy(errorKind).retry
-              ? () => void runSearch(query)
-              : undefined
+            searchFailureCopy(errorKind).retry ? () => void runSearch(query) : undefined
           }
         />
       ) : null}
@@ -362,7 +365,10 @@ export function SearchPanel() {
       {loading ? <ResultSkeleton elapsedMs={elapsedMs} /> : null}
 
       {result && !loading ? (
-        <Card className="search-sheet result-panel w-full shadow-none" data-testid="answer-card">
+        <Card
+          className="search-sheet result-panel w-full shadow-none"
+          data-testid="answer-card"
+        >
           <Card.Content className="p-4 sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <Tabs
@@ -467,7 +473,7 @@ export function SearchPanel() {
               ))}
             </ul>
             <div className="mt-5 space-y-3">
-                <div className="flex flex-wrap gap-2">
+              <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="outline"
@@ -490,27 +496,31 @@ export function SearchPanel() {
                 </Button>
               </div>
               {showDownForm && !feedbackSent ? (
-                <div className="space-y-2">
+                <div className="space-y-3">
                   <TextField
                     fullWidth
+                    className="gap-2.5"
                     name="feedback-comment"
                     value={downComment}
                     onChange={setDownComment}
                   >
                     <Label>어떤 점이 도움이 되지 않았나요?</Label>
                     <TextArea
-                      className="min-h-20"
+                      className="min-h-24"
                       data-testid="feedback-comment"
                       placeholder="빠진 조항, 엉뚱한 문서, 번역이 어색한 부분 등을 적어 주세요."
                     />
                   </TextField>
                   <Button
-                    size="sm"
+                    aria-busy={feedbackBusy}
+                    isDisabled={feedbackBusy}
+                    data-busy={feedbackBusy ? "true" : "false"}
                     data-testid="feedback-submit"
-                    isPending={feedbackBusy}
+                    className="search-submit w-full justify-center gap-2 sm:w-auto"
                     onPress={() => void sendFeedback("down", downComment)}
                   >
-                    의견 보내기
+                    {feedbackBusy ? <Spinner color="current" size="sm" /> : null}
+                    {feedbackBusy ? "의견 보내는 중" : "의견 보내기"}
                   </Button>
                 </div>
               ) : null}
@@ -538,13 +548,7 @@ export function SearchPanel() {
   );
 }
 
-function StableLabel({
-  sizer,
-  children,
-}: {
-  sizer: ReactNode;
-  children: ReactNode;
-}) {
+function StableLabel({ sizer, children }: { sizer: ReactNode; children: ReactNode }) {
   return (
     <span className="stable-label">
       <span className="stable-label-sizer" aria-hidden>
@@ -557,7 +561,10 @@ function StableLabel({
 
 function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
   return (
-    <Card className="search-sheet result-panel w-full shadow-none" data-testid="loading-card">
+    <Card
+      className="search-sheet result-panel w-full shadow-none"
+      data-testid="loading-card"
+    >
       <Card.Content className="p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <div className="flex gap-2">

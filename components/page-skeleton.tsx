@@ -37,12 +37,12 @@ function SearchSkeleton() {
             <div className="textfield textfield--full-width">
               <div
                 aria-hidden
-                className="textarea textarea--full-width bg-muted/20 min-h-24 animate-pulse sm:min-h-28"
+                className="textarea textarea--full-width bg-muted/20 min-h-28 animate-pulse sm:min-h-32"
               />
             </div>
             <div>
-              <p className="text-muted mb-2 text-xs tracking-wide">자주 찾는 질문</p>
-              <div className="flex flex-wrap gap-2">
+              <p className="text-muted mb-3 text-xs tracking-wide">자주 찾는 질문</p>
+              <div className="flex flex-wrap gap-3">
                 {PRESET_QUERIES.map((preset) => (
                   <SizedPulse
                     key={preset.id}
