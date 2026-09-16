@@ -18,7 +18,12 @@ test("question → answer → feedback", async ({ page }) => {
   const toggle = page.getByTestId("toggle-translation");
   if (await toggle.isVisible()) {
     await expect(toggle).toContainText("원문 보기");
+    const before = await toggle.boundingBox();
     await toggle.click();
+    const after = await toggle.boundingBox();
+    expect(before).toBeTruthy();
+    expect(after).toBeTruthy();
+    expect(Math.abs(after!.width - before!.width)).toBeLessThan(1);
     await expect(answer).toContainText(/audit trail|Part 11|BACKGROUND|electronic/i);
     await page.getByTestId("tab-original").click();
     await expect(answer).toContainText(/Part 11|audit trail|electronic|5\.5/i);

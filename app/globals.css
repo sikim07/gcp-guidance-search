@@ -76,19 +76,32 @@ body > * {
 }
 
 .search-submit {
-  interpolate-size: allow-keywords;
   overflow: hidden;
-  transition:
-    width 320ms cubic-bezier(0.22, 1, 0.36, 1),
-    min-width 320ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-.search-submit[data-busy="false"] {
-  min-width: 5.75rem;
+.stable-label {
+  display: inline-grid;
+  justify-items: center;
+  align-items: center;
 }
 
-.search-submit[data-busy="true"] {
-  min-width: 10.5rem;
+.stable-label-sizer,
+.stable-label-live {
+  grid-area: 1 / 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.stable-label-sizer {
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.result-panel {
+  min-height: 20rem;
 }
 
 .retry-notice {

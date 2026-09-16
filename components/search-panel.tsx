@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useState, type ReactNode } from "react";
 import {
   Button,
   Card,
@@ -320,16 +320,22 @@ export function SearchPanel() {
             <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
               <Button
                 type="submit"
-                isPending={loading}
+                aria-busy={loading}
+                isDisabled={loading}
                 data-busy={loading ? "true" : "false"}
                 className="search-submit w-full sm:w-auto"
               >
-                {({ isPending }) => (
-                  <>
-                    {isPending ? <Spinner color="current" size="sm" /> : null}
-                    <span className="search-submit-label">{submitLabel}</span>
-                  </>
-                )}
+                <StableLabel
+                  sizer={
+                    <>
+                      <Spinner size="sm" />
+                      조항 고르는 중
+                    </>
+                  }
+                >
+                  {loading ? <Spinner color="current" size="sm" /> : <span className="size-4 shrink-0" />}
+                  {submitLabel}
+                </StableLabel>
               </Button>
               <p className="text-muted text-xs">하루 20건까지 검색할 수 있습니다</p>
             </div>
@@ -352,7 +358,7 @@ export function SearchPanel() {
       {loading ? <ResultSkeleton elapsedMs={elapsedMs} /> : null}
 
       {result && !loading ? (
-        <Card className="search-sheet w-full" data-testid="answer-card">
+        <Card className="search-sheet result-panel w-full" data-testid="answer-card">
           <Card.Content className="p-4 sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <Tabs
@@ -361,8 +367,8 @@ export function SearchPanel() {
                 variant="secondary"
                 onSelectionChange={(key) => setTab(String(key) as Tab)}
               >
-                <div className="flex flex-wrap items-center justify-between gap-2">
-                  <Tabs.ListContainer>
+                <div className="flex items-center justify-between gap-2">
+                  <Tabs.ListContainer className="min-w-0">
                     <Tabs.List aria-label="검색 결과">
                       <Tabs.Tab data-testid="tab-answer" id="answer">
                         답변
@@ -374,22 +380,35 @@ export function SearchPanel() {
                       </Tabs.Tab>
                     </Tabs.List>
                   </Tabs.ListContainer>
-                  {canTranslate ? (
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      className="shrink-0"
-                      data-testid="toggle-translation"
-                      isPending={translating}
-                      onPress={() => void toggleTranslation()}
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className={`shrink-0 ${canTranslate ? "" : "invisible"}`}
+                    data-testid="toggle-translation"
+                    isDisabled={!canTranslate}
+                    aria-busy={translating}
+                    onPress={() => void toggleTranslation()}
+                  >
+                    <StableLabel
+                      sizer={
+                        <>
+                          <Spinner size="sm" />
+                          한국어로 보기
+                        </>
+                      }
                     >
+                      {translating ? (
+                        <Spinner color="current" size="sm" />
+                      ) : (
+                        <span className="size-4 shrink-0" />
+                      )}
                       {translating
                         ? "번역하는 중"
                         : showKorean
                           ? "원문 보기"
                           : "한국어로 보기"}
-                    </Button>
-                  ) : null}
+                    </StableLabel>
+                  </Button>
                 </div>
                 <Tabs.Panel className="pt-5" id="answer">
                   <p className="clause-body text-sm leading-7 whitespace-pre-wrap sm:text-[15px]">
@@ -398,7 +417,7 @@ export function SearchPanel() {
                 </Tabs.Panel>
                 <Tabs.Panel className="pt-5" id="original">
                   {translating ? (
-                    <div className="space-y-3">
+                    <div className="min-h-52 space-y-3">
                       <Skeleton className="h-4 w-full rounded-lg" />
                       <Skeleton className="h-4 w-5/6 rounded-lg" />
                       <Skeleton className="h-4 w-2/3 rounded-lg" />
@@ -455,10 +474,11 @@ export function SearchPanel() {
               ))}
             </ul>
             <div className="mt-5 space-y-3">
-              <div className="flex flex-wrap gap-2">
+                <div className="flex flex-wrap gap-2">
                 <Button
                   size="sm"
                   variant="outline"
+                  className="min-w-24"
                   data-testid="feedback-up"
                   isDisabled={Boolean(feedbackSent) || feedbackBusy}
                   onPress={() => void sendFeedback("up")}
@@ -468,6 +488,7 @@ export function SearchPanel() {
                 <Button
                   size="sm"
                   variant="outline"
+                  className="min-w-36"
                   data-testid="feedback-down"
                   isDisabled={Boolean(feedbackSent) || feedbackBusy}
                   onPress={() => setShowDownForm(true)}
@@ -523,13 +544,32 @@ export function SearchPanel() {
   );
 }
 
+function StableLabel({
+  sizer,
+  children,
+}: {
+  sizer: ReactNode;
+  children: ReactNode;
+}) {
+  return (
+    <span className="stable-label">
+      <span className="stable-label-sizer" aria-hidden>
+        {sizer}
+      </span>
+      <span className="stable-label-live">{children}</span>
+    </span>
+  );
+}
+
 function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
   return (
-    <Card className="search-sheet w-full" data-testid="loading-card">
+    <Card className="search-sheet result-panel w-full" data-testid="loading-card">
       <Card.Header className="px-4 pt-4 sm:px-6 sm:pt-6">
         <Card.Title className="flex items-center gap-2 text-base">
           <Spinner size="sm" />
-          {loadingCopy(loadingPhase(elapsedMs))}
+          <StableLabel sizer="조항 고르는 중">
+            {loadingCopy(loadingPhase(elapsedMs))}
+          </StableLabel>
         </Card.Title>
         <Card.Description>관련 조항을 고른 뒤 답을 정리합니다.</Card.Description>
       </Card.Header>
