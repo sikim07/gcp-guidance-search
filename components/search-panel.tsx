@@ -11,7 +11,7 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
-import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { RetryNotice } from "@/components/retry-notice";
 import {
   classifySearchFailure,
@@ -23,10 +23,11 @@ import {
 import { loadingCopy, loadingPhase } from "@/lib/search/loading";
 import { PRESET_QUERIES } from "@/lib/search/presets";
 import {
+  customRecents,
   parseStoredRecents,
   pushRecentQuery,
   RECENT_STORAGE_KEY,
-  visibleRecent,
+  removeRecentQuery,
 } from "@/lib/search/recent";
 import { detectPassageLanguage, needsEnglishTranslation } from "@/lib/llm/translate";
 import { normalizeQuery } from "@/lib/utils";
@@ -81,18 +82,24 @@ export function SearchPanel() {
     return () => window.clearInterval(timer);
   }, [loading]);
 
+  function persistRecents(next: string[]) {
+    window.localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
+    return next;
+  }
+
   function remember(nextQuery: string) {
-    setRecents((prev) => {
-      const next = pushRecentQuery(nextQuery, prev);
-      window.localStorage.setItem(RECENT_STORAGE_KEY, JSON.stringify(next));
-      return next;
-    });
+    setRecents((prev) => persistRecents(pushRecentQuery(nextQuery, prev)));
+  }
+
+  function forget(nextQuery: string) {
+    setRecents((prev) => persistRecents(removeRecentQuery(nextQuery, prev)));
   }
 
   async function runSearch(nextQuery: string) {
     const trimmed = nextQuery.trim();
     if (!trimmed) return;
     setQuery(nextQuery);
+    remember(trimmed);
     setLoading(true);
     setError(null);
     setErrorKind(null);
@@ -119,7 +126,6 @@ export function SearchPanel() {
         return;
       }
       setResult(body);
-      remember(trimmed);
       await fillKorean(body);
     } catch {
       setErrorKind("network");
@@ -247,7 +253,7 @@ export function SearchPanel() {
     }
   }
 
-  const recentChips = visibleRecent(recents, query);
+  const recentChips = customRecents(recents);
   const submitLabel = loading ? loadingCopy(loadingPhase(elapsedMs)) : "검색";
 
   return (
@@ -304,15 +310,25 @@ export function SearchPanel() {
                 <p className="text-muted mb-2 text-xs tracking-wide">최근 검색</p>
                 <div className="flex flex-wrap gap-2" data-testid="recent-list">
                   {recentChips.map((item) => (
-                    <Button
-                      key={item}
-                      type="button"
-                      size="sm"
-                      variant="ghost"
-                      onPress={() => void runSearch(item)}
-                    >
-                      {item}
-                    </Button>
+                    <span key={item} className="recent-chip">
+                      <Button
+                        type="button"
+                        size="sm"
+                        variant="ghost"
+                        onPress={() => void runSearch(item)}
+                      >
+                        {item}
+                      </Button>
+                      <button
+                        type="button"
+                        className="recent-chip-remove"
+                        aria-label={`${item} 지우기`}
+                        data-testid="recent-remove"
+                        onClick={() => forget(item)}
+                      >
+                        <X className="size-3.5" />
+                      </button>
+                    </span>
                   ))}
                 </div>
               </div>
@@ -323,19 +339,10 @@ export function SearchPanel() {
                 aria-busy={loading}
                 isDisabled={loading}
                 data-busy={loading ? "true" : "false"}
-                className="search-submit w-full sm:w-auto"
+                className="search-submit w-full justify-center gap-2 sm:w-auto"
               >
-                <StableLabel
-                  sizer={
-                    <>
-                      <Spinner size="sm" />
-                      조항 고르는 중
-                    </>
-                  }
-                >
-                  {loading ? <Spinner color="current" size="sm" /> : <span className="size-4 shrink-0" />}
-                  {submitLabel}
-                </StableLabel>
+                {loading ? <Spinner color="current" size="sm" /> : null}
+                {submitLabel}
               </Button>
               <p className="text-muted text-xs">하루 20건까지 검색할 수 있습니다</p>
             </div>
@@ -347,6 +354,7 @@ export function SearchPanel() {
         <RetryNotice
           {...searchFailureCopy(errorKind, error ?? undefined)}
           busy={loading}
+          pulseBar={errorKind === "network" || errorKind === "server"}
           onRetry={
             searchFailureCopy(errorKind).retry
               ? () => void runSearch(query)
@@ -383,25 +391,13 @@ export function SearchPanel() {
                   <Button
                     size="sm"
                     variant="outline"
-                    className={`shrink-0 ${canTranslate ? "" : "invisible"}`}
+                    className={`shrink-0 justify-center ${canTranslate ? "" : "invisible"}`}
                     data-testid="toggle-translation"
                     isDisabled={!canTranslate}
                     aria-busy={translating}
                     onPress={() => void toggleTranslation()}
                   >
-                    <StableLabel
-                      sizer={
-                        <>
-                          <Spinner size="sm" />
-                          한국어로 보기
-                        </>
-                      }
-                    >
-                      {translating ? (
-                        <Spinner color="current" size="sm" />
-                      ) : (
-                        <span className="size-4 shrink-0" />
-                      )}
+                    <StableLabel sizer="한국어로 보기">
                       {translating
                         ? "번역하는 중"
                         : showKorean
@@ -442,6 +438,7 @@ export function SearchPanel() {
                 {...translateFailureCopy(translateNote.includes("네트워크"))}
                 retryLabel="한국어 다시 시도"
                 busy={translating}
+                pulseBar={translating || translateNote.includes("네트워크")}
                 onRetry={() => void toggleTranslation()}
               />
             ) : null}
@@ -525,6 +522,7 @@ export function SearchPanel() {
                 <RetryNotice
                   {...feedbackFailureCopy()}
                   busy={feedbackBusy}
+                  pulseBar={feedbackBusy}
                   retryLabel="의견 다시 보내기"
                   onRetry={() =>
                     void sendFeedback(showDownForm ? "down" : "up", downComment)
@@ -564,26 +562,32 @@ function StableLabel({
 function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
   return (
     <Card className="search-sheet result-panel w-full" data-testid="loading-card">
-      <Card.Header className="px-4 pt-4 sm:px-6 sm:pt-6">
-        <Card.Title className="flex items-center gap-2 text-base">
-          <Spinner size="sm" />
-          <StableLabel sizer="조항 고르는 중">
-            {loadingCopy(loadingPhase(elapsedMs))}
-          </StableLabel>
-        </Card.Title>
-        <Card.Description>관련 조항을 고른 뒤 답을 정리합니다.</Card.Description>
-      </Card.Header>
-      <Card.Content className="space-y-4 px-4 pb-4 sm:px-6 sm:pb-6">
-        <div className="flex gap-2">
-          <Skeleton className="h-8 w-16 rounded-full" />
-          <Skeleton className="h-8 w-16 rounded-full" />
+      <Card.Content className="p-4 sm:p-6">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex gap-2">
+            <Skeleton className="h-8 w-14 rounded-full" />
+            <Skeleton className="h-8 w-14 rounded-full" />
+          </div>
+          <Skeleton className="h-8 w-28 shrink-0 rounded-full" />
         </div>
-        <div className="space-y-3">
+        <div className="space-y-3 pt-5">
+          <p className="text-muted flex h-7 items-center gap-2 text-sm">
+            <Spinner size="sm" />
+            {loadingCopy(loadingPhase(elapsedMs))}
+          </p>
           <Skeleton className="h-4 w-full rounded-lg" />
           <Skeleton className="h-4 w-11/12 rounded-lg" />
           <Skeleton className="h-4 w-4/5 rounded-lg" />
           <Skeleton className="h-4 w-5/6 rounded-lg" />
           <Skeleton className="h-4 w-2/3 rounded-lg" />
+        </div>
+        <div className="border-border mt-5 space-y-3 border-t pt-5">
+          <Skeleton className="h-4 w-3/4 rounded-lg" />
+          <Skeleton className="h-4 w-2/3 rounded-lg" />
+        </div>
+        <div className="mt-5 flex gap-2">
+          <Skeleton className="h-8 w-24 rounded-full" />
+          <Skeleton className="h-8 w-36 rounded-full" />
         </div>
       </Card.Content>
     </Card>

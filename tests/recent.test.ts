@@ -1,9 +1,15 @@
 import { describe, expect, it } from "vitest";
 import { PRESET_QUERIES } from "@/lib/search/presets";
-import { parseStoredRecents, pushRecentQuery, visibleRecent } from "@/lib/search/recent";
+import {
+  customRecents,
+  isPresetQuery,
+  parseStoredRecents,
+  pushRecentQuery,
+  removeRecentQuery,
+} from "@/lib/search/recent";
 
 describe("recent queries", () => {
-  it("keeps the latest five unique questions, newest first", () => {
+  it("keeps the latest five unique custom questions, newest first", () => {
     let recents: string[] = [];
     recents = pushRecentQuery("감사추적은?", recents);
     recents = pushRecentQuery("동의는?", recents);
@@ -21,10 +27,21 @@ describe("recent queries", () => {
     ]);
   });
 
-  it("hides the query currently in the search box, including presets", () => {
+  it("does not store preset questions; they stay in the preset row", () => {
     const recents = pushRecentQuery(PRESET_QUERIES[0].query, ["직접 적은 질문"]);
-    expect(visibleRecent(recents, PRESET_QUERIES[0].query)).toEqual(["직접 적은 질문"]);
-    expect(visibleRecent(recents, "직접 적은 질문")).toEqual([PRESET_QUERIES[0].query]);
+    expect(isPresetQuery(PRESET_QUERIES[0].query)).toBe(true);
+    expect(recents).toEqual(["직접 적은 질문"]);
+    expect(customRecents(recents)).toEqual(["직접 적은 질문"]);
+  });
+
+  it("keeps the current custom query in the list so it does not vanish when clicked", () => {
+    const recents = pushRecentQuery("직접 적은 질문", []);
+    expect(customRecents(recents)).toEqual(["직접 적은 질문"]);
+  });
+
+  it("removes a custom query", () => {
+    const recents = removeRecentQuery("동의는?", ["IRB 구성은?", "동의는?"]);
+    expect(recents).toEqual(["IRB 구성은?"]);
   });
 
   it("ignores broken localStorage payloads", () => {

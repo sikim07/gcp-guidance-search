@@ -43,11 +43,16 @@
   --font-display: var(--font-noto-sans);
 }
 
+html {
+  background: var(--paper);
+}
+
 body {
   background:
     radial-gradient(1200px 420px at 12% -10%, rgb(154 52 18 / 0.08), transparent 55%),
     radial-gradient(900px 380px at 100% 0%, rgb(30 58 95 / 0.07), transparent 50%),
     var(--background);
+  background-attachment: fixed;
   color: var(--foreground);
 }
 
@@ -76,10 +81,11 @@ body > * {
 }
 
 .search-submit {
-  overflow: hidden;
+  justify-content: center;
 }
 
 .stable-label {
+  position: relative;
   display: inline-grid;
   justify-items: center;
   align-items: center;
@@ -91,7 +97,6 @@ body > * {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  gap: 0.5rem;
   white-space: nowrap;
 }
 
@@ -102,6 +107,24 @@ body > * {
 
 .result-panel {
   min-height: 20rem;
+}
+
+.recent-chip {
+  display: inline-flex;
+  max-width: 100%;
+  align-items: stretch;
+}
+
+.recent-chip-remove {
+  align-items: center;
+  color: var(--muted);
+  cursor: pointer;
+  display: inline-flex;
+  padding-inline: 0.4rem;
+}
+
+.recent-chip-remove:hover {
+  color: var(--foreground);
 }
 
 .retry-notice {
@@ -115,16 +138,24 @@ body > * {
   position: relative;
 }
 
-.retry-notice-bar {
-  animation: retry-bar 1.8s ease-in-out infinite;
+.retry-notice-bar,
+.retry-notice-rule {
   background: var(--accent);
   height: 3px;
   left: 0;
   opacity: 0.85;
   position: absolute;
   top: 0;
-  transform-origin: left;
   width: 100%;
+}
+
+.retry-notice-bar {
+  animation: retry-bar 1.8s ease-in-out infinite;
+  transform-origin: left;
+}
+
+.retry-notice-rule {
+  opacity: 0.45;
 }
 
 @keyframes retry-in {

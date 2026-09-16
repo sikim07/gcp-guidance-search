@@ -69,7 +69,7 @@ const jsonLd = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`${sans.variable} h-full antialiased`}>
+    <html lang="ko" className={`${sans.variable} bg-paper h-full antialiased`}>
       <body className="bg-paper text-ink min-h-full font-sans">
         <script
           type="application/ld+json"
