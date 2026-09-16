@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { ANSWER_MAX_TOKENS } from "@/lib/retrieval/limits";
 import { generateAnswer, extractiveAnswer, SYSTEM_PROMPT } from "@/lib/llm/answer";
 import type { ChunkRecord } from "@/lib/types";
 
@@ -18,6 +19,7 @@ const retrieved = [
     section: "4.8",
     url: "https://www.fda.gov/media/93884/download",
     text: chunk.text,
+    origin: "fda" as const,
     chunk,
   },
 ];
@@ -26,6 +28,11 @@ describe("search edge cases", () => {
   it("includes anti-injection and grounding rules in the system prompt", () => {
     expect(SYSTEM_PROMPT).toMatch(/이전 지시/i);
     expect(SYSTEM_PROMPT).toMatch(/청크에 있는 내용만/);
+    expect(SYSTEM_PROMPT).toMatch(/두세 문장/);
+  });
+
+  it("caps completion tokens at 400", () => {
+    expect(ANSWER_MAX_TOKENS).toBe(400);
   });
 
   it("does not treat prompt injection as an answer", async () => {

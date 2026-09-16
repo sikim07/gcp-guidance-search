@@ -10,5 +10,6 @@ describe("preset queries", () => {
     expect(blob).toMatch(/모니터링/);
     expect(blob).toMatch(/민감정보|건강정보/);
     expect(blob).toMatch(/의료기기/);
+    expect(blob).toMatch(/SAE/);
   });
 });

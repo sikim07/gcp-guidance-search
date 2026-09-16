@@ -5,12 +5,16 @@ export type ClauseChunk = {
 
 const SECTION_PATTERNS: RegExp[] = [
   /^(제\d+조(?:의\d+)?(?:\s*\([^)]+\))?)\s*/,
+  /^(제\d+장)\s*/,
   /^(제\d+호)\s*/,
   /^(Q\d+[A-Z]?)\s*[.:)]\s*/i,
   /^((?:\d+\.){1,4}\d?)\s+/,
   /^([IVXLCM]+\.[A-Z]?)\s+/,
   /^(ADDENDUM\s+\d+(?:\.\d+)*)\s+/i,
 ];
+
+const NAMED_HEADINGS =
+  /^(BACKGROUND|INTRODUCTION|PRINCIPLES|DATA GOVERNANCE|QUALITY MANAGEMENT|ANNEX\s+\d+\b.*)$/i;
 
 function matchSection(line: string): { section: string; rest: string } | null {
   const trimmed = line.trim();
@@ -28,6 +32,9 @@ function matchSection(line: string): { section: string; rest: string } | null {
       }
       return { section, rest };
     }
+  }
+  if (NAMED_HEADINGS.test(trimmed) && trimmed.length <= 80) {
+    return { section: trimmed.replace(/\s+/g, " ").trim(), rest: "" };
   }
   return null;
 }

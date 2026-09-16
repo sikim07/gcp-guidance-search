@@ -24,4 +24,9 @@ export const PRESET_QUERIES = [
     label: "의료기기 임상시험계획은 식품의약품안전처장의 승인이 필요한가?",
     query: "의료기기 임상시험계획은 식품의약품안전처장의 승인이 필요한가?",
   },
+  {
+    id: "sae-clock",
+    label: "SAE는 며칠 안에 보고하나?",
+    query: "SAE는 며칠 안에 보고하나?",
+  },
 ] as const;

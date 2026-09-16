@@ -1,3 +1,5 @@
+import { DEFAULT_IP_DAILY } from "@/lib/cost/limits";
+
 export type SearchFailureKind = "network" | "limit" | "invalid" | "server";
 
 export function classifySearchFailure(status?: number): SearchFailureKind {
@@ -7,7 +9,10 @@ export function classifySearchFailure(status?: number): SearchFailureKind {
   return "server";
 }
 
-export function searchFailureCopy(kind: SearchFailureKind, fallback?: string): {
+export function searchFailureCopy(
+  kind: SearchFailureKind,
+  fallback?: string,
+): {
   title: string;
   detail: string;
   retry: boolean;
@@ -22,7 +27,9 @@ export function searchFailureCopy(kind: SearchFailureKind, fallback?: string): {
   if (kind === "limit") {
     return {
       title: "오늘은 검색 한도에 닿았습니다",
-      detail: fallback ?? "내일 다시 열어 주세요. 한도는 IP당 하루 20건입니다.",
+      detail:
+        fallback ??
+        `내일 다시 열어 주세요. 한도는 IP당 하루 ${DEFAULT_IP_DAILY}건입니다. 같은 질문은 다시 열 수 있습니다.`,
       retry: false,
     };
   }
@@ -40,7 +47,10 @@ export function searchFailureCopy(kind: SearchFailureKind, fallback?: string): {
   };
 }
 
-export function translateFailureCopy(network: boolean): { title: string; detail: string } {
+export function translateFailureCopy(network: boolean): {
+  title: string;
+  detail: string;
+} {
   if (network) {
     return {
       title: "한국어로 옮기는 중 연결이 끊겼습니다",

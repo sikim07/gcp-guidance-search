@@ -41,6 +41,13 @@ describe("humanizeChangeSummary", () => {
     expect(humanizeChangeSummary("변경 없음")).toBe("변경 없음");
     expect(humanizeChangeSummary("초기 적재 (시드 코퍼스)")).toMatch(/초기 적재/);
   });
+
+  it("folds file-hash-only summaries instead of showing the raw hash", () => {
+    expect(humanizeChangeSummary("file hash changed: abcdef")).toMatch(
+      /본문 파일이 바뀌었습니다/,
+    );
+    expect(humanizeChangeSummary("파일 해시만 변경")).toMatch(/본문 파일이 바뀌었습니다/);
+  });
 });
 
 describe("changeKindLabel", () => {

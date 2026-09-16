@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 import { PRESET_QUERIES } from "@/lib/search/presets";
 
 function PulseFill() {
@@ -40,6 +41,15 @@ function SearchSkeleton() {
                 className="textarea textarea--full-width bg-muted/20 min-h-28 animate-pulse sm:min-h-32"
               />
             </div>
+            <div className="flex flex-wrap gap-2">
+              <SizedPulse className="button button--sm button--secondary">
+                국내·FDA
+              </SizedPulse>
+              <SizedPulse className="button button--sm button--secondary">
+                국내
+              </SizedPulse>
+              <SizedPulse className="button button--sm button--secondary">FDA</SizedPulse>
+            </div>
             <div>
               <p className="text-muted mb-3 text-xs tracking-wide">자주 찾는 질문</p>
               <div className="flex flex-wrap gap-3">
@@ -57,7 +67,10 @@ function SearchSkeleton() {
               <SizedPulse className="button search-submit w-full justify-center sm:w-auto">
                 검색
               </SizedPulse>
-              <p className="text-muted text-xs">하루 20건까지 검색할 수 있습니다</p>
+              <p className="text-muted text-xs">
+                하루 {DEFAULT_IP_DAILY}건의 새 검색이 가능합니다. 같은 질문은 한도에
+                들어가지 않습니다.
+              </p>
             </div>
           </div>
         </div>

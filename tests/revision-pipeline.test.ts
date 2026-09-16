@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { detectContentRevision } from "@/lib/pipeline/change-detector";
-import { ingestEntry } from "@/lib/pipeline/runner";
+import { ingestEntry, parseStatusForText } from "@/lib/pipeline/runner";
 import { emptySnapshot, type AppStore, type StoreSnapshot } from "@/lib/db/types";
 import { SEED_CORPUS } from "@/lib/pipeline/seed/corpus";
 import { sha256 } from "@/lib/pipeline/hasher";
@@ -189,5 +189,11 @@ describe("revision pipeline integration", () => {
       "unchanged",
     );
     expect(second.kind).toBe("unchanged");
+  });
+
+  it("marks empty PDF extracts as needing OCR", () => {
+    expect(parseStatusForText("")).toBe("needs_ocr");
+    expect(parseStatusForText("   \n\t")).toBe("needs_ocr");
+    expect(parseStatusForText("Q8. Audit trails capture who, when, and why.")).toBe("ok");
   });
 });

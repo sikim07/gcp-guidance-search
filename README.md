@@ -14,7 +14,7 @@
 - 답변이 도움이 됐는지는 **도움됨 / 도움되지 않음**으로 남길 수 있습니다. 도움되지 않음에는 어떤 점이 어긋났는지 적을 수 있습니다. 저장은 구글 시트(Apps Script 웹앱)로 갑니다. `scripts/feedback-sheet.gs` 를 시트에 붙여 배포한 뒤 `FEEDBACK_SHEETS_WEBHOOK_URL` 을 넣습니다.
 - 다만 이건 공식 해석이 아닙니다. 답변만 믿지 말고 링크로 원문을 한 번 더 확인하는 걸 권합니다.
 
-지금 들어가 있는 가이드라인은 ICH E6(R2), Part 11, eSource, 위험기반 모니터링, Informed Consent, 식약처 ICH GCP 안내서입니다. 법령은 개인정보 보호법, 의료기기법, 약사법, 첨단재생바이오법, 「의약품 등의 안전에 관한 규칙」(별표 4 KGCP)입니다.
+지금 들어가 있는 가이드라인은 ICH E6(R2), E6(R3), Part 11, eSource, 위험기반 모니터링, Informed Consent, 식약처 ICH GCP 안내서, 안전성 보고 기한 발췌입니다. 법령은 개인정보 보호법, 의료기기법, 약사법, 첨단재생바이오법, 「의약품 등의 안전에 관한 규칙」(별표 4 KGCP)입니다.
 
 ## 실행해보기
 
@@ -36,6 +36,8 @@ npm run bench    # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md에 
 ## Vercel
 
 이미 https://gcp-guidance-search.vercel.app 에 올라가 있습니다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 됩니다. Vercel 빌드 명령은 `node scripts/verify.mjs`라서 lint·테스트가 실패하면 배포되지 않습니다.
+
+검색은 IP당 하루 **새 질문 5건**, 전체 하루 50건입니다. 같은 질문은 캐시에서 다시 열리며 한도에 들어가지 않습니다. Vercel 환경변수 `RATE_LIMIT_IP_DAILY` / `RATE_LIMIT_GLOBAL_DAILY`가 있으면 그 값이 코드 기본값보다 이깁니다.
 
 의견을 구글 시트에 남기려면 시트를 하나 만들고 `scripts/feedback-sheet.gs` 를 Apps Script 웹앱으로 배포한 다음, Vercel에 `FEEDBACK_SHEETS_WEBHOOK_URL` 을 넣습니다.
 

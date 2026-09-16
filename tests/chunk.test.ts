@@ -43,6 +43,32 @@ Source data should be attributable.
     expect(chunks[1]?.text).toContain("서면 동의");
   });
 
+  it("keeps Korean chapter titles as section labels", () => {
+    const chunks = chunkByClause(`
+제1장 목적
+이 안내서는 ICH E6를 설명한다.
+
+제4장 전자자료와 필수문서
+감사추적을 남긴다.
+`);
+    expect(chunks.map((c) => c.section)).toEqual([
+      "제1장 목적",
+      "제4장 전자자료와 필수문서",
+    ]);
+  });
+
+  it("splits E6(R3) named principles from packed paragraphs", () => {
+    const chunks = chunkByClause(`
+Principles
+Quality by design means building quality into the protocol.
+
+Quality Management
+The sponsor should implement a quality management system.
+`);
+    expect(chunks.map((c) => c.section)).toEqual(["Principles", "Quality Management"]);
+    expect(chunks[0]?.text).toContain("Quality by design");
+  });
+
   it("splits Q&A identifiers", () => {
     const chunks = chunkByClause(`
 Q7. What should be considered when validating?

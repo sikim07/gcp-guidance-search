@@ -157,5 +157,8 @@ function humanizeHead(head: string): string {
   );
   out = out.replace(/MST\s+(\S+)\s*→\s*(\S+)/, "법령번호 $1에서 $2로 바뀌었습니다.");
   out = out.replace(/고시일\/발행일만 변경[^.]*$/, "발행일만 바뀌고 본문은 같습니다.");
+  if (/file hash|파일 해시/i.test(out) && !/조항/.test(out)) {
+    return "본문 파일이 바뀌었습니다. 바뀐 조항은 다음 개정 기록에 표시됩니다.";
+  }
   return out.replace(/^[·.\s]+|[·.\s]+$/g, "");
 }

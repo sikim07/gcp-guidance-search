@@ -1,10 +1,13 @@
 import type { AppStore } from "@/lib/db/types";
+import { DEFAULT_GLOBAL_DAILY, DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 import { hashIp } from "@/lib/pipeline/hasher";
+
+export { DEFAULT_GLOBAL_DAILY, DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 
 export function rateLimitConfig() {
   return {
-    ipDaily: Number(process.env.RATE_LIMIT_IP_DAILY ?? 20),
-    globalDaily: Number(process.env.RATE_LIMIT_GLOBAL_DAILY ?? 200),
+    ipDaily: Number(process.env.RATE_LIMIT_IP_DAILY ?? DEFAULT_IP_DAILY),
+    globalDaily: Number(process.env.RATE_LIMIT_GLOBAL_DAILY ?? DEFAULT_GLOBAL_DAILY),
   };
 }
 
@@ -21,6 +24,17 @@ export class RateLimitError extends Error {
   ) {
     super(message);
   }
+}
+
+export function shouldCountTowardRateLimit(cacheHit: boolean): boolean {
+  return !cacheHit;
+}
+
+export async function gateSearch(opts: {
+  cacheHit: boolean;
+  limit: () => Promise<void>;
+}): Promise<void> {
+  if (shouldCountTowardRateLimit(opts.cacheHit)) await opts.limit();
 }
 
 export async function enforceRateLimit(store: AppStore, ip: string): Promise<void> {

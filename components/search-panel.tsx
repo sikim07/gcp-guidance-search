@@ -17,7 +17,7 @@ import {
   TextArea,
   TextField,
 } from "@heroui/react";
-import { ThumbsDown, ThumbsUp, X } from "lucide-react";
+import { Copy, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { RetryNotice } from "@/components/retry-notice";
 import {
   classifySearchFailure,
@@ -37,7 +37,10 @@ import {
   subscribeRecents,
   writeStoredRecents,
 } from "@/lib/search/recent";
+import { DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 import { detectPassageLanguage, needsEnglishTranslation } from "@/lib/llm/translate";
+import { formatCitations } from "@/lib/retrieval/cite";
+import type { SearchScope } from "@/lib/retrieval/rank";
 import { normalizeQuery } from "@/lib/utils";
 import type { SearchResponse } from "@/lib/types";
 
@@ -61,6 +64,8 @@ export function SearchPanel() {
   const [downComment, setDownComment] = useState("");
   const [feedbackBusy, setFeedbackBusy] = useState(false);
   const [feedbackError, setFeedbackError] = useState(false);
+  const [scope, setScope] = useState<SearchScope>("all");
+  const [copied, setCopied] = useState(false);
   const recents = useSyncExternalStore(
     subscribeRecents,
     getRecentsSnapshot,
@@ -116,7 +121,7 @@ export function SearchPanel() {
       const response = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed }),
+        body: JSON.stringify({ query: trimmed, scope }),
       });
       const body = (await response.json()) as SearchResponse & { error?: string };
       if (!response.ok) {
@@ -255,6 +260,18 @@ export function SearchPanel() {
   const recentChips = customRecents(recents);
   const submitLabel = loading ? loadingCopy(loadingPhase(elapsedMs)) : "검색";
 
+  async function copyCitations() {
+    if (!result?.sources.length) return;
+    const text = formatCitations(result.sources);
+    try {
+      await navigator.clipboard.writeText(text);
+      setCopied(true);
+      window.setTimeout(() => setCopied(false), 1600);
+    } catch {
+      setCopied(false);
+    }
+  }
+
   return (
     <div className="space-y-6 sm:space-y-8">
       <section className="space-y-2">
@@ -283,6 +300,25 @@ export function SearchPanel() {
                 placeholder="예: 전자기록 감사추적은 어떤 항목을 남겨야 하나?"
               />
             </TextField>
+            <div className="flex flex-wrap gap-2" data-testid="search-scope">
+              {(
+                [
+                  ["all", "국내·FDA"],
+                  ["domestic", "국내"],
+                  ["fda", "FDA"],
+                ] as const
+              ).map(([id, label]) => (
+                <Button
+                  key={id}
+                  type="button"
+                  size="sm"
+                  variant={scope === id ? "primary" : "secondary"}
+                  onPress={() => setScope(id)}
+                >
+                  {label}
+                </Button>
+              ))}
+            </div>
             <div>
               <p className="text-muted mb-3 text-xs tracking-wide">자주 찾는 질문</p>
               <div className="flex flex-wrap gap-3" data-testid="preset-list">
@@ -345,7 +381,10 @@ export function SearchPanel() {
                 {loading ? <Spinner color="current" size="sm" /> : null}
                 {submitLabel}
               </Button>
-              <p className="text-muted text-xs">하루 20건까지 검색할 수 있습니다</p>
+              <p className="text-muted text-xs">
+                하루 {DEFAULT_IP_DAILY}건의 새 검색이 가능합니다. 같은 질문은 한도에
+                들어가지 않습니다.
+              </p>
             </div>
           </form>
         </Card.Content>
@@ -449,7 +488,21 @@ export function SearchPanel() {
                 같은 질문의 답을 다시 보여 줍니다.
               </p>
             ) : null}
-            <ul className="border-border mt-5 space-y-3 border-t pt-5">
+            <div className="border-border mt-5 flex flex-wrap items-center justify-between gap-2 border-t pt-5">
+              <p className="text-muted text-xs">출처</p>
+              {result.sources.length > 0 ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  data-testid="copy-citations"
+                  onPress={() => void copyCitations()}
+                >
+                  <Copy className="size-3.5" />
+                  {copied ? "복사됨" : "인용 복사"}
+                </Button>
+              ) : null}
+            </div>
+            <ul className="mt-3 space-y-3">
               {result.sources.map((source) => (
                 <li
                   key={`${source.url}-${source.section}`}

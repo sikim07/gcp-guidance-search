@@ -80,11 +80,16 @@ The sponsor should implement a system to manage quality throughout all stages of
 
 ADDENDUM 5.18.6 Monitoring Plan
 The sponsor should develop a monitoring plan that is tailored to the specific human subject protection and data integrity risks of the trial. The plan should describe the monitoring strategy, the monitoring responsibilities of all the parties involved, the various monitoring methods to be used, and the rationale for their use. The plan should also emphasize the monitoring of critical data and processes. Particular attention should be given to those aspects that are not routine clinical practice and that require additional training. The monitoring plan should reference the applicable policies and procedures.
+
+8. Essential Documents
+8.1 Introduction
+Essential documents are those documents which individually and collectively permit evaluation of the conduct of a trial and the quality of the data produced. These documents serve to demonstrate the compliance of the investigator, sponsor and monitor with the standards of Good Clinical Practice and with all applicable regulatory requirements. Filing essential documents at the investigator/institution and sponsor sites in a timely manner can greatly assist in the successful management of a trial. These documents are also the ones which are usually audited by the sponsor's independent audit function and inspected by the regulatory authority(ies) as part of the process to confirm the validity of the trial conduct and the integrity of data collected.
 `,
   },
   {
     source: "fda-guidance",
-    title: "Electronic Systems, Electronic Records, and Electronic Signatures in Clinical Investigations: Questions and Answers",
+    title:
+      "Electronic Systems, Electronic Records, and Electronic Signatures in Clinical Investigations: Questions and Answers",
     url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/electronic-systems-electronic-records-and-electronic-signatures-clinical-investigations-questions",
     pdfUrl: "https://www.fda.gov/media/166215/download",
     issuedDate: "2024-10-02",
@@ -189,7 +194,8 @@ Verification of subjects' informed consent is a critical activity. Alternatives 
   },
   {
     source: "fda-guidance",
-    title: "Informed Consent Information Sheet: Guidance for IRBs, Clinical Investigators, and Sponsors",
+    title:
+      "Informed Consent Information Sheet: Guidance for IRBs, Clinical Investigators, and Sponsors",
     url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/informed-consent-information-sheet",
     pdfUrl: "https://www.fda.gov/media/88915/download",
     issuedDate: "2023-08-15",
@@ -235,6 +241,64 @@ ICH E6(R2) 추가사항은 시험의 규모와 복잡성 증가, 전자기록의
 
 제6장 시험대상자 동의
 시험책임자는 적용 가능한 규정과 GCP, 헬싱키 선언의 윤리적 원칙에 따라 시험대상자 또는 대리인의 서면 동의를 받아야 한다. 중요한 새 정보가 생기면 동의서와 서면 정보를 개정하고 IRB/IEC의 승인을 받은 뒤 사용한다.
+`,
+  },
+  {
+    source: "fda-ich",
+    title: "E6(R3) Good Clinical Practice",
+    url: "https://www.fda.gov/regulatory-information/search-fda-guidance-documents/e6r3-good-clinical-practice",
+    pdfUrl: "https://database.ich.org/sites/default/files/ICH_E6%28R3%29_Guideline.pdf",
+    issuedDate: "2025-01-06",
+    category: "ICH",
+    externalId: "fda-ich:e6-r3",
+    text: `Principles
+ICH E6(R3) Good Clinical Practice sets proportionate, risk-based principles for designing, conducting, recording, and reporting trials. Quality by design means building quality into the protocol and processes rather than relying only on after-the-fact inspection. Trial procedures should be proportionate to the risks to participants and to the importance of the data for reliability of results.
+
+Data Governance
+The sponsor and investigator should implement processes that ensure data are attributable, legible, contemporaneous, original, accurate, complete, consistent, and enduring. Computerized systems used in the trial should be fit for purpose, validated for their intended use, and should maintain an audit trail of data changes.
+
+Quality Management
+The sponsor should implement a quality management system that identifies critical-to-quality factors and uses risk proportionate monitoring and review. Essential records should permit reconstruction of the trial. Monitoring, audits, and inspections focus on those critical factors rather than uniform 100% source data verification.
+
+Annex 1 Investigator
+The investigator should ensure that informed consent is obtained before trial-specific procedures, that safety information is reported according to the protocol and applicable regulations, and that essential records under the investigator's control are maintained.
+`,
+  },
+  {
+    source: "fda-guidance",
+    title: "IND Safety Reporting (21 CFR 312.32) — excerpt for reporting clocks",
+    url: "https://www.fda.gov/drugs/investigational-new-drug-ind-application/ind-application-reporting-safety-reports",
+    issuedDate: "2012-12-19",
+    category: "Safety Reporting",
+    externalId: "fda-guidance:312-32-clocks",
+    text: `312.32 IND safety reporting
+The sponsor must notify FDA and all participating investigators in an IND safety report of potential serious risks from clinical trials or any other source.
+
+Fatal or life-threatening unexpected suspected adverse reactions
+The sponsor must notify FDA of any unexpected fatal or life-threatening suspected adverse reaction as soon as possible but in no case later than 7 calendar days after the sponsor's initial receipt of the information.
+
+Other serious unexpected suspected adverse reactions
+The sponsor must notify FDA of any serious unexpected suspected adverse reaction, and of any findings from other studies or sources that suggest a significant risk, as soon as possible but in no case later than 15 calendar days after the sponsor determines that the information qualifies for reporting.
+
+Follow-up
+The sponsor must promptly investigate all safety information and submit follow-up reports as needed to FDA and investigators.
+`,
+  },
+  {
+    source: "mfds",
+    title: "임상시험 안전성 정보 보고 기한 안내 (발췌)",
+    url: "https://www.mfds.go.kr/brd/m_1060/list.do",
+    issuedDate: "2021-06-01",
+    category: "임상시험",
+    externalId: "mfds:safety-clocks",
+    text: `중대한 예상하지 못한 약물이상반응 보고
+시험책임자는 중대한 이상반응을 인지한 즉시 의뢰자에게 알린다. 의뢰자는 치명적이거나 생명을 위협하는 예상하지 못한 약물이상반응(SUSAR)을 최초 인지 후 7일 이내에 식품의약품안전처장에게 보고하고, 이후 8일 이내에 상세 정보를 보완한다.
+
+그 밖의 중대한 예상하지 못한 약물이상반응
+치명적·생명위협이 아닌 중대한 예상하지 못한 약물이상반응은 최초 인지 후 15일 이내에 식품의약품안전처장에게 보고한다. 보고 기한은 관련 규정과 승인된 계획서를 함께 확인한다.
+
+SAE와 SUSAR
+중대한 이상반응(SAE)은 사망, 생명위협, 입원 또는 입원기간 연장, 영구적 장애, 선천성 기형 등을 포함한다. 예상하지 못한 중대한 약물이상반응은 SUSAR로 분류하여 위의 7일·15일 기한을 적용한다.
 `,
   },
 ];

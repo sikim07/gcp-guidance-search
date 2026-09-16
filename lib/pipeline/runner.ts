@@ -24,7 +24,12 @@ import {
   type CatalogEntry,
   type ChangeKind,
   type ChunkRecord,
+  type ParseStatus,
 } from "@/lib/types";
+
+export function parseStatusForText(text: string): ParseStatus {
+  return text.trim().length < 40 ? "needs_ocr" : "ok";
+}
 
 export async function watchSources(
   store: AppStore,
@@ -260,7 +265,7 @@ async function writeNewVersion(
     issuedDate: catalog.issuedDate,
     fileHash: hash,
     extractedText: text,
-    parseStatus: "ok",
+    parseStatus: parseStatusForText(text),
     diffSummary: summary,
     createdAt: now,
   });

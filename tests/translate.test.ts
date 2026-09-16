@@ -1,7 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { applyGcpKoreanTerms } from "@/lib/llm/gcp-terms";
 import { protectLetterLabels, restoreLetterLabels } from "@/lib/llm/markers";
-import { parsePublicTranslation, splitForPublicTranslate } from "@/lib/llm/public-translate";
+import {
+  parsePublicTranslation,
+  splitForPublicTranslate,
+} from "@/lib/llm/public-translate";
 import { lookupSeedKorean } from "@/lib/llm/seed-lookup";
 import {
   detectPassageLanguage,
@@ -90,7 +93,9 @@ describe("seed and public translation", () => {
   });
 
   it("keeps A./B. list markers instead of 에이/비", () => {
-    const protectedText = protectLetterLabels("A. Validation\nB. Audit trail\n(c) backup");
+    const protectedText = protectLetterLabels(
+      "A. Validation\nB. Audit trail\n(c) backup",
+    );
     expect(protectedText).toMatch(/MARK_A/);
     expect(protectedText).toMatch(/MARK_B/);
     expect(restoreLetterLabels("비. 감사추적\n(비) 백업")).toMatch(/^B\. 감사추적/);
@@ -155,5 +160,18 @@ describe("seed and public translation", () => {
     const clip =
       "The audit trail should capture who made the change, when the change was made, and why the change was made, without obscuring the original entry.";
     expect(lookupSeedKorean(clip)).toMatch(/감사추적/);
+  });
+
+  it("looks up SAE clocks and E6(R3) quality-by-design without a model", () => {
+    expect(
+      lookupSeedKorean(
+        "The sponsor must notify FDA of any unexpected fatal or life-threatening suspected adverse reaction as soon as possible but in no case later than 7 calendar days after the sponsor's initial receipt of the information.",
+      ),
+    ).toMatch(/7일/);
+    expect(
+      lookupSeedKorean(
+        "ICH E6(R3) Good Clinical Practice sets proportionate, risk-based principles for designing, conducting, recording, and reporting trials. Quality by design means building quality into the protocol and processes rather than relying only on after-the-fact inspection. Trial procedures should be proportionate to the risks to participants and to the importance of the data for reliability of results.",
+      ),
+    ).toMatch(/Quality by design|품질/);
   });
 });

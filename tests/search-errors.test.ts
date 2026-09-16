@@ -8,5 +8,6 @@ describe("search failure copy", () => {
     expect(searchFailureCopy("server").retry).toBe(true);
     expect(searchFailureCopy(classifySearchFailure(429)).retry).toBe(false);
     expect(searchFailureCopy(classifySearchFailure(400)).retry).toBe(false);
+    expect(searchFailureCopy("limit").detail).toMatch(/하루 5건/);
   });
 });
