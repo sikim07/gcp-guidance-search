@@ -1,13 +1,20 @@
 import { describe, expect, it, vi, afterEach } from "vitest";
 import { appendFeedbackToSheet, sheetsWebhookUrl } from "@/lib/feedback/sheets";
 
+const originalWebhook = process.env.FEEDBACK_SHEETS_WEBHOOK_URL;
+
 afterEach(() => {
-  delete process.env.FEEDBACK_SHEETS_WEBHOOK_URL;
+  if (originalWebhook === undefined) {
+    delete process.env.FEEDBACK_SHEETS_WEBHOOK_URL;
+  } else {
+    process.env.FEEDBACK_SHEETS_WEBHOOK_URL = originalWebhook;
+  }
   vi.unstubAllGlobals();
 });
 
 describe("feedback sheets", () => {
   it("reads the webhook from env", () => {
+    delete process.env.FEEDBACK_SHEETS_WEBHOOK_URL;
     expect(sheetsWebhookUrl()).toBeUndefined();
     process.env.FEEDBACK_SHEETS_WEBHOOK_URL = " https://script.google.com/macros/s/abc/exec ";
     expect(sheetsWebhookUrl()).toBe("https://script.google.com/macros/s/abc/exec");
