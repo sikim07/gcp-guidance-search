@@ -35,7 +35,7 @@ test("question → answer → feedback", async ({ page }) => {
   await expect(page.getByTestId("feedback-thanks")).toBeVisible();
 });
 
-test("mobile uses bottom nav instead of header links", async ({ page }) => {
+test("mobile uses a fixed-height floating tab bar", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const title = page.getByRole("link", { name: "GCP 가이드라인 검색기" });
@@ -49,6 +49,18 @@ test("mobile uses bottom nav instead of header links", async ({ page }) => {
   expect(titleBox).toBeTruthy();
   expect(bottomBox).toBeTruthy();
   expect(bottomBox!.y).toBeGreaterThan(titleBox!.y + titleBox!.height);
+  expect(bottomBox!.width).toBeLessThan(390 - 16);
+  const heightAtNarrow = bottomBox!.height;
+
+  const paddingBottom = await page
+    .locator("main")
+    .evaluate((el) => parseFloat(getComputedStyle(el).paddingBottom));
+  expect(paddingBottom).toBeGreaterThanOrEqual(heightAtNarrow + 12);
+
+  await page.setViewportSize({ width: 500, height: 844 });
+  const wider = await bottom.boundingBox();
+  expect(wider).toBeTruthy();
+  expect(Math.abs(wider!.height - heightAtNarrow)).toBeLessThan(1);
 });
 
 test("updates feed renders seeded corpus", async ({ page }) => {

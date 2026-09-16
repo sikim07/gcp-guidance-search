@@ -82,7 +82,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <SiteHeader />
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-24 sm:max-w-5xl sm:py-8 md:pb-8">
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
           <PageTransition>{children}</PageTransition>
         </main>
         <SiteBottomNav />

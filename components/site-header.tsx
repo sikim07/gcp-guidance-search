@@ -1,16 +1,19 @@
 "use client";
 
-import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { NAV_ITEMS } from "@/lib/nav";
+import { NavLink } from "@/components/nav-link";
+import { NAV_ITEMS, isNavActive } from "@/lib/nav";
 
 export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="border-rule/70 bg-paper/80 sticky top-0 z-20 border-b backdrop-blur-md">
+    <header
+      className="border-rule/70 bg-paper/80 sticky top-0 z-20 border-b backdrop-blur-md"
+      style={{ viewTransitionName: "site-header" }}
+    >
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3 md:max-w-5xl md:py-3.5">
-        <Link
+        <NavLink
           href="/"
           className="text-ink flex items-center gap-2.5 text-base font-semibold tracking-tight whitespace-nowrap sm:text-lg"
         >
@@ -22,13 +25,12 @@ export function SiteHeader() {
             className="size-8 rounded-md"
           />
           GCP 가이드라인 검색기
-        </Link>
+        </NavLink>
         <nav className="hidden items-center gap-1 md:flex">
           {NAV_ITEMS.map((link) => {
-            const active =
-              link.href === "/" ? pathname === "/" : pathname.startsWith(link.href);
+            const active = isNavActive(pathname, link.href);
             return (
-              <Link
+              <NavLink
                 key={link.href}
                 href={link.href}
                 className={
@@ -38,7 +40,7 @@ export function SiteHeader() {
                 }
               >
                 {link.label}
-              </Link>
+              </NavLink>
             );
           })}
         </nav>

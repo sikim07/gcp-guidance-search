@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, type ReactNode } from "react";
+import { ViewTransition, type ReactNode, useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 import { navIndex } from "@/lib/nav";
 
@@ -8,22 +8,37 @@ export function PageTransition({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const index = navIndex(pathname);
   const previous = useRef<number | null>(null);
-  const direction =
-    previous.current === null || previous.current === index
-      ? "none"
-      : index > previous.current
-        ? "right"
-        : "left";
 
   useEffect(() => {
+    if (previous.current !== null && previous.current !== index) {
+      document.documentElement.dataset.navDir =
+        index > previous.current ? "forward" : "back";
+    }
     previous.current = index;
-  }, [index]);
+  }, [index, pathname]);
 
   return (
-    <div className="page-transition-frame">
-      <div key={pathname} className={`page-transition-pane page-transition-${direction}`}>
-        {children}
-      </div>
-    </div>
+    <ViewTransition
+      key={pathname}
+      name="page-content"
+      enter={{
+        "nav-forward": "nav-forward",
+        "nav-back": "nav-back",
+        default: "none",
+      }}
+      exit={{
+        "nav-forward": "nav-forward",
+        "nav-back": "nav-back",
+        default: "none",
+      }}
+      share={{
+        "nav-forward": "nav-forward",
+        "nav-back": "nav-back",
+        default: "none",
+      }}
+      default="none"
+    >
+      <div className="page-shell">{children}</div>
+    </ViewTransition>
   );
 }
