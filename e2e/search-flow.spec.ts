@@ -35,16 +35,20 @@ test("question → answer → feedback", async ({ page }) => {
   await expect(page.getByTestId("feedback-thanks")).toBeVisible();
 });
 
-test("mobile header stacks title above nav", async ({ page }) => {
+test("mobile uses bottom nav instead of header links", async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 844 });
   await page.goto("/");
   const title = page.getByRole("link", { name: "GCP 가이드라인 검색기" });
-  const navSearch = page.locator("header nav").getByRole("link", { name: "검색" });
+  await expect(title).toBeVisible();
+  await expect(page.locator("header nav")).toBeHidden();
+  const bottom = page.getByTestId("bottom-nav");
+  await expect(bottom).toBeVisible();
+  await expect(bottom.getByRole("link", { name: "검색" })).toBeVisible();
   const titleBox = await title.boundingBox();
-  const navBox = await navSearch.boundingBox();
+  const bottomBox = await bottom.boundingBox();
   expect(titleBox).toBeTruthy();
-  expect(navBox).toBeTruthy();
-  expect(navBox!.y).toBeGreaterThanOrEqual(titleBox!.y + titleBox!.height - 1);
+  expect(bottomBox).toBeTruthy();
+  expect(bottomBox!.y).toBeGreaterThan(titleBox!.y + titleBox!.height);
 });
 
 test("updates feed renders seeded corpus", async ({ page }) => {

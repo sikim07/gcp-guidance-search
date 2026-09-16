@@ -1,7 +1,9 @@
 import "./globals.css";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import { SiteBottomNav } from "@/components/site-bottom-nav";
+import { PageTransition } from "@/components/page-transition";
 import {
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
@@ -67,6 +69,10 @@ const jsonLd = {
   offers: { "@type": "Offer", price: "0", priceCurrency: "KRW" },
 };
 
+export const viewport: Viewport = {
+  viewportFit: "cover",
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`${sans.variable} bg-paper h-full antialiased`}>
@@ -76,9 +82,10 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <SiteHeader />
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 sm:max-w-5xl sm:py-8">
-          {children}
+        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-24 sm:max-w-5xl sm:py-8 md:pb-8">
+          <PageTransition>{children}</PageTransition>
         </main>
+        <SiteBottomNav />
       </body>
     </html>
   );

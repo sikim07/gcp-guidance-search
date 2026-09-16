@@ -296,6 +296,7 @@ export function SearchPanel() {
                       size="sm"
                       variant={active ? "primary" : "secondary"}
                       isDisabled={active}
+                      className="preset-chip"
                       data-testid={`preset-${preset.id}`}
                       onPress={() => void runSearch(preset.query)}
                     >
@@ -310,11 +311,12 @@ export function SearchPanel() {
                 <p className="text-muted mb-2 text-xs tracking-wide">최근 검색</p>
                 <div className="flex flex-wrap gap-2" data-testid="recent-list">
                   {recentChips.map((item) => (
-                    <span key={item} className="recent-chip">
+                    <span key={item} className="recent-chip max-w-full">
                       <Button
                         type="button"
                         size="sm"
                         variant="ghost"
+                        className="preset-chip min-w-0"
                         onPress={() => void runSearch(item)}
                       >
                         {item}
@@ -575,11 +577,11 @@ function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
             <Spinner size="sm" />
             {loadingCopy(loadingPhase(elapsedMs))}
           </p>
-          <Skeleton className="h-4 w-full rounded-lg" />
-          <Skeleton className="h-4 w-11/12 rounded-lg" />
-          <Skeleton className="h-4 w-4/5 rounded-lg" />
-          <Skeleton className="h-4 w-5/6 rounded-lg" />
-          <Skeleton className="h-4 w-2/3 rounded-lg" />
+          <Skeleton className="h-7 w-full rounded-lg" />
+          <Skeleton className="h-7 w-11/12 rounded-lg" />
+          <Skeleton className="h-7 w-4/5 rounded-lg" />
+          <Skeleton className="h-7 w-5/6 rounded-lg" />
+          <Skeleton className="h-7 w-2/3 rounded-lg" />
         </div>
         <div className="border-border mt-5 space-y-3 border-t pt-5">
           <Skeleton className="h-4 w-3/4 rounded-lg" />
