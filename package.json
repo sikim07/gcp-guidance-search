@@ -14,8 +14,6 @@
     "test:watch": "vitest",
     "test:e2e": "playwright test",
     "bench": "tsx scripts/bench-cosine.ts",
-    "seed": "tsx scripts/seed.ts",
-    "admin:logs": "tsx scripts/admin-logs.ts",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
