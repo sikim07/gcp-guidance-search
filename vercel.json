@@ -1,5 +1,6 @@
 {
-  "buildCommand": "npm run verify",
+  "$schema": "https://openapi.vercel.sh/vercel.json",
+  "buildCommand": "node scripts/verify.mjs",
   "crons": [
     {
       "path": "/api/cron/watch",

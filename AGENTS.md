@@ -18,4 +18,5 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - v1에서 OCR하지 말 것.
 - 답변은 청크 근거만. 출처(문서, 조항, URL)를 붙일 것.
 - Stop 훅과 벤치마크 스크립트를 제거하지 말 것.
+- `git push` 전에 `npm run verify`(lint + test + next build)를 돌리고, 실패하면 푸시하지 말 것. `next build`만으로는 부족하다.
 

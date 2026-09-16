@@ -1,0 +1,12 @@
+---
+description: Push 전에 lint·test·build를 반드시 실행한다
+alwaysApply: true
+---
+
+# 배포 게이트
+
+`git push` 또는 배포 전에 반드시 `npm run verify`를 실행한다. lint, unit test, `next build`가 모두 종료 코드 0이어야 한다.
+
+- 실패하면 푸시하지 않는다. "일단 올리고 고친다"는 금지.
+- `next build`만 통과한 것을 배포 가능으로 보지 않는다. Vercel 경로 표(`○`/`ƒ`)는 성공 로그이지 검증 완료가 아니다.
+- 로컬에서 이미 돌렸어도, 이번 턴의 코드 변경 뒤에는 다시 돌린다.

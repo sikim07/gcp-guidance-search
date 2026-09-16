@@ -29,13 +29,13 @@ npm run dev
 테스트와 벤치마크는 이렇게 돌립니다.
 
 ```bash
-npm test
-npm run bench   # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md에 정리했습니다
+npm run verify   # lint + unit test + production build. 푸시/Vercel도 이 명령을 쓴다
+npm run bench    # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md에 정리했습니다
 ```
 
 ## Vercel
 
-이미 https://gcp-guidance-search.vercel.app 에 올라가 있습니다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 됩니다.
+이미 https://gcp-guidance-search.vercel.app 에 올라가 있습니다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 됩니다. Vercel 빌드 명령은 `node scripts/verify.mjs`라서 lint·테스트가 실패하면 배포되지 않습니다.
 
 의견을 구글 시트에 남기려면 시트를 하나 만들고 `scripts/feedback-sheet.gs` 를 Apps Script 웹앱으로 배포한 다음, Vercel에 `FEEDBACK_SHEETS_WEBHOOK_URL` 을 넣습니다.
 
