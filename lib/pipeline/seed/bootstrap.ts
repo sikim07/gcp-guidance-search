@@ -16,7 +16,7 @@ export function seedNeedsRefresh(opts: {
   currentSections: string[];
   nextSections: string[];
 }): boolean {
-  if (opts.fileHash !== opts.seedHash) return true;
+  if (opts.fileHash !== opts.seedHash) return false;
   if (opts.currentSections.length !== opts.nextSections.length) return true;
   return opts.currentSections.some((section, i) => section !== opts.nextSections[i]);
 }

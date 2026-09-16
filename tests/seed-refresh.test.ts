@@ -2,7 +2,7 @@ import { describe, expect, it } from "vitest";
 import { seedNeedsRefresh } from "@/lib/pipeline/seed/bootstrap";
 
 describe("seedNeedsRefresh", () => {
-  it("refreshes when the seed hash or clause sections changed", () => {
+  it("refreshes only when the stored text is still the seed and clause cuts changed", () => {
     expect(
       seedNeedsRefresh({
         fileHash: "aaa",
@@ -10,7 +10,7 @@ describe("seedNeedsRefresh", () => {
         currentSections: ["§1"],
         nextSections: ["§1"],
       }),
-    ).toBe(true);
+    ).toBe(false);
     expect(
       seedNeedsRefresh({
         fileHash: "h",
