@@ -2,13 +2,12 @@ import { test, expect } from "@playwright/test";
 
 test("question → answer → feedback", async ({ page }) => {
   await page.goto("/");
-  await expect(
-    page.getByRole("heading", { name: "임상시험 규정을 검색" }),
-  ).toBeVisible();
+  await expect(page.getByRole("heading", { name: "임상시험 규정을 검색" })).toBeVisible();
   await expect(
     page.getByText(/가이드라인과 법령에서 근거 조항을 찾습니다/),
   ).toBeVisible();
   await page.getByTestId("preset-audit-trail").click();
+  await expect(page.getByTestId("search-progress")).toBeVisible();
   const answer = page.getByTestId("answer-card");
   await expect(answer).toBeVisible({ timeout: 60_000 });
   await expect(answer).not.toContainText("지금은 번역을 할 수 없습니다");

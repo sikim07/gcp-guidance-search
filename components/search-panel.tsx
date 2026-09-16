@@ -3,6 +3,7 @@
 import {
   useEffect,
   useMemo,
+  useRef,
   useState,
   useSyncExternalStore,
   type ReactNode,
@@ -40,7 +41,6 @@ import {
 import { DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 import { detectPassageLanguage, needsEnglishTranslation } from "@/lib/llm/translate";
 import { formatCitations } from "@/lib/retrieval/cite";
-import type { SearchScope } from "@/lib/retrieval/rank";
 import { normalizeQuery } from "@/lib/utils";
 import type { SearchResponse } from "@/lib/types";
 
@@ -64,8 +64,8 @@ export function SearchPanel() {
   const [downComment, setDownComment] = useState("");
   const [feedbackBusy, setFeedbackBusy] = useState(false);
   const [feedbackError, setFeedbackError] = useState(false);
-  const [scope, setScope] = useState<SearchScope>("all");
   const [copied, setCopied] = useState(false);
+  const progressRef = useRef<HTMLParagraphElement>(null);
   const recents = useSyncExternalStore(
     subscribeRecents,
     getRecentsSnapshot,
@@ -86,6 +86,7 @@ export function SearchPanel() {
 
   useEffect(() => {
     if (!loading) return;
+    progressRef.current?.scrollIntoView({ behavior: "smooth", block: "nearest" });
     const started = Date.now();
     const timer = window.setInterval(() => setElapsedMs(Date.now() - started), 200);
     return () => window.clearInterval(timer);
@@ -121,7 +122,7 @@ export function SearchPanel() {
       const response = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed, scope }),
+        body: JSON.stringify({ query: trimmed }),
       });
       const body = (await response.json()) as SearchResponse & { error?: string };
       if (!response.ok) {
@@ -300,46 +301,44 @@ export function SearchPanel() {
                 placeholder="예: 전자기록 감사추적은 어떤 항목을 남겨야 하나?"
               />
             </TextField>
-            <div className="flex flex-wrap gap-2" data-testid="search-scope">
-              {(
-                [
-                  ["all", "국내·FDA"],
-                  ["domestic", "국내"],
-                  ["fda", "FDA"],
-                ] as const
-              ).map(([id, label]) => (
-                <Button
-                  key={id}
-                  type="button"
-                  size="sm"
-                  variant={scope === id ? "primary" : "secondary"}
-                  onPress={() => setScope(id)}
-                >
-                  {label}
-                </Button>
-              ))}
-            </div>
             <div>
               <p className="text-muted mb-3 text-xs tracking-wide">자주 찾는 질문</p>
               <div className="flex flex-wrap gap-3" data-testid="preset-list">
                 {PRESET_QUERIES.map((preset) => {
                   const active = preset.id === activePresetId;
+                  const searchingThis = loading && active;
                   return (
                     <Button
                       key={preset.id}
                       type="button"
                       size="sm"
                       variant={active ? "primary" : "secondary"}
-                      isDisabled={active}
-                      className="preset-chip"
+                      isDisabled={loading || active}
+                      aria-busy={searchingThis}
+                      className="preset-chip gap-2"
                       data-testid={`preset-${preset.id}`}
+                      data-busy={searchingThis ? "true" : "false"}
                       onPress={() => void runSearch(preset.query)}
                     >
+                      {searchingThis ? <Spinner color="current" size="sm" /> : null}
                       {preset.label}
                     </Button>
                   );
                 })}
               </div>
+              {loading ? (
+                <p
+                  ref={progressRef}
+                  id="search-progress"
+                  role="status"
+                  aria-live="polite"
+                  data-testid="search-progress"
+                  className="text-muted mt-3 flex min-h-7 items-center gap-2 text-sm"
+                >
+                  <Spinner size="sm" />
+                  {submitLabel}
+                </p>
+              ) : null}
             </div>
             {recentChips.length > 0 ? (
               <div>
@@ -351,9 +350,14 @@ export function SearchPanel() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="preset-chip min-w-0"
+                        className="preset-chip min-w-0 gap-2"
+                        isDisabled={loading}
+                        aria-busy={loading && item === query}
                         onPress={() => void runSearch(item)}
                       >
+                        {loading && item === query ? (
+                          <Spinner color="current" size="sm" />
+                        ) : null}
                         {item}
                       </Button>
                       <button

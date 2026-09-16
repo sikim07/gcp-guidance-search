@@ -41,15 +41,6 @@ function SearchSkeleton() {
                 className="textarea textarea--full-width bg-muted/20 min-h-28 animate-pulse sm:min-h-32"
               />
             </div>
-            <div className="flex flex-wrap gap-2">
-              <SizedPulse className="button button--sm button--secondary">
-                국내·FDA
-              </SizedPulse>
-              <SizedPulse className="button button--sm button--secondary">
-                국내
-              </SizedPulse>
-              <SizedPulse className="button button--sm button--secondary">FDA</SizedPulse>
-            </div>
             <div>
               <p className="text-muted mb-3 text-xs tracking-wide">자주 찾는 질문</p>
               <div className="flex flex-wrap gap-3">
