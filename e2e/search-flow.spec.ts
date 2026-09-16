@@ -11,19 +11,18 @@ test("question → answer → feedback", async ({ page }) => {
   await page.getByTestId("preset-audit-trail").click();
   const answer = page.getByTestId("answer-card");
   await expect(answer).toBeVisible({ timeout: 60_000 });
+  await expect(answer).not.toContainText("지금은 번역을 할 수 없습니다");
   await expect(answer).toContainText(
-    /감사추적|audit trail|확인되지 않습니다|Part 11|5\.5/i,
+    /감사추적|시험대상자|의뢰자|원본자료|전자|확인되지 않습니다/i,
   );
-  await page.getByTestId("tab-original").click();
-  await expect(answer).toContainText(
-    /Part 11|감사추적|audit trail|전자|5\.5|확인되지 않습니다/i,
-  );
-  await page.getByTestId("tab-answer").click();
   const toggle = page.getByTestId("toggle-translation");
   if (await toggle.isVisible()) {
+    await expect(toggle).toContainText("원문 보기");
     await toggle.click();
-    await expect(answer).not.toContainText("지금은 번역을 할 수 없습니다");
-    await expect(answer).toContainText(/감사추적|시험대상자|의뢰자|원본자료|전자/);
+    await expect(answer).toContainText(/audit trail|Part 11|BACKGROUND|electronic/i);
+    await page.getByTestId("tab-original").click();
+    await expect(answer).toContainText(/Part 11|audit trail|electronic|5\.5/i);
+    await page.getByTestId("tab-answer").click();
   }
   await page.getByTestId("feedback-down").click();
   await expect(page.getByTestId("feedback-comment")).toBeVisible();

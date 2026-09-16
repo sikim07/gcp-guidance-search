@@ -108,10 +108,52 @@ export function SearchPanel() {
       }
       setResult(body);
       remember(trimmed);
+      await fillKorean(body);
     } catch {
       setError("네트워크 오류가 발생했습니다.");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function fillKorean(body: SearchResponse) {
+    const needs =
+      needsEnglishTranslation(body.passages) ||
+      detectPassageLanguage(body.answer) !== "ko";
+    if (!needs) {
+      setShowKorean(false);
+      return;
+    }
+    setTranslateNote(null);
+    try {
+      const response = await fetch("/api/translate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          passages: body.passages,
+          answer:
+            detectPassageLanguage(body.answer) === "ko" ? undefined : body.answer,
+        }),
+      });
+      const translated = (await response.json()) as {
+        translations?: Record<string, string>;
+        translatedAnswer?: string;
+        error?: string;
+      };
+      if (!response.ok) {
+        setTranslateNote(
+          translated.error ??
+            "지금은 번역을 할 수 없습니다. 영어 원문을 그대로 보여 줍니다.",
+        );
+        setShowKorean(false);
+        return;
+      }
+      setTranslations(translated.translations ?? {});
+      setTranslatedAnswer(translated.translatedAnswer ?? null);
+      setShowKorean(true);
+    } catch {
+      setTranslateNote("번역 요청 중 네트워크 오류가 났습니다.");
+      setShowKorean(false);
     }
   }
 
@@ -318,7 +360,7 @@ export function SearchPanel() {
                       {translating
                         ? "번역하는 중"
                         : showKorean
-                          ? "영어 원문 보기"
+                          ? "원문 보기"
                           : "한국어로 보기"}
                     </Button>
                   ) : null}
