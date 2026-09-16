@@ -14,6 +14,7 @@ export type SeedDoc = {
 };
 
 export const PRIORITY_TITLE_NEEDLES = [
+  "e6(r3)",
   "e6(r2)",
   "good clinical practice",
   "electronic systems, electronic records, and electronic signatures",

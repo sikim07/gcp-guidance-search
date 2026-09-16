@@ -411,7 +411,7 @@ export function SearchPanel() {
                           ? (translations?.[p.chunkId] ?? p.original)
                           : p.original
                       }
-                      empty="적재된 조항 원문이 없습니다."
+                      empty="이 질문과 맞춰 볼 조항이 없습니다. 임상시험 규정으로 다시 물어 보세요."
                     />
                   )}
                 </Tabs.Panel>

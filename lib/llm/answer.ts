@@ -52,6 +52,13 @@ function isGrounded(question: string, retrieved: Retrieved[]): boolean {
   );
 }
 
+export const UNGROUNDED_ANSWER =
+  "제공된 문서에서 확인되지 않습니다. 질문을 더 구체적으로 하거나 개정 피드에서 해당 문서가 적재됐는지 확인해 주세요. 이 도구는 공식본을 대체하지 않습니다.";
+
+export function isUngroundedAnswer(answer: string): boolean {
+  return answer.startsWith("제공된 문서에서 확인되지 않습니다");
+}
+
 export async function generateAnswer(
   question: string,
   retrieved: Retrieved[],
@@ -63,8 +70,7 @@ export async function generateAnswer(
     !isGrounded(question, retrieved)
   ) {
     return {
-      answer:
-        "제공된 문서에서 확인되지 않습니다. 질문을 더 구체적으로 하거나 개정 피드에서 해당 문서가 적재됐는지 확인해 주세요. 이 도구는 공식본을 대체하지 않습니다.",
+      answer: UNGROUNDED_ANSWER,
       sources: [],
     };
   }

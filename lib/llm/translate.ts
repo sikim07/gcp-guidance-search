@@ -1,4 +1,5 @@
 import { applyGcpKoreanTerms } from "@/lib/llm/gcp-terms";
+import { protectLetterLabels, restoreLetterLabels } from "@/lib/llm/markers";
 import { publicTranslateEnToKo } from "@/lib/llm/public-translate";
 import { lookupSeedKorean } from "@/lib/llm/seed-lookup";
 import type { Passage } from "@/lib/types";
@@ -39,12 +40,13 @@ export async function resolveTranslations(
       }
       const cached = await deps.get(passage.chunkId);
       if (cached) {
-        out[passage.chunkId] = cached;
+        out[passage.chunkId] = restoreLetterLabels(cached);
         return;
       }
       const translated = await deps.translate(passage.original);
-      await deps.put(passage.chunkId, translated);
-      out[passage.chunkId] = translated;
+      const cleaned = restoreLetterLabels(translated);
+      await deps.put(passage.chunkId, cleaned);
+      out[passage.chunkId] = cleaned;
     }),
   );
   return out;
@@ -120,8 +122,8 @@ export async function translateClause(text: string): Promise<string> {
     }
   }
 
-  const machine = await publicTranslateEnToKo(trimmed);
-  return applyGcpKoreanTerms(machine);
+  const machine = await publicTranslateEnToKo(protectLetterLabels(trimmed));
+  return restoreLetterLabels(applyGcpKoreanTerms(machine));
 }
 
 /** Translate English blocks in an extractive answer; keep Korean disclaimers and citations. */

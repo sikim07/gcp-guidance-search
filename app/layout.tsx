@@ -46,6 +46,9 @@ export const metadata: Metadata = {
     follow: true,
     googleBot: { index: true, follow: true, "max-image-preview": "large" },
   },
+  verification: {
+    google: "eQX-mYKL7NbRiG-_s3jBOZlxHkFjDkpN9v-Y_Yot258",
+  },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },

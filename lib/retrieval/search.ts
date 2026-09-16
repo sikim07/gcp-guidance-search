@@ -3,7 +3,7 @@ import type { AppStore } from "@/lib/db/types";
 import { sha256 } from "@/lib/pipeline/hasher";
 import { embedTexts } from "@/lib/pipeline/embed";
 import { cosine } from "@/lib/retrieval/cosine";
-import { decorateRetrieved, generateAnswer, type Retrieved } from "@/lib/llm/answer";
+import { decorateRetrieved, generateAnswer, isUngroundedAnswer, type Retrieved } from "@/lib/llm/answer";
 import type { Passage, SearchResponse, SourceKind } from "@/lib/types";
 import { detectPassageLanguage } from "@/lib/llm/translate";
 import { expandQuery } from "@/lib/retrieval/expand-query";
@@ -12,7 +12,7 @@ import { normalizeQuery } from "@/lib/utils";
 
 const CACHE_SIMILARITY = 0.97;
 const TOP_K = 6;
-const CACHE_GEN = "v2:";
+const CACHE_GEN = "v3:";
 
 export async function searchGuidelines(
   store: AppStore,
@@ -42,12 +42,14 @@ export async function searchGuidelines(
     });
     return {
       answer: readableText(cached.answer),
-      sources: cached.sources,
-      passages: (cached.passages ?? []).map((row) => ({
-        ...row,
-        original: readableText(row.original),
-        language: detectPassageLanguage(readableText(row.original)),
-      })),
+      sources: isUngroundedAnswer(cached.answer) ? [] : cached.sources,
+      passages: isUngroundedAnswer(cached.answer)
+        ? []
+        : (cached.passages ?? []).map((row) => ({
+            ...row,
+            original: readableText(row.original),
+            language: detectPassageLanguage(readableText(row.original)),
+          })),
       cacheHit: true,
       searchLogId,
     };
@@ -106,8 +108,8 @@ export async function searchGuidelines(
   const similarityMs = Date.now() - simStarted;
 
   const retrieved = ranked.map((r) => r.item);
-  const passages = toPassages(retrieved);
   const { answer, sources } = await generateAnswer(query, retrieved);
+  const passages = isUngroundedAnswer(answer) ? [] : toPassages(retrieved);
   const searchLogId = randomUUID();
   await store.addSearchLog({
     id: searchLogId,

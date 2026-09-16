@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { applyGcpKoreanTerms } from "@/lib/llm/gcp-terms";
+import { protectLetterLabels, restoreLetterLabels } from "@/lib/llm/markers";
 import { parsePublicTranslation, splitForPublicTranslate } from "@/lib/llm/public-translate";
 import { lookupSeedKorean } from "@/lib/llm/seed-lookup";
 import {
@@ -86,6 +87,14 @@ describe("seed and public translation", () => {
     expect(applyGcpKoreanTerms("고지된 동의와 감사 추적, 인간 피험자, 후원자")).toBe(
       "시험대상자 동의와 감사추적, 시험대상자, 의뢰자",
     );
+  });
+
+  it("keeps A./B. list markers instead of 에이/비", () => {
+    const protectedText = protectLetterLabels("A. Validation\nB. Audit trail\n(c) backup");
+    expect(protectedText).toMatch(/MARK_A/);
+    expect(protectedText).toMatch(/MARK_B/);
+    expect(restoreLetterLabels("비. 감사추적\n(비) 백업")).toMatch(/^B\. 감사추적/);
+    expect(restoreLetterLabels("비. 감사추적\n(비) 백업")).toMatch(/\(b\) 백업/);
   });
 
   it("parses dict-chrome-ex and gtx payloads", () => {
