@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import type { ChangeKind } from "@/lib/types";
 import { changeKindLabel, humanizeChangeSummary } from "@/lib/text/change-copy";
 import { Card } from "@/components/ui/card";
@@ -5,6 +6,13 @@ import { SourceChip } from "@/components/source-chip";
 import { getStore } from "@/lib/db/store";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "개정 피드",
+  description:
+    "FDA·ICH 가이드라인 발행일·파일 해시와 한국 법령 MST·공포일로 임상시험 규정 개정을 기록합니다.",
+  alternates: { canonical: "/updates" },
+};
 
 export default async function UpdatesPage() {
   const store = await getStore();

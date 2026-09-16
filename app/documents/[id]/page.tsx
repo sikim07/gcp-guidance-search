@@ -1,3 +1,4 @@
+import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { SourceChip } from "@/components/source-chip";
@@ -5,6 +6,23 @@ import { getStore } from "@/lib/db/store";
 import { humanizeChangeSummary } from "@/lib/text/change-copy";
 
 export const dynamic = "force-dynamic";
+
+export async function generateMetadata({
+  params,
+}: {
+  params: Promise<{ id: string }>;
+}): Promise<Metadata> {
+  const { id } = await params;
+  const store = await getStore();
+  const doc = await store.getDocument(id);
+  const statute = doc ? undefined : await store.getStatute(id);
+  const title = doc?.title ?? statute?.title ?? "문서";
+  return {
+    title,
+    description: `${title}의 적재 버전과 개정 요약을 봅니다. 공식본은 원문 링크입니다.`,
+    alternates: { canonical: `/documents/${id}` },
+  };
+}
 
 export default async function DocumentDetailPage({
   params,

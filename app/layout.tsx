@@ -2,6 +2,12 @@ import "./globals.css";
 import type { Metadata } from "next";
 import { Noto_Sans_KR } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
+import {
+  SITE_DESCRIPTION,
+  SITE_KEYWORDS,
+  SITE_NAME,
+  SITE_URL,
+} from "@/lib/site";
 
 const sans = Noto_Sans_KR({
   variable: "--font-noto-sans",
@@ -10,18 +16,62 @@ const sans = Noto_Sans_KR({
 });
 
 export const metadata: Metadata = {
-  title: "GCP 가이드라인 검색기",
-  description:
-    "FDA·ICH·식약처 임상시험 가이드라인 개정을 감지하고 조항을 자연어로 조회합니다.",
+  metadataBase: new URL(SITE_URL),
+  title: {
+    default: SITE_NAME,
+    template: `%s · ${SITE_NAME}`,
+  },
+  description: SITE_DESCRIPTION,
+  keywords: SITE_KEYWORDS,
+  applicationName: SITE_NAME,
+  category: "healthcare",
+  authors: [{ name: SITE_NAME, url: SITE_URL }],
+  creator: SITE_NAME,
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "ko_KR",
+    url: SITE_URL,
+    siteName: SITE_NAME,
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: SITE_NAME,
+    description: SITE_DESCRIPTION,
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true, "max-image-preview": "large" },
+  },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
+};
+
+const jsonLd = {
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: SITE_NAME,
+  url: SITE_URL,
+  inLanguage: "ko",
+  applicationCategory: "HealthApplication",
+  operatingSystem: "Web",
+  description: SITE_DESCRIPTION,
+  isAccessibleForFree: true,
+  offers: { "@type": "Offer", price: "0", priceCurrency: "KRW" },
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="ko" className={`${sans.variable} h-full antialiased`}>
       <body className="bg-paper text-ink min-h-full font-sans">
+        <script
+          type="application/ld+json"
+          dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
+        />
         <SiteHeader />
         <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 sm:max-w-5xl sm:py-8">
           {children}

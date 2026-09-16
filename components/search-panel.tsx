@@ -2,7 +2,6 @@
 
 import { useEffect, useMemo, useState } from "react";
 import {
-  Alert,
   Button,
   Card,
   Label,
@@ -13,6 +12,14 @@ import {
   TextField,
 } from "@heroui/react";
 import { ThumbsDown, ThumbsUp } from "lucide-react";
+import { RetryNotice } from "@/components/retry-notice";
+import {
+  classifySearchFailure,
+  feedbackFailureCopy,
+  searchFailureCopy,
+  translateFailureCopy,
+  type SearchFailureKind,
+} from "@/lib/search/errors";
 import { loadingCopy, loadingPhase } from "@/lib/search/loading";
 import { PRESET_QUERIES } from "@/lib/search/presets";
 import {
@@ -32,6 +39,7 @@ export function SearchPanel() {
   const [loading, setLoading] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [error, setError] = useState<string | null>(null);
+  const [errorKind, setErrorKind] = useState<SearchFailureKind | null>(null);
   const [result, setResult] = useState<SearchResponse | null>(null);
   const [tab, setTab] = useState<Tab>("answer");
   const [translations, setTranslations] = useState<Record<string, string> | null>(null);
@@ -44,6 +52,7 @@ export function SearchPanel() {
   const [showDownForm, setShowDownForm] = useState(false);
   const [downComment, setDownComment] = useState("");
   const [feedbackBusy, setFeedbackBusy] = useState(false);
+  const [feedbackError, setFeedbackError] = useState(false);
 
   const canTranslate = useMemo(
     () =>
@@ -86,6 +95,7 @@ export function SearchPanel() {
     setQuery(nextQuery);
     setLoading(true);
     setError(null);
+    setErrorKind(null);
     setTab("answer");
     setTranslations(null);
     setTranslatedAnswer(null);
@@ -94,6 +104,7 @@ export function SearchPanel() {
     setFeedbackSent(null);
     setShowDownForm(false);
     setDownComment("");
+    setFeedbackError(false);
     try {
       const response = await fetch("/api/search", {
         method: "POST",
@@ -102,6 +113,7 @@ export function SearchPanel() {
       });
       const body = (await response.json()) as SearchResponse & { error?: string };
       if (!response.ok) {
+        setErrorKind(classifySearchFailure(response.status));
         setError(body.error ?? "검색에 실패했습니다.");
         setResult(null);
         return;
@@ -110,7 +122,8 @@ export function SearchPanel() {
       remember(trimmed);
       await fillKorean(body);
     } catch {
-      setError("네트워크 오류가 발생했습니다.");
+      setErrorKind("network");
+      setError(null);
     } finally {
       setLoading(false);
     }
@@ -208,8 +221,9 @@ export function SearchPanel() {
   async function sendFeedback(rating: "up" | "down", comment?: string) {
     if (!result || feedbackSent || feedbackBusy) return;
     setFeedbackBusy(true);
+    setFeedbackError(false);
     try {
-      await fetch("/api/feedback", {
+      const response = await fetch("/api/feedback", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -220,8 +234,14 @@ export function SearchPanel() {
           comment: comment?.trim() || undefined,
         }),
       });
+      if (!response.ok) {
+        setFeedbackError(true);
+        return;
+      }
       setFeedbackSent(rating);
       setShowDownForm(false);
+    } catch {
+      setFeedbackError(true);
     } finally {
       setFeedbackBusy(false);
     }
@@ -317,10 +337,16 @@ export function SearchPanel() {
         </Card.Content>
       </Card>
 
-      {error ? (
-        <Alert status="danger">
-          <Alert.Content>{error}</Alert.Content>
-        </Alert>
+      {errorKind ? (
+        <RetryNotice
+          {...searchFailureCopy(errorKind, error ?? undefined)}
+          busy={loading}
+          onRetry={
+            searchFailureCopy(errorKind).retry
+              ? () => void runSearch(query)
+              : undefined
+          }
+        />
       ) : null}
 
       {loading ? <ResultSkeleton elapsedMs={elapsedMs} /> : null}
@@ -392,9 +418,13 @@ export function SearchPanel() {
               </Tabs>
             </div>
             {translateNote ? (
-              <Alert className="mt-4" status="warning">
-                <Alert.Content>{translateNote}</Alert.Content>
-              </Alert>
+              <RetryNotice
+                className="mt-4"
+                {...translateFailureCopy(translateNote.includes("네트워크"))}
+                retryLabel="한국어 다시 시도"
+                busy={translating}
+                onRetry={() => void toggleTranslation()}
+              />
             ) : null}
             {result.cacheHit ? (
               <p className="text-muted mt-4 text-xs">
@@ -469,6 +499,16 @@ export function SearchPanel() {
                     의견 보내기
                   </Button>
                 </div>
+              ) : null}
+              {feedbackError ? (
+                <RetryNotice
+                  {...feedbackFailureCopy()}
+                  busy={feedbackBusy}
+                  retryLabel="의견 다시 보내기"
+                  onRetry={() =>
+                    void sendFeedback(showDownForm ? "down" : "up", downComment)
+                  }
+                />
               ) : null}
               {feedbackSent ? (
                 <p className="text-muted text-xs" data-testid="feedback-thanks">

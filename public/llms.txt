@@ -1,0 +1,19 @@
+# GCP 가이드라인 검색기
+
+> Unofficial Korean lookup for ICH GCP, FDA clinical trial guidance (Part 11, eSource, informed consent), MFDS notices, and KGCP (Korea GMP-adjacent clinical trial standards in the Safety Rules Annex 4).
+
+- Site: https://gcp-guidance-search.vercel.app
+- Language: Korean UI. Source passages may be English FDA/ICH text with on-demand Korean rendering.
+- Not official legal advice. Always open the linked FDA, MFDS, or Korean Law source.
+
+## What it answers
+- Audit trails / electronic records / 21 CFR Part 11
+- Informed consent of trial subjects (ICH E6 4.8, 21 CFR 50)
+- Risk-based monitoring
+- Electronic source data (eSource)
+- Korean KGCP (의약품 등의 안전에 관한 규칙 별표 4) and related statutes
+
+## Limits
+- Seeded excerpts of ICH E6(R2), not the full E6(R3) PDF
+- No OCR for scanned PDFs
+- Answers are extractive from loaded chunks only

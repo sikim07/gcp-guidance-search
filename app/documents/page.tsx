@@ -1,9 +1,17 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { Card } from "@/components/ui/card";
 import { SourceChip } from "@/components/source-chip";
 import { getStore } from "@/lib/db/store";
 
 export const dynamic = "force-dynamic";
+
+export const metadata: Metadata = {
+  title: "문서 카탈로그",
+  description:
+    "적재된 ICH E6, Part 11, eSource, 식약처 ICH GCP 안내서, KGCP와 관련 법령 목록입니다.",
+  alternates: { canonical: "/documents" },
+};
 
 export default async function DocumentsPage() {
   const store = await getStore();
