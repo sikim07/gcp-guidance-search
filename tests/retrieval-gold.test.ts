@@ -71,6 +71,11 @@ const pool: Item[] = [
     text: "의뢰자는 치명적이거나 생명을 위협하는 예상하지 못한 약물이상반응(SUSAR)을 최초 인지 후 7일 이내에 식품의약품안전처장에게 보고하고, 그 밖의 경우는 15일 이내에 보고한다. SAE 보고 기한.",
   },
   {
+    origin: "domestic",
+    section: "제47조(분쟁의 조정)",
+    text: "개인정보 분쟁조정위원회는 개인정보에 관한 분쟁의 조정을 위해 당사자의 신청을 받아 조정한다. 보고 기한과 무관하다.",
+  },
+  {
     origin: "fda",
     section: "Principles",
     text: "ICH E6(R3) Good Clinical Practice sets proportionate, risk-based principles. Quality by design means building quality into the protocol.",
@@ -104,6 +109,7 @@ describe("retrieval gold questions", () => {
   it("ranks SAE reporting clocks instead of empty or intro text", () => {
     const section = topSection("SAE는 며칠 안에 보고하나?", pool);
     expect(section).toMatch(/약물이상반응|312\.32|7일/);
+    expect(section).not.toMatch(/제47조|분쟁/);
   });
 
   it("ranks E6(R3) quality principles for an R3 query", () => {

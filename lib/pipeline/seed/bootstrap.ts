@@ -10,16 +10,46 @@ import type { ChunkRecord, DocumentRecord, DocumentVersion } from "@/lib/types";
 
 let seeding: Promise<void> | null = null;
 
+export function seedNeedsRefresh(opts: {
+  fileHash: string | null;
+  seedHash: string;
+  currentSections: string[];
+  nextSections: string[];
+}): boolean {
+  if (opts.fileHash !== opts.seedHash) return true;
+  if (opts.currentSections.length !== opts.nextSections.length) return true;
+  return opts.currentSections.some((section, i) => section !== opts.nextSections[i]);
+}
+
 export async function ensureSeeded(store: AppStore): Promise<void> {
   if (!seeding) {
     seeding = (async () => {
       const existing = await store.listDocuments();
-      const have = new Set(existing.map((row) => row.externalId));
+      const byExternal = new Map(existing.map((row) => [row.externalId, row]));
       if (existing.length === 0) {
         await seedStore(store);
       } else {
+        const currentChunks = await store.currentChunks();
         for (const seed of SEED_CORPUS) {
-          if (!have.has(seed.externalId)) await seedOneDocument(store, seed);
+          const have = byExternal.get(seed.externalId);
+          if (!have) {
+            await seedOneDocument(store, seed);
+            continue;
+          }
+          const next = chunkByClause(seed.text, seed.title);
+          const currentSections = currentChunks
+            .filter((chunk) => chunk.documentId === have.id)
+            .map((chunk) => chunk.section);
+          if (
+            seedNeedsRefresh({
+              fileHash: have.fileHash,
+              seedHash: sha256(seed.text),
+              currentSections,
+              nextSections: next.map((clause) => clause.section),
+            })
+          ) {
+            await refreshSeedDocument(store, have, seed);
+          }
         }
       }
       const statutes = await store.listStatutes();
@@ -47,6 +77,24 @@ export async function seedStatutes(store: AppStore): Promise<void> {
   }
 }
 
+function buildChunks(
+  seed: SeedDoc,
+  documentId: string,
+  versionId: string,
+  embeddings: number[][],
+): ChunkRecord[] {
+  const clauses = chunkByClause(seed.text, seed.title);
+  return clauses.map((clause, i) => ({
+    id: randomUUID(),
+    versionId,
+    documentId,
+    section: clause.section,
+    text: clause.text,
+    embedding: embeddings[i] ?? [],
+    isCurrent: true,
+  }));
+}
+
 export async function seedOneDocument(store: AppStore, seed: SeedDoc): Promise<void> {
   const now = new Date().toISOString();
   const documentId = randomUUID();
@@ -60,7 +108,7 @@ export async function seedOneDocument(store: AppStore, seed: SeedDoc): Promise<v
     issuedDate: seed.issuedDate,
     fileHash: sha256(seed.text),
     extractedText: seed.text,
-    parseStatus: "ok",
+    parseStatus: seed.text.trim().length < 40 ? "needs_ocr" : "ok",
     diffSummary: "초기 적재 (시드 코퍼스)",
     createdAt: now,
   };
@@ -77,18 +125,9 @@ export async function seedOneDocument(store: AppStore, seed: SeedDoc): Promise<v
     status: "active",
     createdAt: now,
   };
-  const chunks: ChunkRecord[] = clauses.map((clause, i) => ({
-    id: randomUUID(),
-    versionId,
-    documentId,
-    section: clause.section,
-    text: clause.text,
-    embedding: embeddings[i] ?? [],
-    isCurrent: true,
-  }));
   await store.upsertDocument(doc);
   await store.addVersion(version);
-  await store.addChunks(chunks);
+  await store.addChunks(buildChunks(seed, documentId, versionId, embeddings));
   await store.addChangeLog({
     id: randomUUID(),
     documentId,
@@ -98,6 +137,53 @@ export async function seedOneDocument(store: AppStore, seed: SeedDoc): Promise<v
     summary: `${seed.title} 초기 적재`,
     createdAt: now,
   });
+}
+
+export async function refreshSeedDocument(
+  store: AppStore,
+  existing: DocumentRecord,
+  seed: SeedDoc,
+): Promise<void> {
+  const now = new Date().toISOString();
+  const versionId = randomUUID();
+  const clauses = chunkByClause(seed.text, seed.title);
+  const embeddings = await embedTexts(clauses.map((c) => `${c.section}\n${c.text}`));
+  const hash = sha256(seed.text);
+  await store.upsertDocument({
+    ...existing,
+    title: seed.title,
+    url: seed.url,
+    issuedDate: seed.issuedDate,
+    fileHash: hash,
+    currentVersionId: versionId,
+    category: seed.category,
+    status: "active",
+  });
+  await store.addVersion({
+    id: versionId,
+    documentId: existing.id,
+    versionLabel: seed.issuedDate,
+    issuedDate: seed.issuedDate,
+    fileHash: hash,
+    extractedText: seed.text,
+    parseStatus: seed.text.trim().length < 40 ? "needs_ocr" : "ok",
+    diffSummary: "시드 조항을 다시 잘랐습니다.",
+    createdAt: now,
+  });
+  await store.replaceCurrentChunks(
+    existing.id,
+    buildChunks(seed, existing.id, versionId, embeddings),
+  );
+  await store.addChangeLog({
+    id: randomUUID(),
+    documentId: existing.id,
+    fromVersionId: existing.currentVersionId,
+    toVersionId: versionId,
+    changeKind: "revised_hash",
+    summary: `${seed.title} 시드 조항을 다시 잘랐습니다.`,
+    createdAt: now,
+  });
+  await store.invalidateCache();
 }
 
 export async function seedStore(store: AppStore): Promise<void> {

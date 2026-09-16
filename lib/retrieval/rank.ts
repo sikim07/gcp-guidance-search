@@ -71,6 +71,12 @@ export function qualityPenalty(section: string, text: string, query: string): nu
   }
   if (/제1장\s*목적/.test(head) && !/목적|안내서/.test(q)) n += 0.35;
   if (/^BACKGROUND\b/i.test(text.trim()) && /감사추적|audit trail/.test(q)) n += 0.25;
+  if (
+    /sae|susar|이상반응/.test(q) &&
+    /개인정보|분쟁의 조정|제47조/.test(`${section}\n${text}`)
+  ) {
+    n += 0.5;
+  }
   return n;
 }
 

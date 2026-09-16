@@ -3,6 +3,7 @@ import {
   articleKeyToLabel,
   changeKindLabel,
   humanizeChangeSummary,
+  prettySectionLabel,
 } from "@/lib/text/change-copy";
 
 describe("articleKeyToLabel", () => {
@@ -11,6 +12,14 @@ describe("articleKeyToLabel", () => {
     expect(articleKeyToLabel("0015001")).toBe("제15조");
     expect(articleKeyToLabel("0007021")).toBe("제7조의2");
     expect(articleKeyToLabel("annex-4#5. 시험대상자 동의")).toBe("5. 시험대상자 동의");
+  });
+});
+
+describe("prettySectionLabel", () => {
+  it("shortens KGCP annex headings to 별표 4 · 항", () => {
+    expect(prettySectionLabel("별표 4 의약품 임상시험 관리기준 · 7. 모니터링")).toBe(
+      "별표 4 · 7. 모니터링",
+    );
   });
 });
 

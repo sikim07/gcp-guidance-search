@@ -36,7 +36,23 @@ function matchSection(line: string): { section: string; rest: string } | null {
   if (NAMED_HEADINGS.test(trimmed) && trimmed.length <= 80) {
     return { section: trimmed.replace(/\s+/g, " ").trim(), rest: "" };
   }
+  if (isStandaloneHeading(trimmed)) {
+    return { section: trimmed.replace(/\s+/g, " ").trim(), rest: "" };
+  }
   return null;
+}
+
+function isStandaloneHeading(line: string): boolean {
+  if (line.length < 4 || line.length > 80) return false;
+  if (/[.。!?:：]/.test(line)) return false;
+  if (/^\d/.test(line)) return false;
+  if (/[\p{Script=Hangul}]/u.test(line)) {
+    if (/다$|요$|는다$|한다$/.test(line)) return false;
+    return line.split(/\s+/).length <= 12;
+  }
+  if (!/^[A-Z]/.test(line)) return false;
+  if (/^(The|A|An|This|When|If|Use|Keep)\b/.test(line)) return false;
+  return line.split(/\s+/).length <= 12;
 }
 
 function isHeadingRest(rest: string): boolean {

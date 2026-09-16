@@ -23,9 +23,9 @@ describe("answer vs retrieval limits", () => {
 });
 
 describe("cache generation", () => {
-  it("scopes the v5 cache key by origin filter", () => {
-    expect(searchCacheKey("감사추적", "all")).toBe("v5:all:감사추적");
-    expect(searchCacheKey("감사추적", "fda")).toBe("v5:fda:감사추적");
+  it("scopes the v6 cache key by origin filter", () => {
+    expect(searchCacheKey("감사추적", "all")).toBe("v6:all:감사추적");
+    expect(searchCacheKey("감사추적", "fda")).toBe("v6:fda:감사추적");
     expect(searchCacheKey("감사추적", "all")).not.toBe(
       searchCacheKey("감사추적", "domestic"),
     );

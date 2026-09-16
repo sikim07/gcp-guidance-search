@@ -41,6 +41,11 @@ export function prettySectionLabel(raw: string): string {
   if (item === "본문") return "서문";
   if (/^[IVXLCM]+$/i.test(item)) return `${item.toUpperCase()}절`;
   if (/^\d+\.\d+$/.test(item)) return `조항 ${item}`;
+  const annex = item.match(/^별표\s*(\d+)\b/);
+  if (annex && item.includes("·")) {
+    const tail = item.split("·").pop()?.trim();
+    if (tail) return `별표 ${annex[1]} · ${tail}`;
+  }
   return item;
 }
 

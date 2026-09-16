@@ -79,4 +79,29 @@ Keep them enabled.
 `);
     expect(chunks.map((c) => c.section)).toEqual(["Q7", "Q8"]);
   });
+
+  it("splits Korean SAE clock headings and 312.32 fatal/15-day headings", () => {
+    const korean = chunkByClause(`
+중대한 예상하지 못한 약물이상반응 보고
+의뢰자는 7일 이내에 보고한다.
+
+그 밖의 중대한 예상하지 못한 약물이상반응
+그 밖의 경우는 15일 이내에 보고한다.
+`);
+    expect(korean.map((c) => c.section)).toEqual([
+      "중대한 예상하지 못한 약물이상반응 보고",
+      "그 밖의 중대한 예상하지 못한 약물이상반응",
+    ]);
+    const clocks = chunkByClause(`
+Fatal or life-threatening unexpected suspected adverse reactions
+The sponsor must notify FDA no later than 7 calendar days.
+
+Other serious unexpected suspected adverse reactions
+The sponsor must notify FDA no later than 15 calendar days.
+`);
+    expect(clocks.map((c) => c.section)).toEqual([
+      "Fatal or life-threatening unexpected suspected adverse reactions",
+      "Other serious unexpected suspected adverse reactions",
+    ]);
+  });
 });
