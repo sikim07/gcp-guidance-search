@@ -45,6 +45,45 @@
 
 html {
   background: var(--paper);
+  overflow-y: auto;
+  scrollbar-gutter: auto;
+}
+
+@media (pointer: fine) {
+  html {
+    overflow-y: overlay;
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--ink) 32%, transparent) transparent;
+  }
+
+  html::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+
+  html::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  html::-webkit-scrollbar-thumb {
+    background: color-mix(in oklab, var(--ink) 28%, transparent);
+    border: 2px solid transparent;
+    background-clip: padding-box;
+    border-radius: 999px;
+  }
+}
+
+@media (pointer: coarse) {
+  html {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar {
+    width: 0;
+    height: 0;
+    display: none;
+  }
 }
 
 body {
