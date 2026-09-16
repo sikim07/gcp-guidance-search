@@ -43,6 +43,7 @@ test("mobile uses a fixed-height floating tab bar", async ({ page }) => {
   await expect(page.locator("header nav")).toBeHidden();
   const bottom = page.getByTestId("bottom-nav");
   await expect(bottom).toBeVisible();
+  await expect(bottom).toHaveClass(/liquid-tabbar/);
   await expect(bottom.getByRole("link", { name: "검색" })).toBeVisible();
   const titleBox = await title.boundingBox();
   const bottomBox = await bottom.boundingBox();
@@ -61,6 +62,21 @@ test("mobile uses a fixed-height floating tab bar", async ({ page }) => {
   const wider = await bottom.boundingBox();
   expect(wider).toBeTruthy();
   expect(Math.abs(wider!.height - heightAtNarrow)).toBeLessThan(1);
+});
+
+test("desktop overlay scrollbar does not consume layout width", async ({ page }) => {
+  await page.setViewportSize({ width: 1100, height: 420 });
+  await page.goto("/");
+  const metrics = await page.evaluate(() => {
+    const frame = document.querySelector(".app-frame") as HTMLElement | null;
+    return {
+      inner: window.innerWidth,
+      htmlClient: document.documentElement.clientWidth,
+      gutter: frame ? frame.offsetWidth - frame.clientWidth : -1,
+    };
+  });
+  expect(metrics.htmlClient).toBe(metrics.inner);
+  expect(metrics.gutter).toBe(0);
 });
 
 test("updates feed renders seeded corpus", async ({ page }) => {

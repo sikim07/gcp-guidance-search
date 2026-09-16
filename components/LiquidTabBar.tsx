@@ -58,10 +58,10 @@ export function LiquidTabBar({
     const navRect = nav.getBoundingClientRect();
     const tabRect = tab.getBoundingClientRect();
     setBlob({
-      left: tabRect.left - navRect.left,
-      top: tabRect.top - navRect.top,
-      width: tabRect.width,
-      height: tabRect.height,
+      left: tabRect.left - navRect.left + 3,
+      top: tabRect.top - navRect.top + 3,
+      width: Math.max(0, tabRect.width - 6),
+      height: Math.max(0, tabRect.height - 6),
     });
     setMeasured(true);
   }, [active]);

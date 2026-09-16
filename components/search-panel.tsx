@@ -261,7 +261,7 @@ export function SearchPanel() {
         </p>
       </section>
 
-      <Card className="search-sheet w-full">
+      <Card className="search-sheet w-full shadow-none">
         <Card.Content className="space-y-4 p-4 sm:p-6">
           <form onSubmit={onSubmit} className="space-y-4">
             <TextField
@@ -362,7 +362,7 @@ export function SearchPanel() {
       {loading ? <ResultSkeleton elapsedMs={elapsedMs} /> : null}
 
       {result && !loading ? (
-        <Card className="search-sheet result-panel w-full" data-testid="answer-card">
+        <Card className="search-sheet result-panel w-full shadow-none" data-testid="answer-card">
           <Card.Content className="p-4 sm:p-6">
             <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
               <Tabs
@@ -557,7 +557,7 @@ function StableLabel({
 
 function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
   return (
-    <Card className="search-sheet result-panel w-full" data-testid="loading-card">
+    <Card className="search-sheet result-panel w-full shadow-none" data-testid="loading-card">
       <Card.Content className="p-4 sm:p-6">
         <div className="flex items-center justify-between gap-2">
           <div className="flex gap-2">

@@ -4,6 +4,7 @@ import { Noto_Sans_KR } from "next/font/google";
 import { SiteHeader } from "@/components/site-header";
 import { SiteBottomNav } from "@/components/site-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
+import { OverlayScrollbar } from "@/components/overlay-scrollbar";
 import {
   SITE_DESCRIPTION,
   SITE_KEYWORDS,
@@ -75,17 +76,20 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`${sans.variable} bg-paper h-full antialiased`}>
-      <body className="bg-paper text-ink min-h-full font-sans">
+    <html lang="ko" className={`${sans.variable} bg-paper h-full overflow-hidden antialiased`}>
+      <body className="bg-paper text-ink h-full overflow-hidden font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <SiteHeader />
-        <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
-          <PageTransition>{children}</PageTransition>
-        </main>
+        <div className="app-frame">
+          <SiteHeader />
+          <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
+            <PageTransition>{children}</PageTransition>
+          </main>
+        </div>
         <SiteBottomNav />
+        <OverlayScrollbar />
       </body>
     </html>
   );
