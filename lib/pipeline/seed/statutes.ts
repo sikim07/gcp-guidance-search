@@ -1,4 +1,16 @@
 import type { ParsedArticle } from "@/lib/pipeline/sources/law-parser";
+import { loadExtractedJson, loadExtractedText } from "@/lib/pipeline/seed/load-extracted";
+
+const KGCP_ANNEX_META = loadExtractedJson<{
+  lawId: string;
+  mst: string;
+  title: string;
+  promulgatedDate: string;
+  effectiveDate: string;
+  amendmentType: string;
+  articleKey: string;
+  section: string;
+}>("kgcp-annex-4.meta.json");
 
 export type SeedStatute = {
   lawId: string;
@@ -120,13 +132,13 @@ export const SEED_STATUTES: SeedStatute[] = [
     ],
   },
   {
-    lawId: "011794",
-    mst: "seed",
-    title: "의약품 등의 안전에 관한 규칙",
-    shortTitle: "의약품 등의 안전에 관한 규칙",
-    promulgatedDate: "2026-03-05",
-    effectiveDate: "2026-03-05",
-    amendmentType: "일부개정",
+    lawId: KGCP_ANNEX_META.lawId,
+    mst: KGCP_ANNEX_META.mst,
+    title: KGCP_ANNEX_META.title,
+    shortTitle: KGCP_ANNEX_META.title,
+    promulgatedDate: KGCP_ANNEX_META.promulgatedDate,
+    effectiveDate: KGCP_ANNEX_META.effectiveDate,
+    amendmentType: KGCP_ANNEX_META.amendmentType,
     annexTitle: "의약품 임상시험 관리기준",
     articles: [
       {
@@ -137,31 +149,9 @@ export const SEED_STATUTES: SeedStatute[] = [
       },
       {
         articleKey: "annex-4",
-        section: "별표 4 의약품 임상시험 관리기준",
+        section: KGCP_ANNEX_META.section,
         kind: "annex",
-        text: `1. 목적
-이 기준은 「약사법」 및 「의약품 등의 안전에 관한 규칙」에 따라 의약품 임상시험을 과학적이고 윤리적으로 실시하기 위하여 임상시험의 계획, 실시, 모니터링, 점검, 자료의 기록 및 분석, 임상시험 결과보고 등에 관한 기준을 정함을 목적으로 한다.
-
-2. 용어의 정의
-"임상시험 대상자"란 임상시험에 참여하여 임상시험용의약품을 투여받거나 대조군에 포함되는 사람을 말한다. "원자료"란 임상시험과 관련된 임상 소견, 관찰, 그 밖의 활동을 재구성하고 평가하는 데 필요한 원본기록 또는 인증등본을 말한다. "모니터링"이란 임상시험의 진행과정을 감독하고, 임상시험이 계획서, 표준작업지침서, 이 기준 및 관련 규정에 따라 실시·기록·보고되는지를 확인하는 활동을 말한다.
-
-3. 기본원칙
-임상시험은 헬싱키선언에 근거한 윤리규정, 이 기준 및 관련 규정에 따라 실시하여야 한다. 시험대상자의 권리·안전·복지를 우선하여야 하며, 임상시험 자료는 정확하게 기록·처리·보관하여 결과의 신뢰성을 확보하여야 한다.
-
-4. 임상시험심사위원회
-임상시험실시기관의 장은 임상시험심사위원회를 설치·운영하여야 한다. 심사위원회는 임상시험계획서, 시험대상자 설명서 및 동의서, 시험대상자 모집 절차 등을 심사하고 승인 또는 보완·반려를 결정한다.
-
-5. 시험대상자 동의
-시험책임자는 임상시험 실시 전에 시험대상자 또는 대리인에게 임상시험의 목적, 방법, 예상되는 이익과 위험, 개인정보 보호, 중도 탈퇴의 권리 등을 설명하고 자발적인 서면 동의를 받아야 한다. 동의서에는 서명과 날짜가 기재되어야 한다.
-
-6. 기록 및 자료
-시험책임자 및 의뢰자는 원자료와 필수문서를 보관하여야 한다. 자료의 변경은 원래의 기록이 가려지지 않도록 하고, 변경한 사람·일시·사유가 추적 가능하여야 한다. 전자기록을 사용하는 경우 시스템에 대한 검증, 접근 통제, 감사추적, 백업을 갖추어야 한다.
-
-7. 모니터링
-의뢰자는 임상시험이 이 기준과 승인된 계획서에 따라 실시되는지를 확인하기 위하여 모니터링을 실시하여야 한다. 모니터링의 범위와 방법은 시험의 목적, 설계, 규모, 복잡도 및 시험대상자 보호와 자료 신뢰성에 대한 위험을 고려하여 정한다.
-
-8. 이상반응 보고
-시험책임자는 중대한 이상반응을 인지한 즉시 의뢰자에게 알린다. 의뢰자는 치명적이거나 생명을 위협하는 예상하지 못한 약물이상반응을 최초 인지 후 7일 이내에 식품의약품안전처장과 심사위원회에 보고하고, 그 밖의 중대한 예상하지 못한 약물이상반응은 15일 이내에 보고한다. 보고 기한은 관련 규정과 승인된 계획서를 확인한다.`,
+        text: loadExtractedText("kgcp-annex-4.txt"),
       },
     ],
   },

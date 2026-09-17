@@ -13,6 +13,22 @@ describe("seedNeedsRefresh", () => {
     ).toBe(false);
     expect(
       seedNeedsRefresh({
+        fileHash: "pdf-bytes-hash",
+        seedHash: "new-full-seed",
+        currentSections: Array.from({ length: 200 }, (_, i) => `§${i}`),
+        nextSections: Array.from({ length: 400 }, (_, i) => `§${i}`),
+      }),
+    ).toBe(false);
+    expect(
+      seedNeedsRefresh({
+        fileHash: "old-excerpt-hash",
+        seedHash: "new-full-seed",
+        currentSections: Array.from({ length: 14 }, (_, i) => `§${i}`),
+        nextSections: Array.from({ length: 400 }, (_, i) => `§${i}`),
+      }),
+    ).toBe(true);
+    expect(
+      seedNeedsRefresh({
         fileHash: "h",
         seedHash: "h",
         currentSections: ["§1"],

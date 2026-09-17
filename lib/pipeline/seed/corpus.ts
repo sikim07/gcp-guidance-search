@@ -1,6 +1,8 @@
+import { loadExtractedText } from "@/lib/pipeline/seed/load-extracted";
+
 /**
- * v1 시드 코퍼스. 실제 공개 가이드라인 원문에서 조항 단위로 발췌했다.
- * 전체 PDF는 파이프라인이 재수집할 때 대체한다.
+ * v1 시드 코퍼스. E6(R2)·별표 4는 `scripts/refresh-seed-corpus.ts`가
+ * fetch 파이프라인으로 받은 원문을 extracted/에서 읽는다. 손으로 옮겨 적지 않는다.
  */
 export type SeedDoc = {
   source: "fda-ich" | "fda-guidance" | "mfds" | "kgcp";
@@ -41,50 +43,7 @@ export const SEED_CORPUS: SeedDoc[] = [
     issuedDate: "2018-03-01",
     category: "ICH",
     externalId: "fda-ich:93884",
-    text: `1.24 Source Data
-All information in original records and certified copies of original records of clinical findings, observations, or other activities in a clinical trial necessary for the reconstruction and evaluation of the trial. Source data are contained in source documents (original records or certified copies).
-
-1.64 Certified Copy
-A copy (irrespective of the type of media used) of the original record that has been verified (i.e., by a dated signature or by generation through a validated process) to have the same information, including data that describe the context, content, and structure, as the original.
-
-2.10 All clinical trial information should be recorded, handled, and stored in a way that allows its accurate reporting, interpretation and verification.
-
-2.13 Systems with procedures that assure the quality of every aspect of the trial should be implemented. Aspects of the trial that are essential to ensure human subject protection and reliability of trial results should be the focus of such systems.
-
-4.8 Informed Consent of Trial Subjects
-4.8.1 In obtaining and documenting informed consent, the investigator should comply with the applicable regulatory requirement(s), and should adhere to GCP and to the ethical principles that have their origin in the Declaration of Helsinki. Prior to the beginning of the trial, the investigator should have the IRB/IEC's written approval/favourable opinion of the written informed consent form and any other written information to be provided to subjects.
-
-4.8.8 The written informed consent form and any other written information to be provided to subjects should be revised whenever important new information becomes available that may be relevant to the subject's consent. Any revised written informed consent form, and written information should receive the IRB/IEC's approval/favourable opinion in advance of use. The subject or the subject's legally acceptable representative should be informed of the new information in a timely manner.
-
-4.9 Records and Reports
-4.9.0 The investigator/institution should maintain adequate and accurate source documents and trial records that include all pertinent observations on each of the site's trial subjects. Source data should be attributable, legible, contemporaneous, original, accurate, and complete. Changes to source data should be traceable, should not obscure the original entry, and should be explained if necessary (e.g., via an audit trail).
-
-5.5 Trial Management, Data Handling, and Record Keeping
-5.5.3 When using electronic trial data handling and/or remote electronic trial data systems, the sponsor should:
-(a) Ensure and document that the electronic data processing system(s) conforms to the sponsor's established requirements for completeness, accuracy, reliability, and consistent intended performance (i.e., validation).
-(b) Maintains SOPs for using these systems.
-(c) Ensure that the systems are designed to permit data changes in such a way that the data changes are documented and that there is no deletion of entered data (i.e., maintain an audit trail, data trail, edit trail).
-(d) Maintain a security system that prevents unauthorized access to the data.
-(e) Maintain a list of the individuals who are authorized to make data changes.
-(f) Maintain adequate backup of the data.
-(g) Safeguard the blinding, if any (e.g., maintain the blinding during data entry and processing).
-
-5.18 Monitoring
-5.18.1 The purposes of trial monitoring are to verify that: (a) The rights and well-being of human subjects are protected. (b) The reported trial data are accurate, complete, and verifiable from source documents. (c) The conduct of the trial is in compliance with the currently approved protocol/amendment(s), with GCP, and with the applicable regulatory requirement(s).
-
-5.18.3 Extent and Nature of Monitoring
-The sponsor should ensure that trials are adequately monitored. The sponsor should determine the appropriate extent and nature of monitoring. The determination of the extent and nature of monitoring should be based on considerations such as the objective, purpose, design, complexity, blinding, size, and endpoints of the trial. In general there is a need for on-site monitoring, before, during, and after the trial; however in exceptional circumstances the sponsor may determine that central monitoring in conjunction with procedures such as investigators' training and meetings and extensive written guidance can assure appropriate conduct of the trial in accordance with GCP. Statistically controlled sampling may be an acceptable method for selecting the data to be verified.
-
-ADDENDUM 5.0 Quality Management
-The sponsor should implement a system to manage quality throughout all stages of the trial process. Sponsors should focus on trial activities essential to ensuring human subject protection and the reliability of trial results. Quality management includes the design of efficient clinical trial protocols, tools, and procedures for data collection and processing, as well as the collection of information that is essential to decision making. The methods used to assure and control the quality of the trial should be proportionate to the risks inherent in the trial and the importance of the information collected.
-
-ADDENDUM 5.18.6 Monitoring Plan
-The sponsor should develop a monitoring plan that is tailored to the specific human subject protection and data integrity risks of the trial. The plan should describe the monitoring strategy, the monitoring responsibilities of all the parties involved, the various monitoring methods to be used, and the rationale for their use. The plan should also emphasize the monitoring of critical data and processes. Particular attention should be given to those aspects that are not routine clinical practice and that require additional training. The monitoring plan should reference the applicable policies and procedures.
-
-8. Essential Documents
-8.1 Introduction
-Essential documents are those documents which individually and collectively permit evaluation of the conduct of a trial and the quality of the data produced. These documents serve to demonstrate the compliance of the investigator, sponsor and monitor with the standards of Good Clinical Practice and with all applicable regulatory requirements. Filing essential documents at the investigator/institution and sponsor sites in a timely manner can greatly assist in the successful management of a trial. These documents are also the ones which are usually audited by the sponsor's independent audit function and inspected by the regulatory authority(ies) as part of the process to confirm the validity of the trial conduct and the integrity of data collected.
-`,
+    text: loadExtractedText("e6-r2.txt"),
   },
   {
     source: "fda-guidance",

@@ -1,8 +1,11 @@
 import { readFileSync } from "node:fs";
 import path from "node:path";
 import { describe, expect, it } from "vitest";
-import { parseFdaGuidanceListing, parseFdaIchListing } from "@/lib/pipeline/sources/fda-parser";
-import { isPriorityTitle } from "@/lib/pipeline/seed/corpus";
+import {
+  parseFdaGuidanceListing,
+  parseFdaIchListing,
+} from "@/lib/pipeline/sources/fda-parser";
+import { isPriorityTitle, SEED_CORPUS } from "@/lib/pipeline/seed/corpus";
 import { filterCatalog } from "@/lib/pipeline/fetch";
 
 const ich = readFileSync(path.join(__dirname, "fixtures/fda-ich.html"), "utf8");
@@ -17,6 +20,13 @@ describe("fda-parser", () => {
     expect(e6?.externalId).toContain("93884");
   });
 
+  it("keeps E6(R2) seed text as the fetched PDF extract", () => {
+    const e6 = SEED_CORPUS.find((row) => row.externalId === "fda-ich:93884");
+    expect(e6?.text.length).toBeGreaterThan(40_000);
+    expect(e6?.text).toMatch(/4\.8\.2/);
+    expect(e6?.text).toMatch(/1\.51 Source Data/);
+  });
+
   it("parses the six v1 FDA guidance documents from the listing fixture", () => {
     const entries = parseFdaGuidanceListing(
       guidance,
@@ -26,7 +36,9 @@ describe("fda-parser", () => {
     expect(titles.some((t) => t.includes("Electronic Systems"))).toBe(true);
     expect(titles.some((t) => t.includes("Electronic Source Data"))).toBe(true);
     expect(titles.some((t) => t.includes("Part 11"))).toBe(true);
-    expect(titles.some((t) => t.includes("Risk-Based Approach to Monitoring"))).toBe(true);
+    expect(titles.some((t) => t.includes("Risk-Based Approach to Monitoring"))).toBe(
+      true,
+    );
     expect(titles.some((t) => t.includes("Informed Consent"))).toBe(true);
     expect(entries.find((e) => e.title.includes("Electronic Systems"))?.issuedDate).toBe(
       "2024-10-02",

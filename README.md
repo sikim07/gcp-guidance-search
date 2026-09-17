@@ -14,7 +14,13 @@
 - 답변이 도움이 됐는지는 **도움됨 / 도움되지 않음**으로 남길 수 있습니다. 도움되지 않음에는 어떤 점이 어긋났는지 적을 수 있습니다. 저장은 구글 시트(Apps Script 웹앱)로 갑니다. `scripts/feedback-sheet.gs` 를 시트에 붙여 배포한 뒤 `FEEDBACK_SHEETS_WEBHOOK_URL` 을 넣습니다.
 - 다만 이건 공식 해석이 아닙니다. 답변만 믿지 말고 링크로 원문을 한 번 더 확인하는 걸 권합니다.
 
-지금 들어가 있는 가이드라인은 ICH E6(R2), E6(R3), Part 11, eSource, 위험기반 모니터링, Informed Consent, 식약처 ICH GCP 안내서, 안전성 보고 기한 발췌입니다. 법령은 개인정보 보호법, 의료기기법, 약사법, 첨단재생바이오법, 「의약품 등의 안전에 관한 규칙」(별표 4 KGCP)입니다.
+지금 들어가 있는 가이드라인은 ICH E6(R2) 전문, E6(R3) 발췌, Part 11, eSource, 위험기반 모니터링, Informed Consent, 식약처 ICH GCP 안내서, 안전성 보고 기한 발췌입니다. 법령은 개인정보 보호법, 의료기기법, 약사법, 첨단재생바이오법, 「의약품 등의 안전에 관한 규칙」 **별표 4 KGCP 전문**입니다.
+
+E6(R2)와 별표 4는 `scripts/refresh-seed-corpus.ts`가 `lib/pipeline/fetch.ts`·`parse-pdf.ts`·법령 Open API로 받은 원문을 `lib/pipeline/seed/extracted/`에 두고 시드가 그 파일을 읽습니다. 조항을 손으로 옮겨 적지 않습니다.
+
+```bash
+npx tsx scripts/refresh-seed-corpus.ts   # FDA가 막히면 ICH E6(R2) PDF로 받고, LAW_OC로 별표 4를 받음
+```
 
 ## 실행해보기
 

@@ -70,6 +70,7 @@ export function qualityPenalty(section: string, text: string, query: string): nu
     n += 0.3;
   }
   if (/제1장\s*목적/.test(head) && !/목적|안내서/.test(q)) n += 0.35;
+  if (/(?:^|[·\s])1\.\s*목적/.test(section) && !/목적/.test(q)) n += 0.4;
   if (/^BACKGROUND\b/i.test(text.trim()) && /감사추적|audit trail/.test(q)) n += 0.25;
   if (
     /sae|susar|이상반응/.test(q) &&
@@ -86,7 +87,7 @@ export function phraseBoost(query: string, section: string, text: string): numbe
   const head = text.trim().slice(0, 80);
   let boost = 0;
   if (
-    /서면\s*동의|informed consent|동의/.test(q) &&
+    /서면\s*동의|informed consent|시험대상자.{0,8}동의/.test(q) &&
     /서면\s*동의|informed consent/.test(hay)
   ) {
     boost += 0.14;
@@ -97,7 +98,16 @@ export function phraseBoost(query: string, section: string, text: string): numbe
   if (/임상시험계획/.test(q) && /임상시험계획/.test(hay)) {
     boost += 0.1;
   }
-  if (/4\.8/.test(section) && /동의|consent/.test(q)) {
+  if (
+    /4\.8/.test(section) &&
+    /서면\s*동의|informed consent|시험대상자.{0,8}동의/.test(q)
+  ) {
+    boost += 0.18;
+  }
+  if (/제23조|민감정보/.test(`${section}\n${text}`) && /민감정보|건강정보/.test(q)) {
+    boost += 0.22;
+  }
+  if (/모니터링|monitoring/.test(q) && /5\.18|머\.\s*모니터링/.test(section)) {
     boost += 0.18;
   }
   if (

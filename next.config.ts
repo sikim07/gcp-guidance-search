@@ -3,6 +3,9 @@ import type { NextConfig } from "next";
 const nextConfig: NextConfig = {
   serverExternalPackages: ["unpdf"],
   allowedDevOrigins: ["127.0.0.1", "localhost"],
+  outputFileTracingIncludes: {
+    "*": ["./lib/pipeline/seed/extracted/**/*"],
+  },
 };
 
 export default nextConfig;

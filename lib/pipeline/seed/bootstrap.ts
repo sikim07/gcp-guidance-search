@@ -10,15 +10,27 @@ import type { ChunkRecord, DocumentRecord, DocumentVersion } from "@/lib/types";
 
 let seeding: Promise<void> | null = null;
 
+export function isShortExcerptUpgrade(currentCount: number, nextCount: number): boolean {
+  return (
+    currentCount > 0 &&
+    currentCount < 40 &&
+    nextCount >= 80 &&
+    nextCount >= currentCount * 3
+  );
+}
+
 export function seedNeedsRefresh(opts: {
   fileHash: string | null;
   seedHash: string;
   currentSections: string[];
   nextSections: string[];
 }): boolean {
-  if (opts.fileHash !== opts.seedHash) return false;
-  if (opts.currentSections.length !== opts.nextSections.length) return true;
-  return opts.currentSections.some((section, i) => section !== opts.nextSections[i]);
+  if (opts.fileHash === opts.seedHash) {
+    if (opts.currentSections.length !== opts.nextSections.length) return true;
+    return opts.currentSections.some((section, i) => section !== opts.nextSections[i]);
+  }
+  // 발췌 시드를 전문 시드로 바꿀 때만 덮는다. PDF 적재본(청크가 이미 많음)은 유지.
+  return isShortExcerptUpgrade(opts.currentSections.length, opts.nextSections.length);
 }
 
 export async function ensureSeeded(store: AppStore): Promise<void> {
@@ -54,6 +66,7 @@ export async function ensureSeeded(store: AppStore): Promise<void> {
       }
       const statutes = await store.listStatutes();
       if (statutes.length === 0) await seedStatutes(store);
+      else await refreshSeedStatutes(store);
     })().finally(() => {
       seeding = null;
     });
@@ -75,6 +88,44 @@ export async function seedStatutes(store: AppStore): Promise<void> {
       kind: "new",
     });
   }
+}
+
+async function refreshSeedStatutes(store: AppStore): Promise<void> {
+  const seed = SEED_STATUTES.find((row) => row.lawId === "011794");
+  const annex = seed?.articles.find((row) => row.kind === "annex");
+  if (!seed || !annex) return;
+  const existing = (await store.listStatutes()).find((row) => row.lawId === seed.lawId);
+  if (!existing) {
+    await ingestParsedStatute(store, {
+      lawId: seed.lawId,
+      mst: seed.mst,
+      title: seed.title,
+      shortTitle: seed.shortTitle,
+      promulgatedDate: seed.promulgatedDate,
+      effectiveDate: seed.effectiveDate,
+      amendmentType: seed.amendmentType,
+      articles: seed.articles,
+      kind: "new",
+    });
+    return;
+  }
+  const currentAnnex = (await store.currentStatuteArticles()).filter(
+    (row) => row.statuteId === existing.id && row.kind === "annex",
+  );
+  const next = chunkByClause(annex.text, annex.section);
+  if (!isShortExcerptUpgrade(currentAnnex.length, next.length)) return;
+  await ingestParsedStatute(store, {
+    existing,
+    lawId: seed.lawId,
+    mst: seed.mst,
+    title: seed.title,
+    shortTitle: seed.shortTitle,
+    promulgatedDate: seed.promulgatedDate,
+    effectiveDate: seed.effectiveDate,
+    amendmentType: seed.amendmentType,
+    articles: seed.articles,
+    kind: "revised_hash",
+  });
 }
 
 function buildChunks(
