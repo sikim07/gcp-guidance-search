@@ -42,6 +42,12 @@ import {
   subscribeRecents,
   writeStoredRecents,
 } from "@/lib/search/recent";
+import {
+  getDraftServerSnapshot,
+  getDraftSnapshot,
+  patchStoredDraft,
+  subscribeDraft,
+} from "@/lib/search/draft";
 import { DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 import { detectPassageLanguage, needsEnglishTranslation } from "@/lib/llm/translate";
 import { formatCitations } from "@/lib/retrieval/cite";
@@ -51,31 +57,45 @@ import type { SearchResponse } from "@/lib/types";
 type Tab = "answer" | "original";
 
 export function SearchPanel() {
-  const [query, setQuery] = useState("");
+  const draft = useSyncExternalStore(
+    subscribeDraft,
+    getDraftSnapshot,
+    getDraftServerSnapshot,
+  );
+  const query = draft.query;
+  const result = draft.result;
+  const tab = draft.tab;
+  const translations = draft.translations;
+  const translatedAnswer = draft.translatedAnswer;
+  const showKorean = draft.showKorean;
   const [loading, setLoading] = useState(false);
   const [elapsedMs, setElapsedMs] = useState(0);
   const [error, setError] = useState<string | null>(null);
   const [errorKind, setErrorKind] = useState<SearchFailureKind | null>(null);
-  const [result, setResult] = useState<SearchResponse | null>(null);
-  const [tab, setTab] = useState<Tab>("answer");
-  const [translations, setTranslations] = useState<Record<string, string> | null>(null);
-  const [translatedAnswer, setTranslatedAnswer] = useState<string | null>(null);
   const [translateNote, setTranslateNote] = useState<string | null>(null);
   const [translating, setTranslating] = useState(false);
-  const [showKorean, setShowKorean] = useState(false);
   const [feedbackSent, setFeedbackSent] = useState<"up" | "down" | null>(null);
   const [showDownForm, setShowDownForm] = useState(false);
   const [downComment, setDownComment] = useState("");
   const [feedbackBusy, setFeedbackBusy] = useState(false);
   const [feedbackError, setFeedbackError] = useState(false);
   const [copied, setCopied] = useState(false);
-  const [slotOpen, setSlotOpen] = useState(false);
+  const [slotOpen, setSlotOpen] = useState(() => Boolean(getDraftSnapshot().result));
   const progressRef = useRef<HTMLParagraphElement>(null);
   const recents = useSyncExternalStore(
     subscribeRecents,
     getRecentsSnapshot,
     getRecentsServerSnapshot,
   );
+
+  function setQuery(next: string) {
+    patchStoredDraft({ query: next });
+  }
+
+  function setTab(next: SetStateAction<Tab>) {
+    const value = typeof next === "function" ? next(getDraftSnapshot().tab) : next;
+    patchStoredDraft({ tab: value });
+  }
   const canTranslate = useMemo(
     () =>
       result
@@ -114,17 +134,19 @@ export function SearchPanel() {
   async function runSearch(nextQuery: string) {
     const trimmed = nextQuery.trim();
     if (!trimmed) return;
-    setQuery(nextQuery);
+    patchStoredDraft({
+      query: nextQuery,
+      tab: "answer",
+      translations: null,
+      translatedAnswer: null,
+      showKorean: false,
+    });
     remember(trimmed);
     setElapsedMs(0);
     setLoading(true);
     setError(null);
     setErrorKind(null);
-    setTab("answer");
-    setTranslations(null);
-    setTranslatedAnswer(null);
     setTranslateNote(null);
-    setShowKorean(false);
     setFeedbackSent(null);
     setShowDownForm(false);
     setDownComment("");
@@ -139,10 +161,15 @@ export function SearchPanel() {
       if (!response.ok) {
         setErrorKind(classifySearchFailure(response.status));
         setError(body.error ?? "검색에 실패했습니다.");
-        setResult(null);
+        patchStoredDraft({
+          result: null,
+          translations: null,
+          translatedAnswer: null,
+          showKorean: false,
+        });
         return;
       }
-      setResult(body);
+      patchStoredDraft({ result: body });
       await fillKorean(body);
     } catch {
       setErrorKind("network");
@@ -157,7 +184,7 @@ export function SearchPanel() {
       needsEnglishTranslation(body.passages) ||
       detectPassageLanguage(body.answer) !== "ko";
     if (!needs) {
-      setShowKorean(false);
+      patchStoredDraft({ showKorean: false });
       return;
     }
     setTranslateNote(null);
@@ -180,15 +207,17 @@ export function SearchPanel() {
           translated.error ??
             "지금은 번역을 할 수 없습니다. 영어 원문을 그대로 보여 줍니다.",
         );
-        setShowKorean(false);
+        patchStoredDraft({ showKorean: false });
         return;
       }
-      setTranslations(translated.translations ?? {});
-      setTranslatedAnswer(translated.translatedAnswer ?? null);
-      setShowKorean(true);
+      patchStoredDraft({
+        translations: translated.translations ?? {},
+        translatedAnswer: translated.translatedAnswer ?? null,
+        showKorean: true,
+      });
     } catch {
       setTranslateNote("번역 요청 중 네트워크 오류가 났습니다.");
-      setShowKorean(false);
+      patchStoredDraft({ showKorean: false });
     }
   }
 
@@ -200,11 +229,11 @@ export function SearchPanel() {
   async function toggleTranslation() {
     if (!result || !canTranslate) return;
     if (showKorean) {
-      setShowKorean(false);
+      patchStoredDraft({ showKorean: false });
       return;
     }
     if (translations) {
-      setShowKorean(true);
+      patchStoredDraft({ showKorean: true });
       return;
     }
     setTranslating(true);
@@ -230,9 +259,11 @@ export function SearchPanel() {
         );
         return;
       }
-      setTranslations(body.translations ?? {});
-      setTranslatedAnswer(body.translatedAnswer ?? null);
-      setShowKorean(true);
+      patchStoredDraft({
+        translations: body.translations ?? {},
+        translatedAnswer: body.translatedAnswer ?? null,
+        showKorean: true,
+      });
     } catch {
       setTranslateNote("번역 요청 중 네트워크 오류가 났습니다.");
     } finally {
