@@ -1,12 +1,13 @@
-import { SITE_URL } from "@/lib/site";
 import type { MetadataRoute } from "next";
+import { getStore } from "@/lib/db/store";
+import { buildSitemapEntries } from "@/lib/seo";
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  const lastModified = new Date();
-  return ["", "/about", "/updates", "/documents"].map((path) => ({
-    url: `${SITE_URL}${path || "/"}`,
-    lastModified,
-    changeFrequency: path === "" ? "daily" : "weekly",
-    priority: path === "" ? 1 : 0.7,
-  }));
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const store = await getStore();
+  return buildSitemapEntries({
+    documents: await store.listDocuments(),
+    chunks: await store.currentChunks(),
+    statutes: await store.listStatutes(),
+    articles: await store.currentStatuteArticles(),
+  });
 }

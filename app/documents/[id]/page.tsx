@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { Card } from "@/components/ui/card";
 import { SourceChip } from "@/components/source-chip";
+import { ClauseToc } from "@/components/clause-toc";
 import { getStore } from "@/lib/db/store";
 import { humanizeChangeSummary } from "@/lib/text/change-copy";
 
@@ -19,7 +20,7 @@ export async function generateMetadata({
   const title = doc?.title ?? statute?.title ?? "문서";
   return {
     title,
-    description: `${title}의 적재 버전과 개정 요약을 봅니다. 공식본은 원문 링크입니다.`,
+    description: `${title}의 적재된 조항 원문과 개정 요약을 봅니다. 공식본은 원문 링크입니다.`,
     alternates: { canonical: `/documents/${id}` },
   };
 }
@@ -73,6 +74,12 @@ export default async function DocumentDetailPage({
             </li>
           ))}
         </ol>
+        <ClauseToc
+          entityId={statute.id}
+          clauses={(await store.currentStatuteArticles())
+            .filter((row) => row.statuteId === statute.id && row.isCurrent)
+            .map((row) => ({ section: row.section, text: row.text }))}
+        />
       </div>
     );
   }
@@ -111,6 +118,12 @@ export default async function DocumentDetailPage({
           </li>
         ))}
       </ol>
+      <ClauseToc
+        entityId={doc.id}
+        clauses={(await store.currentChunks())
+          .filter((row) => row.documentId === doc.id && row.isCurrent)
+          .map((row) => ({ section: row.section, text: row.text }))}
+      />
     </div>
   );
 }

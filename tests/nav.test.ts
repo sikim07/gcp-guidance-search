@@ -6,7 +6,7 @@ describe("navIndex", () => {
     expect(navIndex("/")).toBe(0);
     expect(navIndex("/updates")).toBe(1);
     expect(navIndex("/documents")).toBe(2);
-    expect(navIndex("/documents/abc")).toBe(2);
+    expect(navIndex("/documents/abc/5.18")).toBe(2);
     expect(navIndex("/about")).toBe(3);
   });
 });
@@ -15,7 +15,7 @@ describe("isNavActive", () => {
   it("treats nested document routes as the 문서 tab", () => {
     expect(isNavActive("/", "/")).toBe(true);
     expect(isNavActive("/updates", "/")).toBe(false);
-    expect(isNavActive("/documents/abc", "/documents")).toBe(true);
+    expect(isNavActive("/documents/abc/5.18", "/documents")).toBe(true);
   });
 });
 
@@ -31,6 +31,6 @@ describe("navTransitionType", () => {
   });
 
   it("skips animation when staying on the same tab", () => {
-    expect(navTransitionType("/documents", "/documents/abc")).toBe(null);
+    expect(navTransitionType("/documents", "/documents/abc/5.18")).toBe(null);
   });
 });

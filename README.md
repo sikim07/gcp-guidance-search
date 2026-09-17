@@ -47,7 +47,14 @@ npm run bench    # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md에 
 
 의견을 구글 시트에 남기려면 시트를 하나 만들고 `scripts/feedback-sheet.gs` 를 Apps Script 웹앱으로 배포한 다음, Vercel에 `FEEDBACK_SHEETS_WEBHOOK_URL` 을 넣습니다.
 
-검색엔진·AI 크롤러용 `robots.txt`, `sitemap.xml`, `/llms.txt`, Open Graph를 제공합니다.
+검색엔진·AI 크롤러용 `robots.txt`, `sitemap.xml`, `/llms.txt`, Open Graph를 제공합니다. `sitemap.xml`에는 문서 목록뿐 아니라 **조항별 페이지**(`/documents/[id]/[section]`)도 들어갑니다. 홈에는 자주 찾는 질문의 근거 조항 요약이 서버에서 렌더링됩니다.
+
+배포 후 Google Search Console에서 색인을 다시 요청하세요.
+
+1. [Search Console](https://search.google.com/search-console)에서 속성 `https://gcp-guidance-search.vercel.app` 을 연다.
+2. Sitemaps에 `https://gcp-guidance-search.vercel.app/sitemap.xml` 을 다시 제출한다.
+3. URL 검사에 홈(`/`), `/documents`, 조항 페이지 하나를 넣고 **색인 생성 요청**을 보낸다.
+4. `site:gcp-guidance-search.vercel.app` 결과가 비어 있으면 위 요청 이후 며칠을 두고 다시 본다.
 
 답변을 모델로 돌리려면 Vercel 프로젝트 Environment Variables에 `OPENAI_API_KEY`, `ANTHROPIC_API_KEY`를 넣고 재배포하면 됩니다. 법령 실시간 개정 조회는 `LAW_OC`입니다. 월 한도는 각 콘솔에서 거는 게 안전합니다. `CRON_SECRET`을 넣으면 매일 개정 확인 크론이 그 값으로만 돌고, 없으면 Vercel 크론 User-Agent만 통과합니다. 개정 기록을 서버 재시작 뒤에도 남기려면 Supabase가 필요합니다.
 
