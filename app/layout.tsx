@@ -73,9 +73,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html
       lang="ko"
-      className={`${sans.variable} bg-paper h-full overflow-hidden antialiased`}
+      className={`${sans.variable} bg-paper h-full antialiased`}
     >
-      <body className="bg-paper text-ink h-full overflow-hidden font-sans">
+      <body className="bg-paper text-ink h-full font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}

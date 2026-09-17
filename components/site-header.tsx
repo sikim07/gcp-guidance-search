@@ -10,7 +10,7 @@ export function SiteHeader() {
 
   return (
     <header
-      className="border-rule/70 bg-paper z-20 shrink-0 border-b"
+      className="border-rule/70 bg-paper sticky top-0 z-20 shrink-0 border-b"
       style={{ viewTransitionName: "site-header" }}
     >
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3 md:max-w-5xl md:py-3.5">
