@@ -416,8 +416,6 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
   border-radius: 9999px;
   bottom: calc(1rem + env(safe-area-inset-bottom, 0px));
   box-shadow:
-    0 12px 40px rgb(31 27 22 / 0.18),
-    0 0 0 0.5px rgb(31 27 22 / 0.08),
     inset 0 1px 0 rgb(255 255 255 / 0.78),
     inset 0 -1px 0 rgb(31 27 22 / 0.08);
   height: var(--liquid-tabbar-height);
@@ -435,9 +433,7 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
 .dark .liquid-tabbar {
   background: rgb(23 23 23 / 0.4);
   border-color: rgb(255 255 255 / 0.12);
-  box-shadow:
-    0 10px 32px -10px rgb(0 0 0 / 0.55),
-    0 1px 0 rgb(255 255 255 / 0.12) inset;
+  box-shadow: 0 1px 0 rgb(255 255 255 / 0.12) inset;
 }
 
 .liquid-tabbar-blobs {
