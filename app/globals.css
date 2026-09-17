@@ -377,6 +377,10 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
 
 ::view-transition-group(site-tabbar) {
   animation: none;
+  background: transparent;
+  border-radius: 9999px;
+  clip-path: inset(0 round 9999px);
+  overflow: clip;
   z-index: 110;
 }
 
@@ -386,6 +390,9 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
 
 ::view-transition-new(site-tabbar) {
   animation: none;
+  background: transparent;
+  border-radius: 9999px;
+  overflow: clip;
 }
 
 ::view-transition-group(overlay-scrollbar) {
