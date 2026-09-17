@@ -150,6 +150,10 @@ export type AnswerSource = {
   section: string;
   url: string;
   kind?: SourceKind;
+  issuedDate?: string | null;
+  currentMst?: string | null;
+  promulgatedDate?: string | null;
+  effectiveDate?: string | null;
 };
 
 export type Passage = {

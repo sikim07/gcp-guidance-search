@@ -32,6 +32,10 @@ export type Retrieved = {
   text: string;
   kind?: SourceKind;
   origin: "domestic" | "fda";
+  issuedDate?: string | null;
+  currentMst?: string | null;
+  promulgatedDate?: string | null;
+  effectiveDate?: string | null;
   chunk: ChunkRecord;
 };
 
@@ -121,6 +125,10 @@ function uniqueSources(retrieved: Retrieved[]): AnswerSource[] {
       section: r.section,
       url: r.url,
       kind: r.kind ?? "guideline",
+      issuedDate: r.issuedDate,
+      currentMst: r.currentMst,
+      promulgatedDate: r.promulgatedDate,
+      effectiveDate: r.effectiveDate,
     });
   }
   return sources;
@@ -128,7 +136,13 @@ function uniqueSources(retrieved: Retrieved[]): AnswerSource[] {
 
 export function decorateRetrieved(
   chunks: ChunkRecord[],
-  docs: { id: string; title: string; url: string; source?: string }[],
+  docs: {
+    id: string;
+    title: string;
+    url: string;
+    source?: string;
+    issuedDate?: string | null;
+  }[],
 ): Retrieved[] {
   return chunks.map((chunk) => {
     const doc = docs.find((d) => d.id === chunk.documentId);
@@ -139,6 +153,7 @@ export function decorateRetrieved(
       text: chunk.text,
       kind: "guideline" as const,
       origin: originOf("guideline", doc?.url ?? "", doc?.source),
+      issuedDate: doc?.issuedDate,
       chunk,
     };
   });

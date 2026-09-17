@@ -126,6 +126,9 @@ export async function searchGuidelines(
           text: article.text,
           kind: "statute" as SourceKind,
           origin: originOf("statute", statute?.url ?? "", "kgcp"),
+          currentMst: statute?.currentMst,
+          promulgatedDate: statute?.promulgatedDate,
+          effectiveDate: statute?.effectiveDate,
           chunk: {
             id: article.id,
             versionId: article.revisionId,
