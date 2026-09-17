@@ -35,13 +35,13 @@ npm run dev
 테스트와 벤치마크는 이렇게 돌립니다.
 
 ```bash
-npm run verify   # lint + unit test + production build. 푸시/Vercel도 이 명령을 쓴다
+npm run verify   # lint + unit test + production build. git push 훅이 이 명령을 쓴다
 npm run bench    # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md에 정리했습니다
 ```
 
 ## Vercel
 
-이미 https://gcp-guidance-search.vercel.app 에 올라가 있습니다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 됩니다. Vercel 빌드 명령은 `node scripts/verify.mjs`라서 lint·테스트가 실패하면 배포되지 않습니다.
+이미 https://gcp-guidance-search.vercel.app 에 올라가 있습니다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 됩니다. Vercel 빌드 명령은 `next build`입니다. lint·테스트는 git push 훅(`npm run verify`)에서 막습니다. 조항 페이지는 빌드 때 전부 만들지 않고, 첫 요청 이후 1시간 ISR로 캐시합니다. `sitemap.xml`에 URL은 그대로 들어갑니다.
 
 검색은 IP당 하루 **새 질문 5건**, 전체 하루 50건입니다. 같은 질문은 캐시에서 다시 열리며 한도에 들어가지 않습니다. Vercel 환경변수 `RATE_LIMIT_IP_DAILY` / `RATE_LIMIT_GLOBAL_DAILY`가 있으면 그 값이 코드 기본값보다 이깁니다.
 

@@ -14,24 +14,13 @@ export async function documentStaticParams(): Promise<Array<{ id: string }>> {
     .map((row) => ({ id: row.id }));
 }
 
-export async function clauseStaticParams(): Promise<Array<{ id: string; section: string }>> {
-  const store = getStore();
-  const activeDocs = new Set(
-    (await store.listDocuments())
-      .filter((row) => row.status === "active")
-      .map((row) => row.id),
-  );
-  const activeStatutes = new Set(
-    (await store.listStatutes())
-      .filter((row) => row.status === "active")
-      .map((row) => row.id),
-  );
-  const chunks = (await store.currentChunks()).filter((row) => activeDocs.has(row.documentId));
-  const articles = (await store.currentStatuteArticles()).filter((row) =>
-    activeStatutes.has(row.statuteId),
-  );
-  return [
-    ...chunks.map((row) => ({ id: row.documentId, section: row.section })),
-    ...articles.map((row) => ({ id: row.statuteId, section: row.section })),
-  ].filter((row) => isSafeStaticSection(row.section));
+/**
+ * Clause pages stay ISR (`revalidate = 3600`, `dynamicParams = true`) and are
+ * listed in sitemap.xml. Prerendering every section at build pulled ~1,000
+ * pages and the full embedding table through `currentChunks()`.
+ */
+export async function clauseStaticParams(): Promise<
+  Array<{ id: string; section: string }>
+> {
+  return [];
 }

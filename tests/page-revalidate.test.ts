@@ -38,6 +38,11 @@ describe("ISR page revalidation", () => {
 });
 
 describe("static section params", () => {
+  it("does not prerender every clause page at build time", async () => {
+    const { clauseStaticParams } = await import("@/lib/cache/static-params");
+    expect(await clauseStaticParams()).toEqual([]);
+  });
+
   it("rejects statute headings that would overflow the prerender folder name", async () => {
     const { isSafeStaticSection } = await import("@/lib/cache/static-params");
     expect(isSafeStaticSection("5.18")).toBe(true);
