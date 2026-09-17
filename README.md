@@ -2,14 +2,14 @@
 
 사이드 프로젝트 · skim88.1942@gmail.com
 
-**한줄 요약.** 임상시험 규제 문서(ICH GCP, FDA 가이던스, 식약처 안내서, 관련 법령)가 여러 사이트에 흩어져 있고 수시로 개정되는 문제를, 자연어 검색 + 자동 개정 감지 파이프라인으로 풀어본 개인 프로젝트다. 프론트엔드부터 백엔드(임베딩·검색 랭킹·개정 감지 배치), 인프라(캐시 전략·비용 통제), 운영(자동 코드 리뷰 파이프라인)까지 혼자 설계하고 만들었다.
+**한줄 요약.** 임상시험 규제 문서(ICH GCP, FDA 가이던스, 식약처 안내서, 관련 법령)가 여러 사이트에 흩어져 있고 수시로 개정되는 문제를, 자연어 검색 + 자동 개정 감지 파이프라인으로 풀어본 개인 프로젝트다. 프론트엔드부터 백엔드(임베딩·검색 랭킹·개정 감지 배치), 인프라(캐시 전략·비용 통제), 운영(AI 하네스 — 테스트·lint·빌드 의무화)까지 혼자 설계하고 만들었다.
 
 - 레포: https://github.com/sikim07/gcp-guidance-search
 - 서비스: https://gcp-guidance-search.vercel.app
 
 ## 배경 — 어떤 문제를 발견했는가
 
-현장(CRA/QA/RA)에서는 "이 절차가 GCP나 식약처 기준에 근거가 있나?"를 확인해야 할 일이 수시로 생긴다. 문제는 근거가 한 곳에 있지 않고 ICH, FDA 가이던스, 식약처 민원인안내서, 국내 법령(약사법, 의료기기법 등)에 흩어져 있고, 각 문서는 수시로 개정되는데 어느 것이 현행본인지는 직접 원문 사이트를 일일이 다니며 확인해야 알 수 있다.
+현장(CRA/QA/RA)에서는 "이 절차가 GCP나 식약처 기준에 근거가 있나?"를 확인해야 할 일이 수시로 생긴다. 문제는 근거가 한 곳에 있지 않고 FDA ICH, FDA 가이던스, 식약처 민원인안내서, 국내 법령(약사법, 의료기기법 등)에 흩어져 있고, 각 문서는 수시로 개정되는데 어느 것이 현행본인지는 직접 원문 사이트를 일일이 다니며 확인해야 알 수 있다.
 
 실제로 회사 내부에도 이 개정 현황을 사람이 직접 모니터링해서 정리해 공유하는 페이지가 따로 있을 정도로, "개정 여부를 추적하고 근거 조항을 찾는 일"은 이 도메인에서 공통적으로 존재하는 수작업이다. 이를 자동화할 수 있겠다고 판단해 시작했다.
 
@@ -51,9 +51,15 @@ npx tsx scripts/refresh-seed-corpus.ts   # FDA가 막히면 ICH E6(R2) PDF로 �
 
 유료 합성을 붙일 때는 **GPT-5.4 nano**(입력 $0.20 / 출력 $1.25 per 1M 토큰)를 쓴다. 같은 작업에 Claude Haiku 4.5는 입력이 약 5배, Sonnet·Opus는 이 제품에 맞지 않는다. GPT-5 mini는 nano가 한국어·출처 형식을 자주 깨는 경우에만 한 단계 올린다.
 
-### 자동 코드 검증 파이프라인
+### AI 하네스 프로그래밍 — 테스트·lint·빌드 의무화
 
-구현을 AI 에이전트(Cursor)에 맡기면서도 품질을 스스로 담보하기 위해, Claude Code의 Stop 훅으로 구현이 종료될 때마다 git diff를 다른 모델(Gemini)에게 자동으로 교차 검토하고, 문제가 있으면 `{decision:"block"}`로 강제로 재수정하도록 했다(`.claude/hooks/stop-review.mjs`). TypeScript strict, ESLint, Vitest를 `npm run verify`로 묶어 git push 훅으로 강제했다.
+구현은 AI 에이전트(Cursor)에게 맡기되, 결과물 품질은 사람이 매번 리뷰하는 게 아니라 자동 게이트(하네스)로 강제했다. 세 단계로 구성했다.
+
+1. **규칙을 텍스트로 명문화.** `AGENTS.md`에 벡터 DB 금지, KGCP는 별표 4(별표 1 아님), OCR 금지, 근거 없는 답변 금지, 답변 LLM은 기본 발췌·유료면 GPT-5.4 nano 같은 프로젝트 제약을 AI 에이전트가 매번 참조하는 스펙으로 박아 둔다.
+2. **되돌릴 수 없게 자동 게이트로 강제.** TypeScript strict, ESLint, Vitest 단위 테스트를 `npm run verify`로 묶어 git push 훅에 걸어 두어, 하나라도 실패하면 푸시 자체가 막히도록 했다.
+3. **구현 종료 시점의 교차검증.** Claude Code의 Stop 훅을 이용해 구현이 종료될 때마다 git diff를 다른 모델(Gemini)에게 자동으로 교차 검토시키고, 문제가 있으면 `{decision:"block"}`로 강제로 재수정하도록 했다(`.claude/hooks/stop-review.mjs`).
+
+즉 "AI가 생산한 코드를 신뢰해서 쓴다"가 아니라, "AI가 무엇을 내놓아도 이 게이트를 통과하지 못하면 반영되지 않는다"는 구조를 스스로 설계한 것이 핵심이다.
 
 ### SEO·성능 트레이드오프
 
@@ -89,9 +95,9 @@ npx tsx scripts/refresh-seed-corpus.ts   # FDA가 막히면 ICH E6(R2) PDF로 �
 
 - **검색 정확도:** 6개 핵심 질문(감사추적, 서면동의, 모니터링 범위, 민감정보, 의료기기 승인, SAE 보고기한)에 대해 top-1 조항 정확 일치 + 의도적으로 심은 노이즈 조항 배제를 회귀 테스트로 고정(`tests/retrieval-gold.test.ts`, `tests/search-quality.test.ts`).
 - **검색 성능:** 실제 코퍼스 721청크 기준 브루트포스 유사도 검색 약 2ms — 500ms 임계치 대비 약 250배 여유. 벡터 DB 없이 서비스 수준 응답 속도.
-- **코드 품질:** 단위 테스트 142개 통과, lint·타입체크 에러 0. Stop 훅으로 AI 구현 커밋이 다른 모델의 교차 검토를 거치도록 강제.
+- **코드 품질:** 단위 테스트 142개 통과, lint·타입체크 에러 0. `AGENTS.md` 스펙 → `npm run verify` push 훅 → Stop 훅 교차 검토의 3단 하네스로, AI 구현이 게이트를 통과하지 못하면 반영되지 않는다.
 - **콘텐츠 규모:** `sitemap.xml` 기준 253개 URL, 그중 약 240개가 조항 단위 페이지. ICH E6(R2) 전문(4만자 이상), 국내 별표 4(KGCP) 전문(8천자 이상)을 발췌 파이프라인으로 적재하고 `tests/corpus-coverage.test.ts`로 고정.
-- **SEO/성능:** `force-dynamic` → ISR로 라우트 캐시와 프리페치 복구. 조항 전체 SSG 제거로 빌드 정적 페이지 약 1,000개 → 33개.
+- **SEO/성능:** `force-dynamic` → ISR로 라우트 캐시와 프리페치 복구. 문서·조항 페이지는 빌드 때 만들지 않고 첫 요청 + 1시간 ISR로 캐시한다. `sitemap.xml`에 URL은 그대로 넣는다.
 - **비용 통제:** IP별 일 5건·전체 일 50건 새 질문. 동일 질문은 캐시로 응답하고 한도에 넣지 않음. 답변 LLM은 기본 $0. 유료 nano + 한도 상한이면 월 약 1달러대.
 - **운영 자동화:** 개정 감지부터 재임베딩, 캐시 무효화(`revalidatePath`), 관리자 대시보드 로그까지 사람 개입 없이 돌아가는 파이프라인.
 
@@ -112,7 +118,7 @@ CRA·QA·RA가 "이 절차가 근거가 있나"를 확인할 때 여러 사이�
 | Data | Supabase (Postgres). 없으면 로컬 JSON | 문서·청크·법령조문·버전 이력·검색 로그 |
 | AI/검색 | OpenAI 임베딩(`text-embedding-3-small`, 선택), 브루트포스 cosine, 발췌 답변. 유료 합성은 GPT-5.4 nano | 질문 임베딩, 근거 기반 답변. Haiku/Sonnet/Opus는 쓰지 않음 |
 | 외부 연동 | FDA/ICH, 식약처, 국가법령정보센터(law.go.kr) Open API | 원문 수집 · 법령 현행본/개정 이력 |
-| 품질 게이트 | TypeScript strict, ESLint, Vitest, Claude Code Stop 훅 | 단위 테스트 142개, 구현 완료 시점 교차 검토 |
+| 품질 게이트 (하네스) | `AGENTS.md`, TypeScript strict, ESLint, Vitest, git push 훅, Claude Code Stop 훅 | 스펙 명문화 → verify 실패 시 푸시 차단 → 구현 종료 시점 교차 모델 리뷰 |
 | 운영 | 시드 버전 이력·`BENCHMARK.md`, `/admin`, sitemap/robots/llms.txt | 의사결정 근거, 운영 가시성, SEO |
 
 ## 실행해보기
@@ -132,7 +138,7 @@ npm run bench    # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md
 
 ## Vercel
 
-이미 https://gcp-guidance-search.vercel.app 에 올라가 있다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 된다. Vercel 빌드 명령은 `next build`다. lint·테스트는 git push 훅(`npm run verify`)에서 막는다. 조항 페이지는 빌드 때 전부 만들지 않고, 첫 요청 이후 1시간 ISR로 캐시한다. `sitemap.xml`에 URL은 그대로 들어간다.
+이미 https://gcp-guidance-search.vercel.app 에 올라가 있다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 된다. Vercel 빌드 명령은 `next build`다. lint·테스트는 git push 훅(`npm run verify`)에서 막는다. 문서·조항 페이지는 빌드 때 전부 만들지 않고, 첫 요청 이후 1시간 ISR로 캐시한다. `sitemap.xml`에 URL은 그대로 들어간다.
 
 검색은 IP당 하루 **새 질문 5건**, 전체 하루 50건이다. 같은 질문은 캐시에서 다시 열리며 한도에 들어가지 않는다. Vercel 환경변수 `RATE_LIMIT_IP_DAILY` / `RATE_LIMIT_GLOBAL_DAILY`가 있으면 그 값이 코드 기본값보다 이긴다.
 

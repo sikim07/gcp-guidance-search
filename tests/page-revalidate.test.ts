@@ -38,8 +38,11 @@ describe("ISR page revalidation", () => {
 });
 
 describe("static section params", () => {
-  it("does not prerender every clause page at build time", async () => {
-    const { clauseStaticParams } = await import("@/lib/cache/static-params");
+  it("does not prerender document or clause pages at build time", async () => {
+    const { clauseStaticParams, documentStaticParams } = await import(
+      "@/lib/cache/static-params"
+    );
+    expect(await documentStaticParams()).toEqual([]);
     expect(await clauseStaticParams()).toEqual([]);
   });
 
