@@ -2,6 +2,7 @@
 
 import {
   useEffect,
+  useLayoutEffect,
   useMemo,
   useRef,
   useState,
@@ -403,37 +404,96 @@ export function SearchPanel() {
       ) : null}
 
       {loading || result ? (
-        <div className={`result-slot ${slotOpen ? "is-open" : ""}`}>
-          <div className="result-slot-inner">
-            {loading ? (
-              <ResultSkeleton elapsedMs={elapsedMs} progressRef={progressRef} />
-            ) : result ? (
-              <AnswerCard
-                result={result}
-                tab={tab}
-                setTab={setTab}
-                canTranslate={canTranslate}
-                translating={translating}
-                showKorean={showKorean}
-                translatedAnswer={translatedAnswer}
-                translations={translations}
-                translateNote={translateNote}
-                toggleTranslation={toggleTranslation}
-                copied={copied}
-                copyCitations={copyCitations}
-                feedbackSent={feedbackSent}
-                feedbackBusy={feedbackBusy}
-                feedbackError={feedbackError}
-                showDownForm={showDownForm}
-                downComment={downComment}
-                setDownComment={setDownComment}
-                setShowDownForm={setShowDownForm}
-                sendFeedback={sendFeedback}
-              />
-            ) : null}
-          </div>
-        </div>
+        <ResultSlot
+          open={slotOpen}
+          contentKey={loading ? "loading" : (result?.searchLogId ?? "result")}
+        >
+          {loading ? (
+            <ResultSkeleton elapsedMs={elapsedMs} progressRef={progressRef} />
+          ) : result ? (
+            <AnswerCard
+              result={result}
+              tab={tab}
+              setTab={setTab}
+              canTranslate={canTranslate}
+              translating={translating}
+              showKorean={showKorean}
+              translatedAnswer={translatedAnswer}
+              translations={translations}
+              translateNote={translateNote}
+              toggleTranslation={toggleTranslation}
+              copied={copied}
+              copyCitations={copyCitations}
+              feedbackSent={feedbackSent}
+              feedbackBusy={feedbackBusy}
+              feedbackError={feedbackError}
+              showDownForm={showDownForm}
+              downComment={downComment}
+              setDownComment={setDownComment}
+              setShowDownForm={setShowDownForm}
+              sendFeedback={sendFeedback}
+            />
+          ) : null}
+        </ResultSlot>
       ) : null}
+    </div>
+  );
+}
+
+function ResultSlot({
+  open,
+  contentKey,
+  children,
+}: {
+  open: boolean;
+  contentKey: string;
+  children: ReactNode;
+}) {
+  const innerRef = useRef<HTMLDivElement>(null);
+  const previousHeight = useRef<number | null>(null);
+  const firstOpen = useRef(true);
+  const [height, setHeight] = useState<number | undefined>(undefined);
+
+  useLayoutEffect(() => {
+    const node = innerRef.current;
+    if (!node || !open) {
+      firstOpen.current = true;
+      previousHeight.current = null;
+      setHeight(undefined);
+      return;
+    }
+
+    const next = node.scrollHeight;
+    if (firstOpen.current) {
+      firstOpen.current = false;
+      previousHeight.current = next;
+      setHeight(undefined);
+      return;
+    }
+
+    const from = previousHeight.current ?? node.getBoundingClientRect().height;
+    previousHeight.current = next;
+    if (Math.abs(from - next) < 2) return;
+    setHeight(from);
+    const frame = window.requestAnimationFrame(() => setHeight(next));
+    return () => window.cancelAnimationFrame(frame);
+  }, [open, contentKey]);
+
+  return (
+    <div className={`result-slot ${open ? "is-open" : ""}`}>
+      <div
+        ref={innerRef}
+        className="result-slot-inner"
+        style={height == null ? undefined : { height }}
+        onTransitionEnd={(event) => {
+          if (event.propertyName !== "height") return;
+          const node = innerRef.current;
+          setHeight(undefined);
+          if (node) previousHeight.current = node.scrollHeight;
+        }}
+      >
+        {children}
+      </div>
     </div>
   );
 }

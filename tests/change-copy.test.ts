@@ -6,6 +6,7 @@ import {
   feedKindLabel,
   humanizeChangeSummary,
   prettySectionLabel,
+  publicRevisionFeed,
 } from "@/lib/text/change-copy";
 
 describe("articleKeyToLabel", () => {
@@ -79,6 +80,22 @@ describe("collapseRepeatedFeedItems", () => {
     ];
     const out = collapseRepeatedFeedItems(logs);
     expect(out.map((row) => row.id)).toEqual(["1", "3"]);
+  });
+});
+
+describe("publicRevisionFeed", () => {
+  it("hides internal seed re-chunk rows from the public feed", () => {
+    const logs = [
+      { id: "1", documentId: "d1", summary: "시드 조항을 다시 잘랐습니다." },
+      {
+        id: "2",
+        documentId: "d2",
+        summary: "검색에 쓰는 조항 경계를 다시 맞췄습니다. 공식 개정은 아닙니다.",
+      },
+      { id: "3", documentId: "d3", summary: "초기 적재 (시드 코퍼스)" },
+      { id: "4", documentId: "d3", summary: "초기 적재 (시드 코퍼스)" },
+    ];
+    expect(publicRevisionFeed(logs).map((row) => row.id)).toEqual(["3"]);
   });
 });
 

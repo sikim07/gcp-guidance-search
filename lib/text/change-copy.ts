@@ -197,3 +197,9 @@ export function collapseRepeatedFeedItems<
   }
   return out;
 }
+
+export function publicRevisionFeed<T extends { documentId: string; summary: string }>(
+  logs: T[],
+): T[] {
+  return collapseRepeatedFeedItems(logs.filter((log) => !isInternalReseed(log.summary)));
+}

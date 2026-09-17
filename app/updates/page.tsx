@@ -1,9 +1,9 @@
 import type { Metadata } from "next";
 import type { ChangeKind } from "@/lib/types";
 import {
-  collapseRepeatedFeedItems,
   feedKindLabel,
   humanizeChangeSummary,
+  publicRevisionFeed,
 } from "@/lib/text/change-copy";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
@@ -20,7 +20,7 @@ export const metadata: Metadata = {
 
 export default async function UpdatesPage() {
   const store = await getStore();
-  const logs = collapseRepeatedFeedItems(await store.listChangeLogs());
+  const logs = publicRevisionFeed(await store.listChangeLogs());
   const documents = await store.listDocuments();
   const statutes = await store.listStatutes();
   const byId = new Map(documents.map((d) => [d.id, d]));
