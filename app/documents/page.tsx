@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Card } from "@/components/ui/card";
-import { SourceChip } from "@/components/source-chip";
+import { SourceBadge } from "@/components/source-badge";
+import { StaticCard } from "@/components/static-card";
 import { getStore } from "@/lib/db/store";
 
 export const dynamic = "force-dynamic";
@@ -29,14 +29,14 @@ export default async function DocumentsPage() {
         </p>
       </div>
       {documents.length === 0 && statutes.length === 0 ? (
-        <Card>적재된 문서가 없습니다.</Card>
+        <StaticCard>적재된 문서가 없습니다.</StaticCard>
       ) : (
         <ul className="space-y-3">
           {statutes.map((row) => (
             <li key={row.id}>
-              <Card>
+              <StaticCard>
                 <div className="flex flex-wrap items-center gap-2">
-                  <SourceChip source="statute" />
+                  <SourceBadge source="statute" />
                   <span className="text-ink/50 text-xs">{row.status}</span>
                 </div>
                 <Link
@@ -49,14 +49,14 @@ export default async function DocumentsPage() {
                   공포 {row.promulgatedDate ?? "미상"} · 시행{" "}
                   {row.effectiveDate ?? "미상"} · MST {row.currentMst}
                 </p>
-              </Card>
+              </StaticCard>
             </li>
           ))}
           {documents.map((doc) => (
             <li key={doc.id}>
-              <Card>
+              <StaticCard>
                 <div className="flex flex-wrap items-center gap-2">
-                  <SourceChip source={doc.source} />
+                  <SourceBadge source={doc.source} />
                   <span className="text-ink/50 text-xs">{doc.status}</span>
                 </div>
                 <Link
@@ -69,7 +69,7 @@ export default async function DocumentsPage() {
                   발행 {doc.issuedDate ?? "미상"} · hash{" "}
                   {(doc.fileHash ?? "").slice(0, 12)}
                 </p>
-              </Card>
+              </StaticCard>
             </li>
           ))}
         </ul>

@@ -1,8 +1,8 @@
 import type { Metadata } from "next";
 import type { ChangeKind } from "@/lib/types";
 import { changeKindLabel, humanizeChangeSummary } from "@/lib/text/change-copy";
-import { Card } from "@/components/ui/card";
-import { SourceChip } from "@/components/source-chip";
+import { SourceBadge } from "@/components/source-badge";
+import { StaticCard } from "@/components/static-card";
 import { getStore } from "@/lib/db/store";
 
 export const dynamic = "force-dynamic";
@@ -32,9 +32,9 @@ export default async function UpdatesPage() {
         </p>
       </div>
       {logs.length === 0 ? (
-        <Card>
+        <StaticCard>
           아직 감지된 개정이 없습니다. 시드 문서가 적재되면 초기 적재 기록이 나타납니다.
-        </Card>
+        </StaticCard>
       ) : (
         <ol className="space-y-3">
           {logs.map((log) => {
@@ -44,10 +44,10 @@ export default async function UpdatesPage() {
             const source = doc?.source ?? (statute ? "statute" : undefined);
             return (
               <li key={log.id}>
-                <Card className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
+                <StaticCard className="flex flex-col gap-2 sm:flex-row sm:items-start sm:justify-between">
                   <div>
                     <div className="mb-2 flex flex-wrap items-center gap-2">
-                      {source ? <SourceChip source={source} /> : null}
+                      {source ? <SourceBadge source={source} /> : null}
                       <span className="text-seal text-xs">
                         {changeKindLabel(log.changeKind as ChangeKind)}
                       </span>
@@ -60,7 +60,7 @@ export default async function UpdatesPage() {
                   <time className="text-ink/50 text-xs">
                     {log.createdAt.slice(0, 10)}
                   </time>
-                </Card>
+                </StaticCard>
               </li>
             );
           })}

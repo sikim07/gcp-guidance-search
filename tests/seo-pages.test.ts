@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { PRESET_INDEX_CLASS } from "@/components/preset-index";
 import {
   buildSitemapEntries,
   clauseHref,
@@ -90,5 +91,9 @@ describe("preset summaries for the home index", () => {
     expect(audit?.href).toContain("/documents/d1/");
     const sensitive = summaries.find((row) => row.id === "sensitive");
     expect(sensitive?.section).toMatch(/제23조/);
+  });
+
+  it("keeps the home clause index in HTML but off-screen", () => {
+    expect(PRESET_INDEX_CLASS).toBe("sr-only");
   });
 });

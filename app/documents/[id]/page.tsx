@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
-import { Card } from "@/components/ui/card";
-import { SourceChip } from "@/components/source-chip";
+import { SourceBadge } from "@/components/source-badge";
+import { StaticCard } from "@/components/static-card";
 import { ClauseToc } from "@/components/clause-toc";
 import { getStore } from "@/lib/db/store";
 import { humanizeChangeSummary } from "@/lib/text/change-copy";
@@ -41,7 +41,7 @@ export default async function DocumentDetailPage({
     return (
       <div className="space-y-6">
         <div>
-          <SourceChip source="statute" />
+          <SourceBadge source="statute" />
           <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
             {statute.title}
           </h1>
@@ -62,7 +62,7 @@ export default async function DocumentDetailPage({
         <ol className="space-y-3">
           {revisions.map((version) => (
             <li key={version.id}>
-              <Card>
+              <StaticCard>
                 <p className="text-sm font-medium">
                   {version.id === statute.currentRevisionId ? "현행" : "이전 본"}
                   {version.promulgatedDate ? ` · 공포 ${version.promulgatedDate}` : ""}
@@ -70,7 +70,7 @@ export default async function DocumentDetailPage({
                 <p className="text-ink/70 mt-1 text-sm leading-6">
                   {humanizeChangeSummary(version.diffSummary ?? "")}
                 </p>
-              </Card>
+              </StaticCard>
             </li>
           ))}
         </ol>
@@ -90,7 +90,7 @@ export default async function DocumentDetailPage({
   return (
     <div className="space-y-6">
       <div>
-        <SourceChip source={doc.source} />
+        <SourceBadge source={doc.source} />
         <h1 className="mt-3 text-2xl font-semibold tracking-tight sm:text-3xl">
           {doc.title}
         </h1>
@@ -106,7 +106,7 @@ export default async function DocumentDetailPage({
       <ol className="space-y-3">
         {versions.map((version) => (
           <li key={version.id}>
-            <Card>
+            <StaticCard>
               <p className="text-sm font-medium">
                 {version.versionLabel}
                 {version.id === doc.currentVersionId ? " · 현행" : ""}
@@ -114,7 +114,7 @@ export default async function DocumentDetailPage({
               <p className="text-ink/70 mt-1 text-sm leading-6">
                 {humanizeChangeSummary(version.diffSummary ?? "")}
               </p>
-            </Card>
+            </StaticCard>
           </li>
         ))}
       </ol>
