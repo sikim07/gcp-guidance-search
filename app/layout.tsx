@@ -80,14 +80,16 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        <PageTransition>
+        <div className="app-chrome">
+          <SiteHeader />
           <div className="app-frame">
-            <SiteHeader />
-            <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
-              {children}
-            </main>
+            <PageTransition>
+              <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
+                {children}
+              </main>
+            </PageTransition>
           </div>
-        </PageTransition>
+        </div>
         <SiteBottomNav />
         <OverlayScrollbar />
       </body>
