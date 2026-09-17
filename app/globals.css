@@ -60,6 +60,8 @@ body {
 }
 
 .app-frame {
+  display: flex;
+  flex-direction: column;
   height: 100%;
   overflow-x: hidden;
   overflow-y: auto;
@@ -177,6 +179,28 @@ body > .app-frame {
   min-height: 20rem;
 }
 
+.result-slot {
+  display: grid;
+  grid-template-rows: 0fr;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    grid-template-rows 380ms cubic-bezier(0.32, 0.72, 0, 1),
+    opacity 380ms cubic-bezier(0.32, 0.72, 0, 1),
+    transform 380ms cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+.result-slot.is-open {
+  grid-template-rows: 1fr;
+  opacity: 1;
+  transform: none;
+}
+
+.result-slot-inner {
+  min-height: 0;
+  overflow: hidden;
+}
+
 .recent-chip {
   display: inline-flex;
   max-width: 100%;
@@ -248,9 +272,11 @@ body > .app-frame {
 }
 
 .page-shell {
-  margin: -0.75rem -0.7rem -1.35rem;
-  min-height: 1px;
-  padding: 0.75rem 0.7rem 1.35rem;
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  min-height: 100%;
+  width: 100%;
 }
 
 ::view-transition {
@@ -327,19 +353,6 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
   from {
     transform: translateX(-100%);
   }
-}
-
-::view-transition-group(site-header) {
-  animation: none;
-  z-index: 100;
-}
-
-::view-transition-old(site-header) {
-  display: none;
-}
-
-::view-transition-new(site-header) {
-  animation: none;
 }
 
 ::view-transition-group(site-tabbar) {
@@ -489,6 +502,12 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
 
   .liquid-tabbar-blob {
     transition: none !important;
+  }
+
+  .result-slot {
+    opacity: 1;
+    transform: none;
+    transition: none;
   }
 }
 

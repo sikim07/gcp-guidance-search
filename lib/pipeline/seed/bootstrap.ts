@@ -218,7 +218,7 @@ export async function refreshSeedDocument(
     fileHash: hash,
     extractedText: seed.text,
     parseStatus: seed.text.trim().length < 40 ? "needs_ocr" : "ok",
-    diffSummary: "시드 조항을 다시 잘랐습니다.",
+    diffSummary: "검색에 쓰는 조항 경계를 다시 맞췄습니다. 공식 개정은 아닙니다.",
     createdAt: now,
   });
   await store.replaceCurrentChunks(
@@ -231,7 +231,7 @@ export async function refreshSeedDocument(
     fromVersionId: existing.currentVersionId,
     toVersionId: versionId,
     changeKind: "revised_hash",
-    summary: `${seed.title} 시드 조항을 다시 잘랐습니다.`,
+    summary: `${seed.title} 검색에 쓰는 조항 경계를 다시 맞췄습니다. 공식 개정은 아닙니다.`,
     createdAt: now,
   });
   await store.invalidateCache();

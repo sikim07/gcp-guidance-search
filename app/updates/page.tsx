@@ -1,6 +1,10 @@
 import type { Metadata } from "next";
 import type { ChangeKind } from "@/lib/types";
-import { changeKindLabel, humanizeChangeSummary } from "@/lib/text/change-copy";
+import {
+  collapseRepeatedFeedItems,
+  feedKindLabel,
+  humanizeChangeSummary,
+} from "@/lib/text/change-copy";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import { getStore } from "@/lib/db/store";
@@ -16,7 +20,7 @@ export const metadata: Metadata = {
 
 export default async function UpdatesPage() {
   const store = await getStore();
-  const logs = await store.listChangeLogs();
+  const logs = collapseRepeatedFeedItems(await store.listChangeLogs());
   const documents = await store.listDocuments();
   const statutes = await store.listStatutes();
   const byId = new Map(documents.map((d) => [d.id, d]));
@@ -49,7 +53,7 @@ export default async function UpdatesPage() {
                     <div className="mb-2 flex flex-wrap items-center gap-2">
                       {source ? <SourceBadge source={source} /> : null}
                       <span className="text-seal text-xs">
-                        {changeKindLabel(log.changeKind as ChangeKind)}
+                        {feedKindLabel(log.changeKind as ChangeKind, log.summary)}
                       </span>
                     </div>
                     <p className="font-medium">{title}</p>

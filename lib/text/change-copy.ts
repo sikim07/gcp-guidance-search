@@ -165,5 +165,35 @@ function humanizeHead(head: string): string {
   if (/file hash|파일 해시/i.test(out) && !/조항/.test(out)) {
     return "본문 파일이 바뀌었습니다. 바뀐 조항은 다음 개정 기록에 표시됩니다.";
   }
+  if (/시드 조항을 다시 잘랐/.test(out)) {
+    return "검색에 쓰는 조항 경계를 다시 맞췄습니다. 공식 개정은 아닙니다.";
+  }
   return out.replace(/^[·.\s]+|[·.\s]+$/g, "");
+}
+
+export function isInternalReseed(summary: string): boolean {
+  return /시드 조항을 다시 잘랐|조항 경계를 다시 맞췄/.test(summary);
+}
+
+export function feedKindLabel(kind: ChangeKind, summary: string): string {
+  if (isInternalReseed(summary)) return "조항 나누기";
+  return changeKindLabel(kind);
+}
+
+export function collapseRepeatedFeedItems<
+  T extends { documentId: string; summary: string },
+>(logs: T[]): T[] {
+  const out: T[] = [];
+  for (const log of logs) {
+    const prev = out[out.length - 1];
+    if (
+      prev &&
+      prev.documentId === log.documentId &&
+      humanizeChangeSummary(prev.summary) === humanizeChangeSummary(log.summary)
+    ) {
+      continue;
+    }
+    out.push(log);
+  }
+  return out;
 }

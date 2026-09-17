@@ -5,12 +5,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteBottomNav } from "@/components/site-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
 import { OverlayScrollbar } from "@/components/overlay-scrollbar";
-import {
-  SITE_DESCRIPTION,
-  SITE_KEYWORDS,
-  SITE_NAME,
-  SITE_URL,
-} from "@/lib/site";
+import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const sans = Noto_Sans_KR({
   variable: "--font-noto-sans",
@@ -76,17 +71,22 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="ko" className={`${sans.variable} bg-paper h-full overflow-hidden antialiased`}>
+    <html
+      lang="ko"
+      className={`${sans.variable} bg-paper h-full overflow-hidden antialiased`}
+    >
       <body className="bg-paper text-ink h-full overflow-hidden font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
         <div className="app-frame">
-          <SiteHeader />
-          <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
-            <PageTransition>{children}</PageTransition>
-          </main>
+          <PageTransition>
+            <SiteHeader />
+            <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
+              {children}
+            </main>
+          </PageTransition>
         </div>
         <SiteBottomNav />
         <OverlayScrollbar />

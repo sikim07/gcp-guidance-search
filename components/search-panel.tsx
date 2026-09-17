@@ -6,7 +6,10 @@ import {
   useRef,
   useState,
   useSyncExternalStore,
+  type Dispatch,
   type ReactNode,
+  type RefObject,
+  type SetStateAction,
 } from "react";
 import {
   Button,
@@ -65,6 +68,7 @@ export function SearchPanel() {
   const [feedbackBusy, setFeedbackBusy] = useState(false);
   const [feedbackError, setFeedbackError] = useState(false);
   const [copied, setCopied] = useState(false);
+  const [slotOpen, setSlotOpen] = useState(false);
   const progressRef = useRef<HTMLParagraphElement>(null);
   const recents = useSyncExternalStore(
     subscribeRecents,
@@ -83,6 +87,12 @@ export function SearchPanel() {
   const activePresetId = PRESET_QUERIES.find(
     (preset) => normalizeQuery(preset.query) === normalizeQuery(query),
   )?.id;
+
+  useEffect(() => {
+    if (!loading && !result) return;
+    const frame = window.requestAnimationFrame(() => setSlotOpen(true));
+    return () => window.cancelAnimationFrame(frame);
+  }, [loading, result]);
 
   useEffect(() => {
     if (!loading) return;
@@ -326,19 +336,6 @@ export function SearchPanel() {
                   );
                 })}
               </div>
-              {loading ? (
-                <p
-                  ref={progressRef}
-                  id="search-progress"
-                  role="status"
-                  aria-live="polite"
-                  data-testid="search-progress"
-                  className="text-muted mt-3 flex min-h-7 items-center gap-2 text-sm"
-                >
-                  <Spinner size="sm" />
-                  {submitLabel}
-                </p>
-              ) : null}
             </div>
             {recentChips.length > 0 ? (
               <div>
@@ -383,7 +380,7 @@ export function SearchPanel() {
                 className="search-submit w-full justify-center gap-2 sm:w-auto"
               >
                 {loading ? <Spinner color="current" size="sm" /> : null}
-                {submitLabel}
+                <StableLabel sizer="조항 고르는 중">{submitLabel}</StableLabel>
               </Button>
               <p className="text-muted text-xs">
                 하루 {DEFAULT_IP_DAILY}건의 새 검색이 가능합니다. 같은 질문은 한도에
@@ -405,201 +402,37 @@ export function SearchPanel() {
         />
       ) : null}
 
-      {loading ? <ResultSkeleton elapsedMs={elapsedMs} /> : null}
-
-      {result && !loading ? (
-        <Card
-          className="search-sheet result-panel w-full shadow-none"
-          data-testid="answer-card"
-        >
-          <Card.Content className="p-4 sm:p-6">
-            <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-              <Tabs
-                className="w-full min-w-0"
-                selectedKey={tab}
-                variant="secondary"
-                onSelectionChange={(key) => setTab(String(key) as Tab)}
-              >
-                <div className="flex items-center justify-between gap-2">
-                  <Tabs.ListContainer className="min-w-0">
-                    <Tabs.List aria-label="검색 결과">
-                      <Tabs.Tab data-testid="tab-answer" id="answer">
-                        답변
-                        <Tabs.Indicator />
-                      </Tabs.Tab>
-                      <Tabs.Tab data-testid="tab-original" id="original">
-                        원문
-                        <Tabs.Indicator />
-                      </Tabs.Tab>
-                    </Tabs.List>
-                  </Tabs.ListContainer>
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    className={`translate-toggle shrink-0 ${canTranslate ? "" : "invisible"}`}
-                    data-testid="toggle-translation"
-                    isDisabled={!canTranslate}
-                    aria-busy={translating}
-                    onPress={() => void toggleTranslation()}
-                  >
-                    <StableLabel sizer="한국어로 보기">
-                      {translating
-                        ? "번역하는 중"
-                        : showKorean
-                          ? "원문 보기"
-                          : "한국어로 보기"}
-                    </StableLabel>
-                  </Button>
-                </div>
-                <Tabs.Panel className="pt-5" id="answer">
-                  <p className="clause-body text-sm leading-7 whitespace-pre-wrap sm:text-[15px]">
-                    {showKorean && translatedAnswer ? translatedAnswer : result.answer}
-                  </p>
-                </Tabs.Panel>
-                <Tabs.Panel className="pt-5" id="original">
-                  {translating ? (
-                    <div className="min-h-52 space-y-3">
-                      <Skeleton className="h-4 w-full rounded-lg" />
-                      <Skeleton className="h-4 w-5/6 rounded-lg" />
-                      <Skeleton className="h-4 w-2/3 rounded-lg" />
-                    </div>
-                  ) : (
-                    <PassageList
-                      passages={result.passages}
-                      textFor={(p) =>
-                        showKorean
-                          ? (translations?.[p.chunkId] ?? p.original)
-                          : p.original
-                      }
-                      empty="이 질문과 맞춰 볼 조항이 없습니다. 임상시험 규정으로 다시 물어 보세요."
-                    />
-                  )}
-                </Tabs.Panel>
-              </Tabs>
-            </div>
-            {translateNote ? (
-              <RetryNotice
-                className="mt-4"
-                {...translateFailureCopy(translateNote.includes("네트워크"))}
-                retryLabel="한국어 다시 시도"
-                busy={translating}
-                pulseBar={translating || translateNote.includes("네트워크")}
-                onRetry={() => void toggleTranslation()}
+      {loading || result ? (
+        <div className={`result-slot ${slotOpen ? "is-open" : ""}`}>
+          <div className="result-slot-inner">
+            {loading ? (
+              <ResultSkeleton elapsedMs={elapsedMs} progressRef={progressRef} />
+            ) : result ? (
+              <AnswerCard
+                result={result}
+                tab={tab}
+                setTab={setTab}
+                canTranslate={canTranslate}
+                translating={translating}
+                showKorean={showKorean}
+                translatedAnswer={translatedAnswer}
+                translations={translations}
+                translateNote={translateNote}
+                toggleTranslation={toggleTranslation}
+                copied={copied}
+                copyCitations={copyCitations}
+                feedbackSent={feedbackSent}
+                feedbackBusy={feedbackBusy}
+                feedbackError={feedbackError}
+                showDownForm={showDownForm}
+                downComment={downComment}
+                setDownComment={setDownComment}
+                setShowDownForm={setShowDownForm}
+                sendFeedback={sendFeedback}
               />
             ) : null}
-            {result.cacheHit ? (
-              <p className="text-muted mt-4 text-xs">
-                같은 질문의 답을 다시 보여 줍니다.
-              </p>
-            ) : null}
-            <div className="border-border mt-5 flex flex-wrap items-center justify-between gap-2 border-t pt-5">
-              <p className="text-muted text-xs">출처</p>
-              {result.sources.length > 0 ? (
-                <Button
-                  size="sm"
-                  variant="outline"
-                  data-testid="copy-citations"
-                  onPress={() => void copyCitations()}
-                >
-                  <Copy className="size-3.5" />
-                  {copied ? "복사됨" : "인용 복사"}
-                </Button>
-              ) : null}
-            </div>
-            <ul className="mt-3 space-y-3">
-              {result.sources.map((source) => (
-                <li
-                  key={`${source.url}-${source.section}`}
-                  className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-2"
-                >
-                  <span className="text-muted text-xs">
-                    {source.kind === "statute" ? "법령" : "가이드라인"}
-                  </span>
-                  <a
-                    href={source.url}
-                    className="text-fda min-w-0 text-sm break-words underline-offset-4 hover:underline"
-                    target="_blank"
-                    rel="noreferrer"
-                  >
-                    {source.title}
-                  </a>
-                  <span className="text-muted text-xs sm:text-sm">
-                    · {source.section}
-                  </span>
-                </li>
-              ))}
-            </ul>
-            <div className="mt-5 space-y-3">
-              <div className="flex flex-wrap gap-2">
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="min-w-24"
-                  data-testid="feedback-up"
-                  isDisabled={Boolean(feedbackSent) || feedbackBusy}
-                  onPress={() => void sendFeedback("up")}
-                >
-                  <ThumbsUp className="size-4" /> 도움됨
-                </Button>
-                <Button
-                  size="sm"
-                  variant="outline"
-                  className="min-w-36"
-                  data-testid="feedback-down"
-                  isDisabled={Boolean(feedbackSent) || feedbackBusy}
-                  onPress={() => setShowDownForm(true)}
-                >
-                  <ThumbsDown className="size-4" /> 도움되지 않음
-                </Button>
-              </div>
-              {showDownForm && !feedbackSent ? (
-                <div className="space-y-3">
-                  <TextField
-                    fullWidth
-                    className="gap-2.5"
-                    name="feedback-comment"
-                    value={downComment}
-                    onChange={setDownComment}
-                  >
-                    <Label>어떤 점이 도움이 되지 않았나요?</Label>
-                    <TextArea
-                      className="min-h-24"
-                      data-testid="feedback-comment"
-                      placeholder="빠진 조항, 엉뚱한 문서, 번역이 어색한 부분 등을 적어 주세요."
-                    />
-                  </TextField>
-                  <Button
-                    aria-busy={feedbackBusy}
-                    isDisabled={feedbackBusy}
-                    data-busy={feedbackBusy ? "true" : "false"}
-                    data-testid="feedback-submit"
-                    className="search-submit w-full justify-center gap-2 sm:w-auto"
-                    onPress={() => void sendFeedback("down", downComment)}
-                  >
-                    {feedbackBusy ? <Spinner color="current" size="sm" /> : null}
-                    {feedbackBusy ? "의견 보내는 중" : "의견 보내기"}
-                  </Button>
-                </div>
-              ) : null}
-              {feedbackError ? (
-                <RetryNotice
-                  {...feedbackFailureCopy()}
-                  busy={feedbackBusy}
-                  pulseBar={feedbackBusy}
-                  retryLabel="의견 다시 보내기"
-                  onRetry={() =>
-                    void sendFeedback(showDownForm ? "down" : "up", downComment)
-                  }
-                />
-              ) : null}
-              {feedbackSent ? (
-                <p className="text-muted text-xs" data-testid="feedback-thanks">
-                  의견을 반영해 검색을 다듬겠습니다. 감사합니다.
-                </p>
-              ) : null}
-            </div>
-          </Card.Content>
-        </Card>
+          </div>
+        </div>
       ) : null}
     </div>
   );
@@ -616,7 +449,13 @@ function StableLabel({ sizer, children }: { sizer: ReactNode; children: ReactNod
   );
 }
 
-function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
+function ResultSkeleton({
+  elapsedMs,
+  progressRef,
+}: {
+  elapsedMs: number;
+  progressRef: RefObject<HTMLParagraphElement | null>;
+}) {
   return (
     <Card
       className="search-sheet result-panel w-full shadow-none"
@@ -631,7 +470,14 @@ function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
           <Skeleton className="h-8 w-28 shrink-0 rounded-full" />
         </div>
         <div className="space-y-3 pt-5">
-          <p className="text-muted flex h-7 items-center gap-2 text-sm">
+          <p
+            ref={progressRef}
+            id="search-progress"
+            role="status"
+            aria-live="polite"
+            data-testid="search-progress"
+            className="text-muted flex h-7 items-center gap-2 text-sm"
+          >
             <Spinner size="sm" />
             {loadingCopy(loadingPhase(elapsedMs))}
           </p>
@@ -648,6 +494,237 @@ function ResultSkeleton({ elapsedMs }: { elapsedMs: number }) {
         <div className="mt-5 flex gap-2">
           <Skeleton className="h-8 w-24 rounded-full" />
           <Skeleton className="h-8 w-36 rounded-full" />
+        </div>
+      </Card.Content>
+    </Card>
+  );
+}
+
+function AnswerCard({
+  result,
+  tab,
+  setTab,
+  canTranslate,
+  translating,
+  showKorean,
+  translatedAnswer,
+  translations,
+  translateNote,
+  toggleTranslation,
+  copied,
+  copyCitations,
+  feedbackSent,
+  feedbackBusy,
+  feedbackError,
+  showDownForm,
+  downComment,
+  setDownComment,
+  setShowDownForm,
+  sendFeedback,
+}: {
+  result: SearchResponse;
+  tab: Tab;
+  setTab: Dispatch<SetStateAction<Tab>>;
+  canTranslate: boolean;
+  translating: boolean;
+  showKorean: boolean;
+  translatedAnswer: string | null;
+  translations: Record<string, string> | null;
+  translateNote: string | null;
+  toggleTranslation: () => Promise<void>;
+  copied: boolean;
+  copyCitations: () => Promise<void>;
+  feedbackSent: "up" | "down" | null;
+  feedbackBusy: boolean;
+  feedbackError: boolean;
+  showDownForm: boolean;
+  downComment: string;
+  setDownComment: Dispatch<SetStateAction<string>>;
+  setShowDownForm: Dispatch<SetStateAction<boolean>>;
+  sendFeedback: (rating: "up" | "down", comment?: string) => Promise<void>;
+}) {
+  return (
+    <Card
+      className="search-sheet result-panel w-full shadow-none"
+      data-testid="answer-card"
+    >
+      <Card.Content className="p-4 sm:p-6">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <Tabs
+            className="w-full min-w-0"
+            selectedKey={tab}
+            variant="secondary"
+            onSelectionChange={(key) => setTab(String(key) as Tab)}
+          >
+            <div className="flex items-center justify-between gap-2">
+              <Tabs.ListContainer className="min-w-0">
+                <Tabs.List aria-label="검색 결과">
+                  <Tabs.Tab data-testid="tab-answer" id="answer">
+                    답변
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                  <Tabs.Tab data-testid="tab-original" id="original">
+                    원문
+                    <Tabs.Indicator />
+                  </Tabs.Tab>
+                </Tabs.List>
+              </Tabs.ListContainer>
+              <Button
+                size="sm"
+                variant="outline"
+                className={`translate-toggle shrink-0 ${canTranslate ? "" : "invisible"}`}
+                data-testid="toggle-translation"
+                isDisabled={!canTranslate}
+                aria-busy={translating}
+                onPress={() => void toggleTranslation()}
+              >
+                <StableLabel sizer="한국어로 보기">
+                  {translating
+                    ? "번역하는 중"
+                    : showKorean
+                      ? "원문 보기"
+                      : "한국어로 보기"}
+                </StableLabel>
+              </Button>
+            </div>
+            <Tabs.Panel className="pt-5" id="answer">
+              <p className="clause-body text-sm leading-7 whitespace-pre-wrap sm:text-[15px]">
+                {showKorean && translatedAnswer ? translatedAnswer : result.answer}
+              </p>
+            </Tabs.Panel>
+            <Tabs.Panel className="pt-5" id="original">
+              {translating ? (
+                <div className="min-h-52 space-y-3">
+                  <Skeleton className="h-4 w-full rounded-lg" />
+                  <Skeleton className="h-4 w-5/6 rounded-lg" />
+                  <Skeleton className="h-4 w-2/3 rounded-lg" />
+                </div>
+              ) : (
+                <PassageList
+                  passages={result.passages}
+                  textFor={(p) =>
+                    showKorean ? (translations?.[p.chunkId] ?? p.original) : p.original
+                  }
+                  empty="이 질문과 맞춰 볼 조항이 없습니다. 임상시험 규정으로 다시 물어 보세요."
+                />
+              )}
+            </Tabs.Panel>
+          </Tabs>
+        </div>
+        {translateNote ? (
+          <RetryNotice
+            className="mt-4"
+            {...translateFailureCopy(translateNote.includes("네트워크"))}
+            retryLabel="한국어 다시 시도"
+            busy={translating}
+            pulseBar={translating || translateNote.includes("네트워크")}
+            onRetry={() => void toggleTranslation()}
+          />
+        ) : null}
+        {result.cacheHit ? (
+          <p className="text-muted mt-4 text-xs">같은 질문의 답을 다시 보여 줍니다.</p>
+        ) : null}
+        <div className="border-border mt-5 flex flex-wrap items-center justify-between gap-2 border-t pt-5">
+          <p className="text-muted text-xs">출처</p>
+          {result.sources.length > 0 ? (
+            <Button
+              size="sm"
+              variant="outline"
+              data-testid="copy-citations"
+              onPress={() => void copyCitations()}
+            >
+              <Copy className="size-3.5" />
+              {copied ? "복사됨" : "인용 복사"}
+            </Button>
+          ) : null}
+        </div>
+        <ul className="mt-3 space-y-3">
+          {result.sources.map((source) => (
+            <li
+              key={`${source.url}-${source.section}`}
+              className="flex flex-col gap-1.5 sm:flex-row sm:items-baseline sm:gap-2"
+            >
+              <span className="text-muted text-xs">
+                {source.kind === "statute" ? "법령" : "가이드라인"}
+              </span>
+              <a
+                href={source.url}
+                className="text-fda min-w-0 text-sm break-words underline-offset-4 hover:underline"
+                target="_blank"
+                rel="noreferrer"
+              >
+                {source.title}
+              </a>
+              <span className="text-muted text-xs sm:text-sm">· {source.section}</span>
+            </li>
+          ))}
+        </ul>
+        <div className="mt-5 space-y-3">
+          <div className="flex flex-wrap gap-2">
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-w-24"
+              data-testid="feedback-up"
+              isDisabled={Boolean(feedbackSent) || feedbackBusy}
+              onPress={() => void sendFeedback("up")}
+            >
+              <ThumbsUp className="size-4" /> 도움됨
+            </Button>
+            <Button
+              size="sm"
+              variant="outline"
+              className="min-w-36"
+              data-testid="feedback-down"
+              isDisabled={Boolean(feedbackSent) || feedbackBusy}
+              onPress={() => setShowDownForm(true)}
+            >
+              <ThumbsDown className="size-4" /> 도움되지 않음
+            </Button>
+          </div>
+          {showDownForm && !feedbackSent ? (
+            <div className="space-y-3">
+              <TextField
+                fullWidth
+                className="gap-2.5"
+                name="feedback-comment"
+                value={downComment}
+                onChange={setDownComment}
+              >
+                <Label>어떤 점이 도움이 되지 않았나요?</Label>
+                <TextArea
+                  className="min-h-24"
+                  data-testid="feedback-comment"
+                  placeholder="빠진 조항, 엉뚱한 문서, 번역이 어색한 부분 등을 적어 주세요."
+                />
+              </TextField>
+              <Button
+                aria-busy={feedbackBusy}
+                isDisabled={feedbackBusy}
+                data-busy={feedbackBusy ? "true" : "false"}
+                data-testid="feedback-submit"
+                className="search-submit w-full justify-center gap-2 sm:w-auto"
+                onPress={() => void sendFeedback("down", downComment)}
+              >
+                {feedbackBusy ? <Spinner color="current" size="sm" /> : null}
+                {feedbackBusy ? "의견 보내는 중" : "의견 보내기"}
+              </Button>
+            </div>
+          ) : null}
+          {feedbackError ? (
+            <RetryNotice
+              {...feedbackFailureCopy()}
+              busy={feedbackBusy}
+              pulseBar={feedbackBusy}
+              retryLabel="의견 다시 보내기"
+              onRetry={() => void sendFeedback(showDownForm ? "down" : "up", downComment)}
+            />
+          ) : null}
+          {feedbackSent ? (
+            <p className="text-muted text-xs" data-testid="feedback-thanks">
+              의견을 반영해 검색을 다듬겠습니다. 감사합니다.
+            </p>
+          ) : null}
         </div>
       </Card.Content>
     </Card>

@@ -2,6 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   articleKeyToLabel,
   changeKindLabel,
+  collapseRepeatedFeedItems,
+  feedKindLabel,
   humanizeChangeSummary,
   prettySectionLabel,
 } from "@/lib/text/change-copy";
@@ -57,11 +59,35 @@ describe("humanizeChangeSummary", () => {
     );
     expect(humanizeChangeSummary("파일 해시만 변경")).toMatch(/본문 파일이 바뀌었습니다/);
   });
+
+  it("explains seed re-chunk logs instead of repeating the raw pipeline phrase", () => {
+    const out = humanizeChangeSummary(
+      "E6(R2) Good Clinical Practice 시드 조항을 다시 잘랐습니다.",
+    );
+    expect(out).toMatch(/검색에 쓰는 조항/);
+    expect(out).toMatch(/공식 개정은 아닙니다/);
+    expect(out).not.toMatch(/다시 잘랐/);
+  });
+});
+
+describe("collapseRepeatedFeedItems", () => {
+  it("keeps one row when the same document repeats the same summary", () => {
+    const logs = [
+      { id: "1", documentId: "d1", summary: "시드 조항을 다시 잘랐습니다." },
+      { id: "2", documentId: "d1", summary: "시드 조항을 다시 잘랐습니다." },
+      { id: "3", documentId: "d2", summary: "초기 적재 (시드 코퍼스)" },
+    ];
+    const out = collapseRepeatedFeedItems(logs);
+    expect(out.map((row) => row.id)).toEqual(["1", "3"]);
+  });
 });
 
 describe("changeKindLabel", () => {
   it("does not show raw enum names", () => {
     expect(changeKindLabel("revised_hash")).toBe("본문이 바뀜");
     expect(changeKindLabel("revised_mst")).toBe("법령 개정");
+    expect(feedKindLabel("revised_hash", "시드 조항을 다시 잘랐습니다.")).toBe(
+      "조항 나누기",
+    );
   });
 });
