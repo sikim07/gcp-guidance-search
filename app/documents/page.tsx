@@ -4,7 +4,7 @@ import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import { getStore } from "@/lib/db/store";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
 
 export const metadata: Metadata = {
   title: "문서 카탈로그",

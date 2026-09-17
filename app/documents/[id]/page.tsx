@@ -4,9 +4,15 @@ import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import { ClauseToc } from "@/components/clause-toc";
 import { getStore } from "@/lib/db/store";
+import { documentStaticParams } from "@/lib/cache/static-params";
 import { humanizeChangeSummary } from "@/lib/text/change-copy";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export function generateStaticParams() {
+  return documentStaticParams();
+}
 
 export async function generateMetadata({
   params,

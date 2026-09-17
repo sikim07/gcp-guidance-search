@@ -5,6 +5,7 @@
   "description": "FDA·ICH·식약처 임상시험 가이드라인 개정 감지 파이프라인과 자연어 조회 UI",
   "scripts": {
     "dev": "next dev --port 43123",
+    "seed": "tsx scripts/seed-dev.ts",
     "build": "node scripts/verify.mjs",
     "build:next": "next build",
     "verify": "node scripts/verify.mjs",

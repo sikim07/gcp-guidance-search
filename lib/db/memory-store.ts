@@ -24,6 +24,12 @@ type GlobalStore = {
 
 const g = globalThis as GlobalStore;
 
+function traceStoreRead(name: string, count: number): void {
+  if (process.env.STORE_QUERY_LOG === "1") {
+    console.info(`[store] ${name} (${count})`);
+  }
+}
+
 async function load(): Promise<StoreSnapshot> {
   if (g.__gcpStore && g.__gcpStoreLoaded) {
     g.__gcpStore = migrateSnapshot(g.__gcpStore);
@@ -63,9 +69,11 @@ async function persist(snapshot: StoreSnapshot): Promise<void> {
 
 export const memoryStore: AppStore = {
   async listDocuments() {
-    return (await load()).documents
+    const rows = (await load()).documents
       .slice()
       .sort((a, b) => b.createdAt.localeCompare(a.createdAt));
+    traceStoreRead("listDocuments", rows.length);
+    return rows;
   },
   async getDocument(id) {
     return (await load()).documents.find((d) => d.id === id);
@@ -91,7 +99,9 @@ export const memoryStore: AppStore = {
     await persist(snap);
   },
   async currentChunks() {
-    return (await load()).chunks.filter((c) => c.isCurrent);
+    const rows = (await load()).chunks.filter((c) => c.isCurrent);
+    traceStoreRead("currentChunks", rows.length);
+    return rows;
   },
   async replaceCurrentChunks(documentId: string, chunks: ChunkRecord[]) {
     const snap = await load();

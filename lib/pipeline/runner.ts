@@ -33,10 +33,11 @@ export function parseStatusForText(text: string): ParseStatus {
 
 export async function watchSources(
   store: AppStore,
-): Promise<{ queued: number; detections: ChangeKind[] }> {
+): Promise<{ queued: number; detections: ChangeKind[]; updatedDocumentIds: string[] }> {
   const existing = await store.listDocuments();
   let queued = 0;
   const detections: ChangeKind[] = [];
+  const updatedDocumentIds: string[] = [];
 
   for (const source of SOURCES) {
     if (source === "kgcp") continue; // KGCP는 법령 별표 4로 옮김. 가이드라인 카탈로그로 다시 넣지 않는다.
@@ -60,6 +61,7 @@ export async function watchSources(
           summary: `${item.previous.title} 목록에서 사라짐 (철회로 표시)`,
           createdAt: new Date().toISOString(),
         });
+        updatedDocumentIds.push(item.previous.id);
         continue;
       }
       if (item.kind === "new" || item.kind === "unchanged") {
@@ -77,12 +79,12 @@ export async function watchSources(
       }
     }
   }
-  return { queued, detections };
+  return { queued, detections, updatedDocumentIds };
 }
 
 export async function processNextJob(
   store: AppStore,
-): Promise<{ processed: boolean; kind?: ChangeKind }> {
+): Promise<{ processed: boolean; kind?: ChangeKind; documentId?: string }> {
   const job = await store.nextJob();
   if (!job) return { processed: false };
   try {
@@ -97,7 +99,7 @@ export async function processNextJob(
         summary: result.summary,
       });
     }
-    return { processed: true, kind: result.kind };
+    return { processed: true, kind: result.kind, documentId: result.documentId };
   } catch (error) {
     job.status = "failed";
     job.attempts += 1;
@@ -111,7 +113,7 @@ export async function ingestEntry(
   store: AppStore,
   catalog: CatalogEntry,
   hintedKind: ChangeKind,
-): Promise<{ kind: ChangeKind; title: string; summary: string }> {
+): Promise<{ kind: ChangeKind; title: string; summary: string; documentId?: string }> {
   const { text, bytes } = await loadDocumentText(catalog);
   const hash = sha256(bytes);
   const existing = (await store.listDocuments()).find(
@@ -119,9 +121,16 @@ export async function ingestEntry(
   );
 
   if (!existing) {
-    await writeNewVersion(store, catalog, text, hash, "new", "신규 문서 적재");
+    const documentId = await writeNewVersion(
+      store,
+      catalog,
+      text,
+      hash,
+      "new",
+      "신규 문서 적재",
+    );
     await store.invalidateCache();
-    return { kind: "new", title: catalog.title, summary: "신규 문서 적재" };
+    return { kind: "new", title: catalog.title, summary: "신규 문서 적재", documentId };
   }
 
   const kind =
@@ -134,7 +143,7 @@ export async function ingestEntry(
         });
 
   if (kind === "unchanged") {
-    return { kind, title: catalog.title, summary: "변경 없음" };
+    return { kind, title: catalog.title, summary: "변경 없음", documentId: existing.id };
   }
 
   const previousVersion = existing.currentVersionId
@@ -147,7 +156,7 @@ export async function ingestEntry(
       ? "발행일만 바뀌고 본문은 같습니다."
       : summarizeDiff(sectionChanges.length ? sectionChanges : []);
 
-  await writeNewVersion(
+  const documentId = await writeNewVersion(
     store,
     catalog,
     text,
@@ -159,7 +168,7 @@ export async function ingestEntry(
     sectionChanges,
   );
   await store.invalidateCache();
-  return { kind, title: catalog.title, summary };
+  return { kind, title: catalog.title, summary, documentId };
 }
 
 async function loadDocumentText(
@@ -194,7 +203,7 @@ async function writeNewVersion(
   existingId?: string,
   previousVersionId?: string | null,
   sectionChanges?: ReturnType<typeof diffSections>,
-): Promise<void> {
+): Promise<string> {
   const now = new Date().toISOString();
   const documentId = existingId ?? randomUUID();
   const versionId = randomUUID();
@@ -279,14 +288,22 @@ async function writeNewVersion(
     summary,
     createdAt: now,
   });
+  return documentId;
 }
 
-export async function drainQueue(store: AppStore, max = 20): Promise<number> {
-  let n = 0;
+export async function drainQueue(
+  store: AppStore,
+  max = 20,
+): Promise<{ processed: number; updatedDocumentIds: string[] }> {
+  let processed = 0;
+  const updatedDocumentIds: string[] = [];
   for (let i = 0; i < max; i += 1) {
     const result = await processNextJob(store);
     if (!result.processed) break;
-    n += 1;
+    processed += 1;
+    if (result.documentId && result.kind && result.kind !== "unchanged") {
+      updatedDocumentIds.push(result.documentId);
+    }
   }
-  return n;
+  return { processed, updatedDocumentIds };
 }

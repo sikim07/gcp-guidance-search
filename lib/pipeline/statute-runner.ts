@@ -16,12 +16,18 @@ import { summarizeDiff, type SectionChange } from "@/lib/pipeline/section-diff";
 
 export async function watchStatutes(
   store: AppStore,
-): Promise<{ checked: number; ingested: number; skipped: boolean }> {
+): Promise<{
+  checked: number;
+  ingested: number;
+  skipped: boolean;
+  ingestedIds: string[];
+}> {
   if (!getLawOc()) {
-    return { checked: 0, ingested: 0, skipped: true };
+    return { checked: 0, ingested: 0, skipped: true, ingestedIds: [] };
   }
 
   let ingested = 0;
+  const ingestedIds: string[] = [];
   // Vercel cron 제한: 본문 JSON이 큰 법령(규칙)은 한 번에 하나만 받는다.
   const maxBodies = Number.parseInt(process.env.LAW_MAX_BODIES_PER_WATCH ?? "1", 10);
   for (const watched of WATCHED_STATUTES) {
@@ -43,7 +49,7 @@ export async function watchStatutes(
     const parsed = articlesFromLawBody(body, {
       includeAnnexTitle: "annexTitle" in watched ? watched.annexTitle : undefined,
     });
-    await ingestParsedStatute(store, {
+    const statuteId = await ingestParsedStatute(store, {
       existing,
       lawId: hit.lawId,
       mst: hit.mst,
@@ -56,9 +62,10 @@ export async function watchStatutes(
       kind,
     });
     ingested += 1;
+    ingestedIds.push(statuteId);
     if (ingested >= maxBodies) break;
   }
-  return { checked: WATCHED_STATUTES.length, ingested, skipped: false };
+  return { checked: WATCHED_STATUTES.length, ingested, skipped: false, ingestedIds };
 }
 
 export async function ingestParsedStatute(
@@ -75,7 +82,7 @@ export async function ingestParsedStatute(
     articles: ParsedArticle[];
     kind: ChangeKind;
   },
-): Promise<void> {
+): Promise<string> {
   const now = new Date().toISOString();
   const statuteId = input.existing?.id ?? randomUUID();
   const revisionId = randomUUID();
@@ -161,6 +168,7 @@ export async function ingestParsedStatute(
   if (expanded.some((article) => article.kind === "annex")) {
     await withdrawKgcpGuidelines(store);
   }
+  return statuteId;
 }
 
 function expandArticles(articles: ParsedArticle[]): ParsedArticle[] {

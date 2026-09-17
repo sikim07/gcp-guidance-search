@@ -12,8 +12,14 @@ import { SITE_NAME } from "@/lib/site";
 import { humanizeChangeSummary } from "@/lib/text/change-copy";
 import { readableText } from "@/lib/text/readable";
 import { sourceLabel } from "@/lib/utils";
+import { clauseStaticParams } from "@/lib/cache/static-params";
 
-export const dynamic = "force-dynamic";
+export const revalidate = 3600;
+export const dynamicParams = true;
+
+export function generateStaticParams() {
+  return clauseStaticParams();
+}
 
 async function loadClause(id: string, rawSection: string) {
   const section = decodeClauseSection(rawSection);
