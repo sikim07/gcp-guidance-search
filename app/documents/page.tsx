@@ -34,42 +34,40 @@ export default async function DocumentsPage() {
         <ul className="space-y-3">
           {statutes.map((row) => (
             <li key={row.id}>
-              <StaticCard>
-                <div className="flex flex-wrap items-center gap-2">
-                  <SourceBadge source="statute" />
-                  <span className="text-ink/50 text-xs">{row.status}</span>
-                </div>
-                <Link
-                  href={`/documents/${row.id}`}
-                  className="mt-2 block font-medium hover:underline"
-                >
-                  {row.title}
-                </Link>
-                <p className="text-ink/50 mt-1 text-xs">
-                  공포 {row.promulgatedDate ?? "미상"} · 시행{" "}
-                  {row.effectiveDate ?? "미상"} · MST {row.currentMst}
-                </p>
-              </StaticCard>
+              <Link href={`/documents/${row.id}`} className="block">
+                <StaticCard>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <SourceBadge source="statute" />
+                    <span className="text-ink/50 text-xs">{row.status}</span>
+                  </div>
+                  <span className="text-fda mt-2 block font-medium underline underline-offset-4">
+                    {row.title}
+                  </span>
+                  <p className="text-ink/50 mt-1 text-xs">
+                    공포 {row.promulgatedDate ?? "미상"} · 시행{" "}
+                    {row.effectiveDate ?? "미상"} · MST {row.currentMst}
+                  </p>
+                </StaticCard>
+              </Link>
             </li>
           ))}
           {documents.map((doc) => (
             <li key={doc.id}>
-              <StaticCard>
-                <div className="flex flex-wrap items-center gap-2">
-                  <SourceBadge source={doc.source} />
-                  <span className="text-ink/50 text-xs">{doc.status}</span>
-                </div>
-                <Link
-                  href={`/documents/${doc.id}`}
-                  className="mt-2 block font-medium hover:underline"
-                >
-                  {doc.title}
-                </Link>
-                <p className="text-ink/50 mt-1 text-xs">
-                  발행 {doc.issuedDate ?? "미상"} · hash{" "}
-                  {(doc.fileHash ?? "").slice(0, 12)}
-                </p>
-              </StaticCard>
+              <Link href={`/documents/${doc.id}`} className="block">
+                <StaticCard>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <SourceBadge source={doc.source} />
+                    <span className="text-ink/50 text-xs">{doc.status}</span>
+                  </div>
+                  <span className="text-fda mt-2 block font-medium underline underline-offset-4">
+                    {doc.title}
+                  </span>
+                  <p className="text-ink/50 mt-1 text-xs">
+                    발행 {doc.issuedDate ?? "미상"} · hash{" "}
+                    {(doc.fileHash ?? "").slice(0, 12)}
+                  </p>
+                </StaticCard>
+              </Link>
             </li>
           ))}
         </ul>
