@@ -97,6 +97,34 @@ describe("publicRevisionFeed", () => {
     ];
     expect(publicRevisionFeed(logs).map((row) => row.id)).toEqual(["3"]);
   });
+
+  it("hides guideline section dumps that are just re-chunking, but keeps 공포·초기 적재", () => {
+    const logs = [
+      {
+        id: "rechunk-new",
+        documentId: "consent",
+        summary:
+          "변경 II, III, IV, V / 추가 본문, I, 1, 2, 3 / 삭제 VI",
+      },
+      {
+        id: "rechunk-old",
+        documentId: "consent",
+        summary: "변경 II, III / 추가 본문, I / 삭제 VI",
+      },
+      {
+        id: "seed",
+        documentId: "consent",
+        summary: "Informed Consent Information Sheet 초기 적재",
+      },
+      {
+        id: "statute",
+        documentId: "rule",
+        summary:
+          "일부개정 · 공포 2026-03-05 · 시행 2026-03-05 · 시드 조문을 법령 현행본(284019)으로 바꿨습니다. 변경 별표 4 · 1. 목적",
+      },
+    ];
+    expect(publicRevisionFeed(logs).map((row) => row.id)).toEqual(["seed", "statute"]);
+  });
 });
 
 describe("changeKindLabel", () => {

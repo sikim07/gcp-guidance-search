@@ -9,7 +9,7 @@ export function SiteHeader() {
   const pathname = usePathname();
 
   return (
-    <header className="border-rule/70 bg-paper/80 sticky top-0 z-20 border-b backdrop-blur-md">
+    <header className="border-rule/70 bg-paper sticky top-0 z-20 border-b">
       <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3 md:max-w-5xl md:py-3.5">
         <NavLink
           href="/"

@@ -175,6 +175,14 @@ export function isInternalReseed(summary: string): boolean {
   return /시드 조항을 다시 잘랐|조항 경계를 다시 맞췄/.test(summary);
 }
 
+export function isInternalPipelineChange(summary: string): boolean {
+  if (isInternalReseed(summary)) return true;
+  if (/초기 적재/.test(summary)) return false;
+  const hasOfficialMarker = /공포|발행일|시행\s|MST\s|파일 해시|file hash/i.test(summary);
+  if (hasOfficialMarker) return false;
+  return /바뀐 조항|새로 실린 조항|빠진 조항|변경\s|추가\s|삭제\s/.test(summary);
+}
+
 export function feedKindLabel(kind: ChangeKind, summary: string): string {
   if (isInternalReseed(summary)) return "조항 나누기";
   return changeKindLabel(kind);
@@ -201,5 +209,5 @@ export function collapseRepeatedFeedItems<
 export function publicRevisionFeed<T extends { documentId: string; summary: string }>(
   logs: T[],
 ): T[] {
-  return collapseRepeatedFeedItems(logs.filter((log) => !isInternalReseed(log.summary)));
+  return collapseRepeatedFeedItems(logs.filter((log) => !isInternalPipelineChange(log.summary)));
 }
