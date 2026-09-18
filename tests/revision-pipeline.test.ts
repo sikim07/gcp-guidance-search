@@ -115,6 +115,10 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
       return undefined;
     },
     async putTranslation() {},
+    async addRevalidationLog() {},
+    async listRevalidationLogs() {
+      return [];
+    },
   };
 }
 

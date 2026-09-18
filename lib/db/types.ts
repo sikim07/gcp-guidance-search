@@ -6,6 +6,7 @@ import type {
   FeedbackRecord,
   IngestJob,
   QueryCacheRecord,
+  RevalidationLogRecord,
   SearchLogRecord,
   StatuteArticle,
   StatuteRecord,
@@ -26,6 +27,7 @@ export type StoreSnapshot = {
   statuteRevisions: StatuteRevision[];
   statuteArticles: StatuteArticle[];
   translations: Record<string, string>;
+  revalidationLogs: RevalidationLogRecord[];
 };
 
 export interface AppStore {
@@ -65,6 +67,8 @@ export interface AppStore {
   ): Promise<void>;
   getTranslation(chunkId: string): Promise<string | undefined>;
   putTranslation(chunkId: string, text: string): Promise<void>;
+  addRevalidationLog(row: RevalidationLogRecord): Promise<void>;
+  listRevalidationLogs(): Promise<RevalidationLogRecord[]>;
 }
 
 export function emptySnapshot(): StoreSnapshot {
@@ -82,5 +86,6 @@ export function emptySnapshot(): StoreSnapshot {
     statuteRevisions: [],
     statuteArticles: [],
     translations: {},
+    revalidationLogs: [],
   };
 }

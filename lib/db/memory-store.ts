@@ -8,6 +8,7 @@ import type {
   FeedbackRecord,
   IngestJob,
   QueryCacheRecord,
+  RevalidationLogRecord,
   SearchLogRecord,
   StatuteArticle,
   StatuteRecord,
@@ -53,6 +54,7 @@ function migrateSnapshot(snap: StoreSnapshot): StoreSnapshot {
     statuteRevisions: snap.statuteRevisions ?? [],
     statuteArticles: snap.statuteArticles ?? [],
     translations: snap.translations ?? {},
+    revalidationLogs: snap.revalidationLogs ?? [],
   };
 }
 
@@ -238,5 +240,14 @@ export const memoryStore: AppStore = {
     const snap = await load();
     snap.translations[chunkId] = text;
     await persist(snap);
+  },
+  async addRevalidationLog(row: RevalidationLogRecord) {
+    const snap = await load();
+    snap.revalidationLogs.unshift(row);
+    snap.revalidationLogs = snap.revalidationLogs.slice(0, 50);
+    await persist(snap);
+  },
+  async listRevalidationLogs() {
+    return (await load()).revalidationLogs.slice();
   },
 };

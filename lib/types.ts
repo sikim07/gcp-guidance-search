@@ -124,6 +124,15 @@ export type SearchLogRecord = {
   createdAt: string;
 };
 
+export type RevalidationLogRecord = {
+  id: string;
+  createdAt: string;
+  reason: string;
+  paths: string[];
+  documentIds: string[];
+  statuteIds: string[];
+};
+
 export type FeedbackRecord = {
   id: string;
   searchLogId: string | null;

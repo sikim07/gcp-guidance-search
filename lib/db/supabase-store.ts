@@ -8,6 +8,7 @@ import type {
   FeedbackRecord,
   IngestJob,
   QueryCacheRecord,
+  RevalidationLogRecord,
   SearchLogRecord,
   StatuteArticle,
   StatuteRecord,
@@ -523,6 +524,35 @@ export const supabaseStore: AppStore = {
       text,
     });
     if (error) throw error;
+  },
+  async addRevalidationLog(row) {
+    const { error } = await client().from("revalidation_logs").insert({
+      id: row.id,
+      reason: row.reason,
+      paths: row.paths,
+      document_ids: row.documentIds,
+      statute_ids: row.statuteIds,
+      created_at: row.createdAt,
+    });
+    if (error) throw error;
+  },
+  async listRevalidationLogs() {
+    const { data, error } = await client()
+      .from("revalidation_logs")
+      .select("*")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (error) throw error;
+    return (data ?? []).map(
+      (row): RevalidationLogRecord => ({
+        id: row.id,
+        reason: row.reason,
+        paths: row.paths ?? [],
+        documentIds: row.document_ids ?? [],
+        statuteIds: row.statute_ids ?? [],
+        createdAt: row.created_at,
+      }),
+    );
   },
 };
 
