@@ -140,6 +140,33 @@ npm run verify   # lint + unit test + production build. git push 훅이 이 명�
 npm run bench    # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md
 ```
 
+## 데이터 모델
+
+가이드라인과 법령은 테이블을 처음부터 나눈다. 가이드라인은 `documents` → `document_versions` → `chunks`이고, 개정 식별은 발행일·파일 해시(SHA-256)다. 법령은 `statutes` → `statute_revisions` → `statute_articles`이고, 개정 식별은 법령일련번호(MST)·공포일·시행일·제개정구분이다. 이력 테이블 구조가 다른 이유는 추적 신호가 다르기 때문이다. `0002_statutes.sql`에도 법령은 `file_hash`를 쓰지 않는다고 적혀 있다.
+
+`chunks.embedding`과 `statute_articles.embedding`은 pgvector 컬럼이 아니라 jsonb float 배열이다. `0001_init.sql`이 vector 컬럼을 만들지 말라고 못 박고, 전환 조건은 청크 5,000개 초과 또는 유사도 계산(임베딩 API 제외) 500ms 초과로 `BENCHMARK.md`·`lib/retrieval/cosine.ts`와 같다. 현재 규모에서 브루트포스 cosine이 그 임계치보다 자릿수가 빠르다는 측정이 근거다.
+
+옛 청크·조문은 지우지 않는다. `chunks`와 `statute_articles` 모두 `is_current`로 현행만 가리키고, 이전 행은 버전 이력과 단락 diff를 위해 남긴다.
+
+`change_log`는 처음에 `document_id`가 `documents`를 참조했다. 법령을 넣으면서(`0002_statutes.sql`) 그 FK를 해제하고 `entity_kind`를 추가해, 같은 테이블이 문서 id와 법령 id를 함께 가리킨다.
+
+| 테이블 | 역할 |
+| --- | --- |
+| `documents` | 가이드라인 메타(출처, URL, 발행일, `file_hash`, 현행 버전 id) |
+| `document_versions` | 가이드라인 버전 본문·해시·추출 상태·diff 요약 |
+| `chunks` | 조항 단위 청크. `embedding`은 jsonb float 배열, `is_current`로 현행 표시 |
+| `statutes` | 법령 메타(law_id, 현행 MST, 공포일·시행일, 제개정구분) |
+| `statute_revisions` | 법령 개정 이력(MST, 공포일·시행일, diff 요약) |
+| `statute_articles` | 법령 조문/별표. `embedding`은 jsonb, `is_current`로 현행 표시 |
+| `change_log` | 문서·법령 개정 이벤트. `entity_kind`로 구분, `document_id`는 둘 다 담을 수 있음 |
+| `query_cache` | 정규화 질문·질문 임베딩·답변·출처·passages. 질문 임베딩 유사도 캐싱 |
+| `rate_limits` | `(bucket, day)`별 카운터. IP·전역 일일 새 질문 한도에 사용 |
+| `ingest_jobs` | 수집 큐. `status`·`attempts`·`last_error`로 재시도 |
+| `search_logs` | 질문·답변·캐시 여부·`latency_ms`·`similarity_ms`·상위 청크 id |
+| `translated_chunks` | 청크 id별 한국어 번역 캐시 |
+| `feedback` | 검색 답변 도움됨/안됨과 선택 의견(`comment`) |
+| `revalidation_logs` | 온디맨드 ISR 재검증 이유와 경로·문서/법령 id |
+
 ## Vercel
 
 이미 https://gcp-guidance-search.vercel.app 에 올라가 있다. 키 없이 시드 문서로 검색·개정 피드·한국어 보기는 된다. Vercel 빌드 명령은 `next build`다. lint·테스트는 git push 훅(`npm run verify`)에서 막는다. 문서·조항 페이지는 빌드 때 전부 만들지 않고, 첫 요청 이후 1시간 ISR로 캐시한다. `sitemap.xml`에 URL은 그대로 들어간다.
