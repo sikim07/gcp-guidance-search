@@ -13,7 +13,7 @@ export function SiteHeader() {
       className="border-rule/70 bg-paper sticky top-0 z-20 shrink-0 border-b"
       style={{ viewTransitionName: "site-header" }}
     >
-      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3 md:max-w-5xl md:py-3.5">
+      <div className="mx-auto flex w-full max-w-3xl items-center justify-between px-4 py-3 sm:max-w-5xl md:py-3.5">
         <NavLink
           href="/"
           className="text-ink flex items-center gap-2.5 text-base font-semibold tracking-tight whitespace-nowrap sm:text-lg"
