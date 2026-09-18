@@ -1,4 +1,8 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import {
+  mapRevalidationLogRows,
+  throwUnlessMissingRelation,
+} from "@/lib/db/supabase-errors";
 import type { AppStore } from "@/lib/db/types";
 import type {
   ChangeLogRecord,
@@ -8,7 +12,6 @@ import type {
   FeedbackRecord,
   IngestJob,
   QueryCacheRecord,
-  RevalidationLogRecord,
   SearchLogRecord,
   StatuteArticle,
   StatuteRecord,
@@ -534,7 +537,7 @@ export const supabaseStore: AppStore = {
       statute_ids: row.statuteIds,
       created_at: row.createdAt,
     });
-    if (error) throw error;
+    throwUnlessMissingRelation(error);
   },
   async listRevalidationLogs() {
     const { data, error } = await client()
@@ -542,17 +545,7 @@ export const supabaseStore: AppStore = {
       .select("*")
       .order("created_at", { ascending: false })
       .limit(50);
-    if (error) throw error;
-    return (data ?? []).map(
-      (row): RevalidationLogRecord => ({
-        id: row.id,
-        reason: row.reason,
-        paths: row.paths ?? [],
-        documentIds: row.document_ids ?? [],
-        statuteIds: row.statute_ids ?? [],
-        createdAt: row.created_at,
-      }),
-    );
+    return mapRevalidationLogRows(data, error);
   },
 };
 
