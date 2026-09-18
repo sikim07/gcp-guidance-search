@@ -56,18 +56,6 @@ html,
 body {
   background: var(--paper);
   height: 100%;
-  /* Viewport scroll stays on the document so mobile URL bars can collapse.
-     Hide the native bar so long pages do not steal width from the sticky header. */
-  scrollbar-width: none;
-  -ms-overflow-style: none;
-}
-
-html::-webkit-scrollbar,
-body::-webkit-scrollbar {
-  background: transparent;
-  display: none;
-  height: 0;
-  width: 0;
 }
 
 .app-chrome {
@@ -98,6 +86,20 @@ body::-webkit-scrollbar {
 }
 
 @media (pointer: fine) {
+  html,
+  body {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+
+  html::-webkit-scrollbar,
+  body::-webkit-scrollbar {
+    background: transparent;
+    display: none;
+    height: 0;
+    width: 0;
+  }
+
   .overlay-scrollbar {
     display: block;
     inset: 0 0 0 auto;
@@ -376,8 +378,6 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
 
 ::view-transition-group(site-header) {
   animation: none;
-  left: 0;
-  width: 100%;
   z-index: 100;
 }
 
