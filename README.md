@@ -61,11 +61,12 @@ npx tsx scripts/refresh-seed-corpus.ts   # FDA가 막히면 ICH E6(R2) PDF로 �
 
 ### 테스트·lint·빌드를 자동으로 강제하기
 
-구현 자체는 AI 에이전트(Cursor)에게 맡겼다. 대신 결과물 품질까지 매번 사람이 리뷰하고 싶지는 않았다. 그래서 자동 게이트로 대신하게 했고, 세 단계로 나눴다.
+구현 자체는 AI 에이전트(Cursor)에게 맡겼다. 대신 결과물 품질까지 매번 사람이 리뷰하고 싶지는 않았다. 그래서 자동 게이트로 대신하게 했다.
 
 1. **규칙을 텍스트로 명문화한다.** `AGENTS.md`에 벡터 DB 금지, KGCP는 별표 4(별표 1 아님), OCR 금지, 근거 없는 답변 금지, 답변 LLM은 기본 발췌·유료면 GPT-5.4 nano 같은 제약을 적어두고, AI 에이전트가 매번 이걸 참조하게 했다.
-2. **자동 게이트로 강제한다.** TypeScript strict, ESLint, Vitest 단위 테스트를 `npm run verify`로 묶어 git push 훅에 걸었다. 하나라도 실패하면 푸시 자체가 안 된다.
-3. **구현이 끝나는 시점에 교차 검증한다.** Claude Code의 Stop 훅으로 구현이 끝날 때마다 git diff를 다른 모델(Gemini)에게 자동으로 검토시키고, 문제가 있으면 `{decision: "block"}`으로 재수정을 강제한다(`.claude/hooks/stop-review.mjs`).
+2. **자동 게이트로 강제한다.** TypeScript strict, ESLint, Vitest 단위 테스트를 `npm run verify`로 묶어 git push 훅(`.githooks/pre-push`)에 걸었다. 하나라도 실패하면 푸시 자체가 안 된다.
+
+실제로 이 게이트에 여러 번 걸렸다. 피드백 시트 테스트가 환경변수를 지웠다가 복구하지 못해 verify가 깨진 적이 있고(`f2fde7a`), 조항 페이지를 빌드타임에 전부 SSG로 만들려다 빌드가 길어져서 걸린 적도 있다(`a2edceb`, `1cdf446`). React 훅 관련 lint 경고 때문에 막힌 적도 있다(`e3d9e5c`). 검색 랭킹이 서문이나 각주를 1위로 잘못 잡는 실패도 있었는데, 지금은 `retrieval-gold.test.ts`로 고정해서(`08d2a16`, `2977355`) 같은 실패가 반복되면 푸시가 막힌다. KGCP를 별표 1(GMP)과 혼동해 잘못 적재하는 것도 `tests/law-parser.test.ts`로 막아뒀다.
 
 AI가 만든 코드를 믿고 쓰는 게 아니라, 이 게이트를 통과하지 못하면 아예 반영이 안 되는 구조를 만드는 데 초점을 맞췄다.
 
@@ -101,7 +102,7 @@ AI가 만든 코드를 믿고 쓰는 게 아니라, 이 게이트를 통과하�
 
 - **검색 정확도:** 6개 핵심 질문(감사추적, 서면동의, 모니터링 범위, 민감정보, 의료기기 승인, SAE 보고기한)에서 top-1 조항 정확 일치와, 일부러 심은 노이즈 조항 배제를 회귀 테스트로 고정(`tests/retrieval-gold.test.ts`, `tests/search-quality.test.ts`).
 - **검색 성능:** 실제 코퍼스 721청크 기준 브루트포스 유사도 검색이 약 2ms. 500ms 임계치와 비교하면 250배쯤 여유가 있다. 벡터 DB 없이도 서비스 수준 응답 속도가 나온다.
-- **코드 품질:** 단위 테스트 142개 통과, lint·타입체크 에러 0개. `AGENTS.md` 스펙 → `npm run verify` push 훅 → Stop 훅 교차 검토, 이 세 단계를 다 통과하지 못하면 AI가 만든 코드도 반영되지 않는다.
+- **코드 품질:** 단위 테스트 142개 통과, lint·타입체크 에러 0개. `AGENTS.md` 스펙 → `npm run verify` push 훅, 이 두 단계를 통과하지 못하면 AI가 만든 코드도 반영되지 않는다. 실제로 환경변수 처리, 빌드 시간, 검색 랭킹 회귀 문제로 여러 번 막힌 적이 있다.
 - **콘텐츠 규모:** `sitemap.xml` 기준 253개 URL, 그중 약 240개가 조항 단위 페이지다. ICH E6(R2) 전문(4만자 이상)과 국내 별표 4(KGCP) 전문(8천자 이상)을 발췌 파이프라인으로 적재했고, 이 기준은 `tests/corpus-coverage.test.ts`로 고정해뒀다.
 - **SEO/성능:** `force-dynamic`에서 ISR로 옮기면서 라우트 캐시와 프리페치를 되살렸다. 문서·조항 페이지는 빌드 때 만들지 않고 첫 요청 이후 1시간 ISR로 캐시한다.
 - **비용 통제:** IP별 일 5건, 전체 일 50건으로 새 질문 수를 제한한다. 같은 질문은 캐시로 응답하고 한도에도 안 들어간다. 답변 LLM은 기본이 0원이고, 유료 nano를 켠 채로 한도를 매일 다 채운다는 최악의 가정을 해도 월 1달러대 — 실사용 트래픽으로 검증한 숫자는 아니지만, 상한을 미리 설계해뒀다는 뜻이다.
@@ -124,7 +125,7 @@ CRA·QA·RA가 "이 절차가 근거가 있나"를 확인할 때, 여러 사이�
 | Data | Supabase (Postgres) | 문서·청크·법령조문·버전 이력·검색 로그 |
 | AI/검색 | OpenAI 임베딩(`text-embedding-3-small`, 선택), 브루트포스 cosine, 발췌 답변. 유료 합성은 GPT-5.4 nano | 질문 임베딩, 근거 기반 답변 |
 | 외부 연동 | FDA/ICH, 식약처, 국가법령정보센터(law.go.kr) Open API | 원문 수집, 법령 현행본/개정 이력 조회 |
-| 품질 게이트 | `AGENTS.md`, TypeScript strict, ESLint, Vitest, git push 훅, Claude Code Stop 훅 | 스펙 명문화 → verify 실패 시 푸시 차단 → 구현 종료 시점 교차 모델 리뷰 |
+| 품질 게이트 | `AGENTS.md`, TypeScript strict, ESLint, Vitest, git push 훅(`.githooks/pre-push`) | 스펙 명문화 → verify 실패 시 푸시 차단 |
 | 운영 | 시드 버전 이력·`BENCHMARK.md`, `/admin`, sitemap/robots/llms.txt | 의사결정 근거 기록, 운영 가시성, SEO |
 
 ## 실행해보기

@@ -10,7 +10,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 
 # GCP 가이드라인 검색기
 
-이 파일은 AI 에이전트가 매번 읽는 스펙이다. 규칙을 어긴 코드는 `npm run verify`(git push 훅)와 Stop 훅이 막는다.
+이 파일은 AI 에이전트가 매번 읽는 스펙이다. 규칙을 어긴 코드는 `npm run verify`(git push 훅)가 막는다.
 
 우선순위: 개정 감지 파이프라인 > 검색/답변 품질 > UI.
 
@@ -19,7 +19,7 @@ This block is written and re-added by `next dev` — verify at `node_modules/nex
 - 식약처 m_1060 전체 게시판을 적재하지 말 것. 임상시험 관련만.
 - v1에서 OCR하지 말 것.
 - 답변은 청크 근거만. 출처(문서, 조항, URL)를 붙일 것.
-- Stop 훅과 벤치마크 스크립트를 제거하지 말 것.
+- 벤치마크 스크립트를 제거하지 말 것.
 - `git push` 전에 `npm run verify`(lint + test + next build)를 돌리고, 실패하면 푸시하지 말 것. `next build`만으로는 부족하다.
 - Vercel 배포 명령은 `next build`만 돌린다. 문서·조항 페이지(`/documents/[id]`, `/documents/[id]/[section]`)를 빌드 때 전부 SSG하지 말 것. ISR + sitemap으로 둔다.
 - 답변 LLM은 기본 비활성이다. 키 없으면 조항 발췌 + 시드 한국어 + 공개 번역으로 동작해야 한다.
