@@ -7,9 +7,12 @@
 - 레포: https://github.com/sikim07/gcp-guidance-search
 - 서비스: https://gcp-guidance-search.vercel.app
 
-![검색 화면 (데스크톱)](docs/screenshot.png)
-
-![검색 화면 (모바일)](docs/screenshot-mobile.png)
+<p>
+  <img src="./docs/screenshot.png" alt="검색 화면 (데스크톱)" width="880" />
+</p>
+<p>
+  <img src="./docs/screenshot-mobile.png" alt="검색 화면 (모바일)" width="360" />
+</p>
 
 ## 배경 — 어떤 문제를 발견했는가
 
