@@ -7,6 +7,8 @@
 - 레포: https://github.com/sikim07/gcp-guidance-search
 - 서비스: https://gcp-guidance-search.vercel.app
 
+![검색 화면 스크린샷](docs/screenshot.png)
+
 ## 배경 — 어떤 문제를 발견했는가
 
 현장(CRA/QA/RA)에서는 "이 절차가 GCP나 식약처 기준에 근거가 있나?"를 확인해야 할 일이 수시로 생긴다. 근거가 한 곳에 있으면 좋을 텐데, 그렇지가 않다. FDA ICH, FDA 가이던스, 식약처 민원인안내서, 국내 법령(약사법, 의료기기법 등)에 흩어져 있고, 개정도 제각각 이루어진다. 그러니 지금 보고 있는 문서가 현행본인지조차 원문 사이트를 하나하나 들어가 확인해야 알 수 있다.
@@ -194,3 +196,7 @@ npm run bench    # 벡터 검색을 안 쓰기로 한 이유는 BENCHMARK.md에 
 - [국가법령정보센터 Open API](https://open.law.go.kr) — 현행법령 JSON. KGCP는 「의약품 등의 안전에 관한 규칙」 **별표 4** (별표 1 GMP 아님)
 
 스캔본 PDF는 아직 OCR을 붙이지 않아서 텍스트 추출이 안 된다. 이건 공식 해석이 아니니, 답변만 믿지 말고 링크로 원문을 한 번 더 확인해보길 권한다.
+
+## License
+
+MIT License. 자세한 내용은 [LICENSE](./LICENSE) 참고.
