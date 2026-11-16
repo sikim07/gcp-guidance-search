@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import {
-  listCachedCurrentChunks,
-  listCachedCurrentStatuteArticles,
+  listPublicArticlesForStatute,
+  listPublicChunksForDocument,
 } from "@/lib/cache/public-catalog";
 import { clauseStaticParams } from "@/lib/cache/static-params";
 import { getStore } from "@/lib/db/store";
@@ -34,8 +34,8 @@ async function loadClause(id: string, rawSection: string) {
   const store = getStore();
   const doc = await store.getDocument(id);
   if (doc) {
-    const chunk = (await listCachedCurrentChunks()).find(
-      (row) => row.documentId === id && row.section === section,
+    const chunk = (await listPublicChunksForDocument(id)).find(
+      (row) => row.section === section,
     );
     if (!chunk) return null;
     const versions = publicDocumentVersions(
@@ -63,8 +63,8 @@ async function loadClause(id: string, rawSection: string) {
   }
   const statute = await store.getStatute(id);
   if (!statute) return null;
-  const article = (await listCachedCurrentStatuteArticles()).find(
-    (row) => row.statuteId === id && row.section === section,
+  const article = (await listPublicArticlesForStatute(id)).find(
+    (row) => row.section === section,
   );
   if (!article) return null;
   const revisions = await store.listStatuteRevisions(statute.id);

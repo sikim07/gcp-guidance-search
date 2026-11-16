@@ -41,6 +41,14 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
     async currentChunksWithEmbeddings() {
       return snap.chunks.filter((c) => c.isCurrent);
     },
+    async listCurrentChunksByDocument(documentId) {
+      return snap.chunks.filter((c) => c.isCurrent && c.documentId === documentId);
+    },
+    async currentChunkIndex() {
+      return snap.chunks
+        .filter((c) => c.isCurrent)
+        .map((c) => ({ ...c, text: "", embedding: [] }));
+    },
     async replaceCurrentChunks(documentId: string, chunks: ChunkRecord[]) {
       for (const chunk of snap.chunks) {
         if (chunk.documentId === documentId) chunk.isCurrent = false;
@@ -109,6 +117,16 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
     },
     async currentStatuteArticlesWithEmbeddings() {
       return (snap.statuteArticles ?? []).filter((a) => a.isCurrent);
+    },
+    async listCurrentArticlesByStatute(statuteId) {
+      return (snap.statuteArticles ?? []).filter(
+        (a) => a.isCurrent && a.statuteId === statuteId,
+      );
+    },
+    async currentStatuteArticleIndex() {
+      return (snap.statuteArticles ?? [])
+        .filter((a) => a.isCurrent)
+        .map((a) => ({ ...a, text: "", embedding: [] }));
     },
     async replaceCurrentStatuteArticles(statuteId, articles) {
       snap.statuteArticles ??= [];

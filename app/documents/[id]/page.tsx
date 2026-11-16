@@ -4,8 +4,8 @@ import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import { ClauseToc } from "@/components/clause-toc";
 import {
-  listCachedCurrentChunks,
-  listCachedCurrentStatuteArticles,
+  listPublicArticlesForStatute,
+  listPublicChunksForDocument,
 } from "@/lib/cache/public-catalog";
 import { documentStaticParams } from "@/lib/cache/static-params";
 import { getStore } from "@/lib/db/store";
@@ -52,7 +52,7 @@ export default async function DocumentDetailPage({
 
   if (statute) {
     const revisions = await store.listStatuteRevisions(statute.id);
-    const articles = await listCachedCurrentStatuteArticles();
+    const articles = await listPublicArticlesForStatute(statute.id);
     return (
       <div className="space-y-6">
         <div>
@@ -92,7 +92,7 @@ export default async function DocumentDetailPage({
         <ClauseToc
           entityId={statute.id}
           clauses={articles
-            .filter((row) => row.statuteId === statute.id && row.isCurrent)
+            .filter((row) => row.isCurrent)
             .map((row) => ({ section: row.section, text: row.text }))}
         />
       </div>
@@ -104,7 +104,7 @@ export default async function DocumentDetailPage({
     await store.listVersions(id),
     doc.currentVersionId,
   );
-  const chunks = await listCachedCurrentChunks();
+  const chunks = await listPublicChunksForDocument(doc.id);
 
   return (
     <div className="space-y-6">
@@ -140,7 +140,7 @@ export default async function DocumentDetailPage({
       <ClauseToc
         entityId={doc.id}
         clauses={chunks
-          .filter((row) => row.documentId === doc.id && row.isCurrent)
+          .filter((row) => row.isCurrent)
           .map((row) => ({ section: row.section, text: row.text }))}
       />
     </div>

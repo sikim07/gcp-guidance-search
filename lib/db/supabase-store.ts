@@ -4,9 +4,11 @@ import {
   throwUnlessMissingRelation,
 } from "@/lib/db/supabase-errors";
 import {
+  CHUNK_INDEX_COLUMNS,
   CHUNK_PUBLIC_COLUMNS,
   CHUNK_SEARCH_COLUMNS,
   DOCUMENT_VERSION_LIST_COLUMNS,
+  STATUTE_ARTICLE_INDEX_COLUMNS,
   STATUTE_ARTICLE_PUBLIC_COLUMNS,
   STATUTE_ARTICLE_SEARCH_COLUMNS,
 } from "@/lib/db/select-columns";
@@ -144,6 +146,41 @@ export const supabaseStore: AppStore = {
   },
   async currentChunksWithEmbeddings() {
     return listCurrentChunks(CHUNK_SEARCH_COLUMNS, true);
+  },
+  async listCurrentChunksByDocument(documentId) {
+    const { data, error } = await client()
+      .from("chunks")
+      .select(CHUNK_PUBLIC_COLUMNS)
+      .eq("is_current", true)
+      .eq("document_id", documentId);
+    if (error) throw error;
+    const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+    return rows.map((row) => ({
+      id: String(row.id),
+      versionId: String(row.version_id),
+      documentId: String(row.document_id),
+      section: String(row.section),
+      text: String(row.text),
+      embedding: [] as number[],
+      isCurrent: Boolean(row.is_current),
+    }));
+  },
+  async currentChunkIndex() {
+    const { data, error } = await client()
+      .from("chunks")
+      .select(CHUNK_INDEX_COLUMNS)
+      .eq("is_current", true);
+    if (error) throw error;
+    const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+    return rows.map((row, index) => ({
+      id: `idx-${index}`,
+      versionId: "",
+      documentId: String(row.document_id),
+      section: String(row.section),
+      text: "",
+      embedding: [] as number[],
+      isCurrent: Boolean(row.is_current),
+    }));
   },
   async replaceCurrentChunks(documentId, chunks) {
     const sb = client();
@@ -483,6 +520,35 @@ export const supabaseStore: AppStore = {
   },
   async currentStatuteArticlesWithEmbeddings() {
     return listCurrentStatuteArticles(STATUTE_ARTICLE_SEARCH_COLUMNS, true);
+  },
+  async listCurrentArticlesByStatute(statuteId) {
+    const { data, error } = await client()
+      .from("statute_articles")
+      .select(STATUTE_ARTICLE_PUBLIC_COLUMNS)
+      .eq("is_current", true)
+      .eq("statute_id", statuteId);
+    if (error) throw error;
+    const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+    return rows.map((row) => mapStatuteArticle(row, false));
+  },
+  async currentStatuteArticleIndex() {
+    const { data, error } = await client()
+      .from("statute_articles")
+      .select(STATUTE_ARTICLE_INDEX_COLUMNS)
+      .eq("is_current", true);
+    if (error) throw error;
+    const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+    return rows.map((row, index) => ({
+      id: `idx-${index}`,
+      statuteId: String(row.statute_id),
+      revisionId: "",
+      articleKey: "",
+      section: String(row.section),
+      text: "",
+      embedding: [] as number[],
+      isCurrent: Boolean(row.is_current),
+      kind: "article" as const,
+    }));
   },
   async replaceCurrentStatuteArticles(statuteId, articles) {
     const sb = client();

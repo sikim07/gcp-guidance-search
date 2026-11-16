@@ -108,6 +108,12 @@ export const memoryStore: AppStore = {
   async currentChunksWithEmbeddings() {
     return this.currentChunks();
   },
+  async listCurrentChunksByDocument(documentId) {
+    return (await this.currentChunks()).filter((row) => row.documentId === documentId);
+  },
+  async currentChunkIndex() {
+    return (await this.currentChunks()).map((row) => ({ ...row, text: "", embedding: [] }));
+  },
   async replaceCurrentChunks(documentId: string, chunks: ChunkRecord[]) {
     const snap = await load();
     for (const chunk of snap.chunks) {
@@ -230,6 +236,18 @@ export const memoryStore: AppStore = {
   },
   async currentStatuteArticlesWithEmbeddings() {
     return this.currentStatuteArticles();
+  },
+  async listCurrentArticlesByStatute(statuteId) {
+    return (await this.currentStatuteArticles()).filter(
+      (row) => row.statuteId === statuteId,
+    );
+  },
+  async currentStatuteArticleIndex() {
+    return (await this.currentStatuteArticles()).map((row) => ({
+      ...row,
+      text: "",
+      embedding: [],
+    }));
   },
   async replaceCurrentStatuteArticles(statuteId: string, articles: StatuteArticle[]) {
     const snap = await load();

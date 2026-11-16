@@ -2,11 +2,17 @@
  * Public ISR/catalog reads must not pull jsonb embeddings or full PDF text.
  * Those columns dominate Supabase egress when Googlebot walks clause pages.
  */
+/** Sitemap/index only — no clause body. */
+export const CHUNK_INDEX_COLUMNS = "document_id, section, is_current";
+
 export const CHUNK_PUBLIC_COLUMNS =
   "id, version_id, document_id, section, text, is_current";
 
 export const CHUNK_SEARCH_COLUMNS =
   "id, version_id, document_id, section, text, embedding, is_current";
+
+export const STATUTE_ARTICLE_INDEX_COLUMNS =
+  "statute_id, section, is_current";
 
 export const STATUTE_ARTICLE_PUBLIC_COLUMNS =
   "id, statute_id, revision_id, article_key, section, text, is_current, kind";

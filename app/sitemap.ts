@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 import {
-  listCachedCurrentChunks,
-  listCachedCurrentStatuteArticles,
+  listCachedChunkIndex,
   listCachedDocuments,
+  listCachedStatuteArticleIndex,
   listCachedStatutes,
 } from "@/lib/cache/public-catalog";
 import { buildSitemapEntries } from "@/lib/seo";
@@ -13,9 +13,9 @@ export const revalidate = 86_400;
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const [documents, chunks, statutes, articles] = await Promise.all([
     listCachedDocuments(),
-    listCachedCurrentChunks(),
+    listCachedChunkIndex(),
     listCachedStatutes(),
-    listCachedCurrentStatuteArticles(),
+    listCachedStatuteArticleIndex(),
   ]);
   return buildSitemapEntries({
     documents,

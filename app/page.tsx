@@ -1,10 +1,10 @@
 import { SearchPanel } from "@/components/search-panel";
 import { PresetIndex } from "@/components/preset-index";
 import {
-  listCachedCurrentChunks,
-  listCachedCurrentStatuteArticles,
   listCachedDocuments,
   listCachedStatutes,
+  listPublicCurrentChunks,
+  listPublicCurrentStatuteArticles,
 } from "@/lib/cache/public-catalog";
 import { clausePoolFromCatalog, pickPresetSummaries } from "@/lib/seo";
 import { PRESET_QUERIES } from "@/lib/search/presets";
@@ -16,8 +16,8 @@ export default async function HomePage() {
   const [documents, statutes, chunks, articles] = await Promise.all([
     listCachedDocuments(),
     listCachedStatutes(),
-    listCachedCurrentChunks(),
-    listCachedCurrentStatuteArticles(),
+    listPublicCurrentChunks(),
+    listPublicCurrentStatuteArticles(),
   ]);
   const summaries = pickPresetSummaries(
     PRESET_QUERIES,

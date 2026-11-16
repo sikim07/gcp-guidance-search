@@ -56,3 +56,4 @@ agent-tools/
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+.vercel/

@@ -41,6 +41,10 @@ export interface AppStore {
   currentChunks(): Promise<ChunkRecord[]>;
   /** Search + revision reuse — always includes embeddings when present. */
   currentChunksWithEmbeddings(): Promise<ChunkRecord[]>;
+  /** One document’s current chunks without embeddings (clause/detail pages). */
+  listCurrentChunksByDocument(documentId: string): Promise<ChunkRecord[]>;
+  /** Sitemap rows — section labels only, empty text. */
+  currentChunkIndex(): Promise<ChunkRecord[]>;
   replaceCurrentChunks(documentId: string, chunks: ChunkRecord[]): Promise<void>;
   addChunks(chunks: ChunkRecord[]): Promise<void>;
   addChangeLog(log: ChangeLogRecord): Promise<void>;
@@ -67,6 +71,10 @@ export interface AppStore {
   currentStatuteArticles(): Promise<StatuteArticle[]>;
   /** Search + revision reuse — always includes embeddings when present. */
   currentStatuteArticlesWithEmbeddings(): Promise<StatuteArticle[]>;
+  /** One statute’s current articles without embeddings. */
+  listCurrentArticlesByStatute(statuteId: string): Promise<StatuteArticle[]>;
+  /** Sitemap rows — section labels only, empty text. */
+  currentStatuteArticleIndex(): Promise<StatuteArticle[]>;
   replaceCurrentStatuteArticles(
     statuteId: string,
     articles: StatuteArticle[],
