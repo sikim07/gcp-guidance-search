@@ -6,7 +6,8 @@ describe("search control color roles", () => {
   it("defines distinct tones for scope, preset, submit, and retry", () => {
     const css = readFileSync(path.join(process.cwd(), "app/globals.css"), "utf8");
     expect(css).toMatch(/\.chip-scope\s*\{/);
-    expect(css).toMatch(/\.chip-preset\s*\{/);
+    expect(css).toMatch(/\.chip-preset\s*\{[^}]*var\(--ink\)/s);
+    expect(css).not.toMatch(/\.chip-preset\s*\{[^}]*var\(--fda\)/s);
     expect(css).toMatch(/\.search-submit\s*\{[^}]*var\(--seal\)/s);
     expect(css).toMatch(/\.retry-action\s*\{/);
   });

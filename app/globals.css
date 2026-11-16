@@ -178,17 +178,22 @@ body {
   box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--seal) 25%, transparent);
 }
 
+/* Presets stay in the warm paper/ink family (not cool FDA navy). */
 .chip-preset {
-  background: color-mix(in oklab, var(--fda) 8%, var(--sheet)) !important;
-  color: color-mix(in oklab, var(--fda) 70%, var(--ink)) !important;
-  border: 1px solid color-mix(in oklab, var(--fda) 22%, var(--rule)) !important;
+  background: color-mix(in oklab, var(--ink) 5%, var(--sheet)) !important;
+  color: color-mix(in oklab, var(--ink) 82%, var(--muted)) !important;
+  border: 1px solid color-mix(in oklab, var(--rule) 88%, var(--ink) 12%) !important;
 }
 
 .chip-preset.is-active {
-  background: color-mix(in oklab, var(--fda) 16%, var(--sheet)) !important;
-  color: var(--fda) !important;
-  border-color: color-mix(in oklab, var(--fda) 42%, var(--rule)) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fda) 22%, transparent);
+  background: color-mix(in oklab, var(--ink) 9%, var(--sheet)) !important;
+  color: var(--ink) !important;
+  border-color: color-mix(in oklab, var(--ink) 28%, var(--rule)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 12%, transparent);
+}
+
+.chip-preset:hover {
+  background: color-mix(in oklab, var(--ink) 7%, var(--sheet)) !important;
 }
 
 .chip-recent {
