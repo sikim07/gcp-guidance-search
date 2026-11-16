@@ -167,6 +167,24 @@ export function SearchPanel() {
           scope: getDraftSnapshot().scope,
         }),
       });
+      const contentType = response.headers.get("content-type") ?? "";
+      if (!contentType.includes("application/json")) {
+        setErrorKind(
+          response.status === 503 ? "unavailable" : classifySearchFailure(response.status),
+        );
+        setError(
+          response.status >= 500
+            ? "검색 저장소를 잠시 쓸 수 없습니다. 문서 목록에서 조항을 직접 열어 보세요."
+            : "검색에 실패했습니다.",
+        );
+        patchStoredDraft({
+          result: null,
+          translations: null,
+          translatedAnswer: null,
+          showKorean: false,
+        });
+        return;
+      }
       const body = (await response.json()) as SearchResponse & {
         error?: string;
         code?: string;
@@ -468,7 +486,12 @@ export function SearchPanel() {
 
       {errorKind ? (
         <RetryNotice
-          {...searchFailureCopy(errorKind, error ?? undefined)}
+          {...searchFailureCopy(
+            errorKind === "server" && /저장소/.test(error ?? "")
+              ? "unavailable"
+              : errorKind,
+            error ?? undefined,
+          )}
           busy={loading}
           pulseBar={
             errorKind === "network" ||
@@ -479,6 +502,17 @@ export function SearchPanel() {
             searchFailureCopy(errorKind).retry ? () => void runSearch(query) : undefined
           }
         />
+      ) : null}
+
+      {result?.degraded ? (
+        <p
+          className="text-muted text-sm leading-6"
+          data-testid="search-degraded"
+          role="status"
+        >
+          검색 저장소가 잠시 제한되어 시드 문서만으로 답합니다. 문서 목록의 조항 페이지는
+          계속 열 수 있습니다.
+        </p>
       ) : null}
 
       {loading || result ? (

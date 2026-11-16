@@ -44,7 +44,7 @@ export function isStoreUnavailableError(error: unknown): boolean {
       ? String((error as { code?: unknown }).code ?? "")
       : "";
   return (
-    /egress|bandwidth|quota|over[_ ]?limit|overage|project (is )?paused|payment required|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed|Failed to fetch|JWT|PGRST301|PGRST303|statement timeout|57014|53300|522|521|1020/i.test(
+    /egress|bandwidth|quota|over[_ ]?limit|overage|exceed[_ ]?\w*_?quota|402|restricted|Fair Use|read-only transaction|cannot execute .+ in a read-only|project (is )?paused|payment required|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed|Failed to fetch|JWT|PGRST301|PGRST303|statement timeout|57014|53300|522|521|540|1020/i.test(
       `${code} ${message}`,
     )
   );

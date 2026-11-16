@@ -1,4 +1,5 @@
 import type { AppStore } from "@/lib/db/types";
+import { isStoreUnavailableError } from "@/lib/db/supabase-errors";
 import { DEFAULT_GLOBAL_DAILY, DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 import { hashIp } from "@/lib/pipeline/hasher";
 
@@ -40,8 +41,16 @@ export async function gateSearch(opts: {
 export async function enforceRateLimit(store: AppStore, ip: string): Promise<void> {
   const { ipDaily, globalDaily } = rateLimitConfig();
   const day = new Date().toISOString().slice(0, 10);
-  const ipCount = await store.incrementRateLimit(`ip:${hashIp(ip)}`, day);
-  const globalCount = await store.incrementRateLimit("global", day);
+  let ipCount: number;
+  let globalCount: number;
+  try {
+    ipCount = await store.incrementRateLimit(`ip:${hashIp(ip)}`, day);
+    globalCount = await store.incrementRateLimit("global", day);
+  } catch (error) {
+    // Read-only / restricted projects still need search; skip metering.
+    if (isStoreUnavailableError(error)) return;
+    throw error;
+  }
   if (ipCount > ipDaily) {
     throw new RateLimitError(`IP당 일일 한도(${ipDaily}건)를 초과했습니다.`);
   }

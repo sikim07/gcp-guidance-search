@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 import {
   isMissingRelation,
+  isStoreUnavailableError,
   mapRevalidationLogRows,
   throwUnlessMissingRelation,
 } from "@/lib/db/supabase-errors";
@@ -80,6 +81,23 @@ describe("mapRevalidationLogRows", () => {
         createdAt: "2026-09-18T01:00:00.000Z",
       },
     ]);
+  });
+});
+
+describe("isStoreUnavailableError", () => {
+  it("recognizes egress Fair Use and read-only restrictions", () => {
+    expect(
+      isStoreUnavailableError({
+        message:
+          "Service for this project is restricted due to the following violations: exceed_egress_quota",
+      }),
+    ).toBe(true);
+    expect(
+      isStoreUnavailableError({
+        message: "cannot execute INSERT in a read-only transaction",
+      }),
+    ).toBe(true);
+    expect(isStoreUnavailableError(new Error("permission denied"))).toBe(false);
   });
 });
 

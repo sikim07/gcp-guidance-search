@@ -176,6 +176,8 @@ export type Passage = {
 };
 
 export type SearchResponse = {
+  /** True when Supabase was unavailable and the seed corpus answered instead. */
+  degraded?: boolean;
   answer: string;
   sources: AnswerSource[];
   passages: Passage[];

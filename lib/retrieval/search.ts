@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { isStoreUnavailableError } from "@/lib/db/supabase-errors";
 import type { AppStore } from "@/lib/db/types";
 import { sha256 } from "@/lib/pipeline/hasher";
 import { embedTexts } from "@/lib/pipeline/embed";
@@ -55,20 +56,24 @@ export async function hitCachedSearch(
   cached: QueryCacheRecord,
 ): Promise<SearchResponse> {
   const started = Date.now();
-  await store.bumpCacheHit(cached.queryHash);
   const searchLogId = randomUUID();
-  await store.addSearchLog({
-    id: searchLogId,
-    query,
-    normalizedQuery: normalizeQuery(query),
-    ipHash,
-    cacheHit: true,
-    latencyMs: Date.now() - started,
-    similarityMs: 0,
-    topChunkIds: [],
-    answer: cached.answer,
-    createdAt: new Date().toISOString(),
-  });
+  try {
+    await store.bumpCacheHit(cached.queryHash);
+    await store.addSearchLog({
+      id: searchLogId,
+      query,
+      normalizedQuery: normalizeQuery(query),
+      ipHash,
+      cacheHit: true,
+      latencyMs: Date.now() - started,
+      similarityMs: 0,
+      topChunkIds: [],
+      answer: cached.answer,
+      createdAt: new Date().toISOString(),
+    });
+  } catch (error) {
+    if (!isStoreUnavailableError(error)) throw error;
+  }
   return {
     answer: readableText(cached.answer),
     sources: isUngroundedAnswer(cached.answer) ? [] : cached.sources,
@@ -167,28 +172,32 @@ export async function searchGuidelines(
   );
   const passages = isUngroundedAnswer(answer) ? [] : toPassages(retrieved);
   const searchLogId = randomUUID();
-  await store.addSearchLog({
-    id: searchLogId,
-    query,
-    normalizedQuery: normalized,
-    ipHash,
-    cacheHit: false,
-    latencyMs: Date.now() - started,
-    similarityMs,
-    topChunkIds: ranked.map((r) => r.item.chunk.id),
-    answer,
-    createdAt: new Date().toISOString(),
-  });
-  await store.putQueryCache({
-    queryHash: sha256(cacheKey),
-    normalizedQuery: cacheKey,
-    embedding: queryEmbedding ?? [],
-    answer,
-    sources,
-    passages,
-    expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(),
-    hitCount: 0,
-  });
+  try {
+    await store.addSearchLog({
+      id: searchLogId,
+      query,
+      normalizedQuery: normalized,
+      ipHash,
+      cacheHit: false,
+      latencyMs: Date.now() - started,
+      similarityMs,
+      topChunkIds: ranked.map((r) => r.item.chunk.id),
+      answer,
+      createdAt: new Date().toISOString(),
+    });
+    await store.putQueryCache({
+      queryHash: sha256(cacheKey),
+      normalizedQuery: cacheKey,
+      embedding: queryEmbedding ?? [],
+      answer,
+      sources,
+      passages,
+      expiresAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 7).toISOString(),
+      hitCount: 0,
+    });
+  } catch (error) {
+    if (!isStoreUnavailableError(error)) throw error;
+  }
   return { answer, sources, passages, cacheHit: false, searchLogId };
 }
 

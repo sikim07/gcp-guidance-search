@@ -1,6 +1,8 @@
 import { z } from "zod";
+import { getFallbackStore } from "@/lib/db/fallback-store";
 import { getStore } from "@/lib/db/store";
 import { isStoreUnavailableError } from "@/lib/db/supabase-errors";
+import type { AppStore } from "@/lib/db/types";
 import { clientIp, enforceRateLimit, RateLimitError } from "@/lib/cost/rate-limit";
 import { hashIp } from "@/lib/pipeline/hasher";
 import {
@@ -8,25 +10,47 @@ import {
   peekExactSearchCache,
   searchGuidelines,
 } from "@/lib/retrieval/search";
+import type { SearchResponse } from "@/lib/types";
 
 const Body = z.object({
   query: z.string().trim().min(2).max(500),
   scope: z.enum(["all", "domestic", "fda"]).optional(),
 });
 
+async function runSearch(
+  store: AppStore,
+  query: string,
+  scope: "all" | "domestic" | "fda",
+  ip: string,
+): Promise<SearchResponse> {
+  const cached = await peekExactSearchCache(store, query, scope);
+  if (cached) {
+    return hitCachedSearch(store, query, hashIp(ip), cached);
+  }
+  await enforceRateLimit(store, ip);
+  return searchGuidelines(store, query, hashIp(ip), scope);
+}
+
 export async function POST(request: Request) {
   try {
     const json: unknown = await request.json();
     const { query, scope = "all" } = Body.parse(json);
-    const store = getStore();
     const ip = clientIp(request.headers);
-    const cached = await peekExactSearchCache(store, query, scope);
-    if (cached) {
-      return Response.json(await hitCachedSearch(store, query, hashIp(ip), cached));
+    try {
+      const result = await runSearch(getStore(), query, scope, ip);
+      return Response.json(result);
+    } catch (error) {
+      if (error instanceof RateLimitError || error instanceof z.ZodError) {
+        throw error;
+      }
+      if (!isStoreUnavailableError(error)) throw error;
+      const fallback = await getFallbackStore();
+      const result = await runSearch(fallback, query, scope, ip);
+      return Response.json({
+        ...result,
+        degraded: true,
+      } satisfies SearchResponse);
     }
-    await enforceRateLimit(store, ip);
-    const result = await searchGuidelines(store, query, hashIp(ip), scope);
-    return Response.json(result);
   } catch (error) {
     if (error instanceof RateLimitError) {
       return Response.json({ error: error.message }, { status: 429 });
