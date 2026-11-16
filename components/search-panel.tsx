@@ -742,30 +742,44 @@ function AnswerCard({
                   </Tabs.Tab>
                 </Tabs.List>
               </Tabs.ListContainer>
-              <Button
-                size="sm"
-                variant="outline"
-                className={`translate-toggle shrink-0 ${canTranslate ? "" : "invisible"}`}
-                data-testid="toggle-translation"
-                isDisabled={!canTranslate}
-                aria-busy={translating}
-                onPress={() => void toggleTranslation()}
-              >
-                <StableLabel sizer="한국어로 보기">
-                  {translating
-                    ? "번역하는 중"
-                    : showKorean
-                      ? "원문 보기"
-                      : "한국어로 보기"}
-                </StableLabel>
-              </Button>
+              {canTranslate ? (
+                <Button
+                  size="sm"
+                  variant="outline"
+                  className="translate-toggle shrink-0"
+                  data-testid="toggle-translation"
+                  aria-busy={translating}
+                  onPress={() => void toggleTranslation()}
+                >
+                  <StableLabel sizer="한국어로 보기">
+                    {translating
+                      ? "번역하는 중"
+                      : showKorean
+                        ? "원문 보기"
+                        : "한국어로 보기"}
+                  </StableLabel>
+                </Button>
+              ) : (
+                <span
+                  className="translate-toggle shrink-0 invisible"
+                  aria-hidden="true"
+                />
+              )}
             </div>
-            <Tabs.Panel className="pt-5" id="answer">
+            <Tabs.Panel
+              className="result-tab-panel pt-5"
+              id="answer"
+              aria-label="검색 답변"
+            >
               <p className="clause-body text-sm leading-7 whitespace-pre-wrap sm:text-[15px]">
                 {showKorean && translatedAnswer ? translatedAnswer : result.answer}
               </p>
             </Tabs.Panel>
-            <Tabs.Panel className="pt-5" id="original">
+            <Tabs.Panel
+              className="result-tab-panel pt-5"
+              id="original"
+              aria-label="근거 원문"
+            >
               {translating ? (
                 <div className="min-h-52 space-y-3">
                   <Skeleton className="h-4 w-full rounded-lg" />
@@ -804,9 +818,10 @@ function AnswerCard({
               size="sm"
               variant="outline"
               data-testid="copy-citations"
+              aria-label={copied ? "인용 복사됨" : "인용 복사"}
               onPress={() => void copyCitations()}
             >
-              <Copy className="size-3.5" />
+              <Copy className="size-3.5" aria-hidden />
               {copied ? "복사됨" : "인용 복사"}
             </Button>
           ) : null}
@@ -842,7 +857,7 @@ function AnswerCard({
               isDisabled={Boolean(feedbackSent) || feedbackBusy}
               onPress={() => void sendFeedback("up")}
             >
-              <ThumbsUp className="size-4" /> 도움됨
+              <ThumbsUp className="size-4" aria-hidden /> 도움됨
             </Button>
             <Button
               size="sm"
@@ -852,7 +867,7 @@ function AnswerCard({
               isDisabled={Boolean(feedbackSent) || feedbackBusy}
               onPress={() => setShowDownForm(true)}
             >
-              <ThumbsDown className="size-4" /> 도움되지 않음
+              <ThumbsDown className="size-4" aria-hidden /> 도움되지 않음
             </Button>
           </div>
           {showDownForm && !feedbackSent ? (

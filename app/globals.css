@@ -182,6 +182,17 @@ body {
   min-height: 20rem;
 }
 
+/* React Aria TabPanel is focusable; show where Tab landed. */
+.result-tab-panel:focus {
+  outline: none;
+}
+
+.result-tab-panel:focus-visible {
+  border-radius: 0.75rem;
+  outline: 2px solid color-mix(in oklab, var(--fda) 75%, transparent);
+  outline-offset: 4px;
+}
+
 .result-slot {
   display: grid;
   grid-template-rows: 0fr;
