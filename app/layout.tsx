@@ -77,26 +77,28 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const adsClient = adsenseClientId();
+  // Always load with the site publisher ID so AdSense site preview / Auto ads
+  // can detect placements. Slot env vars only affect manual <ins> units.
+  const adsClient = adsenseClientId() ?? ADSENSE_PUBLISHER_ID;
   return (
     <html
       lang="ko"
       className={`${sans.variable} bg-paper h-full antialiased`}
     >
+      <head>
+        <Script
+          id="adsense"
+          async
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsClient}`}
+          crossOrigin="anonymous"
+          strategy="beforeInteractive"
+        />
+      </head>
       <body className="bg-paper text-ink h-full font-sans">
         <script
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
-        {adsClient ? (
-          <Script
-            id="adsense"
-            async
-            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsClient}`}
-            crossOrigin="anonymous"
-            strategy="afterInteractive"
-          />
-        ) : null}
         <div className="app-chrome">
           <SiteHeader />
           <div className="app-frame">
