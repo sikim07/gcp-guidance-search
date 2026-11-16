@@ -39,6 +39,8 @@ export function RetryNotice({
         {onRetry ? (
           <Button
             size="sm"
+            variant="secondary"
+            className="retry-action"
             isPending={busy}
             data-testid="retry-action"
             onPress={onRetry}

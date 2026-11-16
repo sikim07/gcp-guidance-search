@@ -388,10 +388,10 @@ export function SearchPanel() {
                       key={item.id}
                       type="button"
                       size="sm"
-                      variant={active ? "primary" : "secondary"}
+                      variant="secondary"
                       aria-pressed={active}
                       isDisabled={loading}
-                      className="preset-chip"
+                      className={`preset-chip chip-scope${active ? " is-active" : ""}`}
                       data-testid={`scope-${item.id}`}
                       onPress={() => setScope(item.id)}
                     >
@@ -415,10 +415,10 @@ export function SearchPanel() {
                       key={preset.id}
                       type="button"
                       size="sm"
-                      variant={active ? "primary" : "secondary"}
+                      variant="secondary"
                       isDisabled={loading || active}
                       aria-busy={searchingThis}
-                      className="preset-chip gap-2"
+                      className={`preset-chip chip-preset gap-2${active ? " is-active" : ""}`}
                       data-testid={`preset-${preset.id}`}
                       data-busy={searchingThis ? "true" : "false"}
                       onPress={() => void runSearch(preset.query)}
@@ -440,7 +440,7 @@ export function SearchPanel() {
                         type="button"
                         size="sm"
                         variant="ghost"
-                        className="preset-chip min-w-0 gap-2"
+                        className="preset-chip chip-recent min-w-0 gap-2"
                         isDisabled={loading}
                         aria-busy={loading && item === query}
                         onPress={() => void runSearch(item)}

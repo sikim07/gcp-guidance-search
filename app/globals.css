@@ -150,6 +150,61 @@ body {
 
 .search-submit {
   justify-content: center;
+  background: var(--seal) !important;
+  color: var(--accent-foreground) !important;
+  border-color: transparent !important;
+}
+
+.search-submit:hover {
+  background: color-mix(in oklab, var(--seal) 88%, #000) !important;
+}
+
+.search-submit[data-disabled="true"],
+.search-submit:disabled {
+  opacity: 0.55;
+}
+
+/* Role-tinted chips: same paper palette, different hue so groups scan apart. */
+.chip-scope {
+  background: color-mix(in oklab, var(--seal) 9%, var(--sheet)) !important;
+  color: color-mix(in oklab, var(--seal) 72%, var(--ink)) !important;
+  border: 1px solid color-mix(in oklab, var(--seal) 24%, var(--rule)) !important;
+}
+
+.chip-scope.is-active {
+  background: color-mix(in oklab, var(--seal) 18%, var(--sheet)) !important;
+  color: var(--seal) !important;
+  border-color: color-mix(in oklab, var(--seal) 45%, var(--rule)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--seal) 25%, transparent);
+}
+
+.chip-preset {
+  background: color-mix(in oklab, var(--fda) 8%, var(--sheet)) !important;
+  color: color-mix(in oklab, var(--fda) 70%, var(--ink)) !important;
+  border: 1px solid color-mix(in oklab, var(--fda) 22%, var(--rule)) !important;
+}
+
+.chip-preset.is-active {
+  background: color-mix(in oklab, var(--fda) 16%, var(--sheet)) !important;
+  color: var(--fda) !important;
+  border-color: color-mix(in oklab, var(--fda) 42%, var(--rule)) !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--fda) 22%, transparent);
+}
+
+.chip-recent {
+  background: color-mix(in oklab, var(--ink) 4%, var(--sheet)) !important;
+  color: color-mix(in oklab, var(--ink) 78%, transparent) !important;
+  border: 1px solid color-mix(in oklab, var(--rule) 80%, transparent) !important;
+}
+
+.retry-action {
+  background: color-mix(in oklab, var(--seal) 10%, var(--sheet)) !important;
+  color: var(--seal) !important;
+  border: 1px solid color-mix(in oklab, var(--seal) 35%, var(--rule)) !important;
+}
+
+.retry-action:hover {
+  background: color-mix(in oklab, var(--seal) 16%, var(--sheet)) !important;
 }
 
 .translate-toggle {

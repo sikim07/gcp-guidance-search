@@ -47,7 +47,7 @@ function SearchSkeleton() {
                 {PRESET_QUERIES.map((preset) => (
                   <SizedPulse
                     key={preset.id}
-                    className="button button--sm button--secondary preset-chip"
+                    className="button button--sm button--secondary preset-chip chip-preset"
                   >
                     {preset.label}
                   </SizedPulse>
