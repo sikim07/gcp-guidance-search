@@ -1,8 +1,17 @@
 import { DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 
-export type SearchFailureKind = "network" | "limit" | "invalid" | "server";
+export type SearchFailureKind =
+  | "network"
+  | "limit"
+  | "invalid"
+  | "unavailable"
+  | "server";
 
-export function classifySearchFailure(status?: number): SearchFailureKind {
+export function classifySearchFailure(
+  status?: number,
+  code?: string | null,
+): SearchFailureKind {
+  if (code === "store_unavailable" || status === 503) return "unavailable";
   if (!status) return "network";
   if (status === 429) return "limit";
   if (status === 400) return "invalid";
@@ -16,6 +25,7 @@ export function searchFailureCopy(
   title: string;
   detail: string;
   retry: boolean;
+  documentsHref?: string;
 } {
   if (kind === "network") {
     return {
@@ -38,6 +48,16 @@ export function searchFailureCopy(
       title: "질문을 조금 더 적어 주세요",
       detail: fallback ?? "두 글자 이상이면 검색할 수 있습니다.",
       retry: false,
+    };
+  }
+  if (kind === "unavailable") {
+    return {
+      title: "검색 저장소를 잠시 쓸 수 없습니다",
+      detail:
+        fallback ??
+        "사용량 한도나 연결 문제일 수 있습니다. 잠시 후 다시 시도하거나, 문서 목록에서 조항을 직접 열어 보세요.",
+      retry: true,
+      documentsHref: "/documents",
     };
   }
   return {

@@ -51,6 +51,8 @@ import {
 import { DEFAULT_IP_DAILY } from "@/lib/cost/limits";
 import { detectPassageLanguage, needsEnglishTranslation } from "@/lib/llm/translate";
 import { formatCitations } from "@/lib/retrieval/cite";
+import type { SearchScope } from "@/lib/retrieval/rank";
+import { SEARCH_SCOPES } from "@/lib/search/scopes";
 import { normalizeQuery } from "@/lib/utils";
 import type { SearchResponse } from "@/lib/types";
 
@@ -65,6 +67,7 @@ export function SearchPanel() {
   const query = draft.query;
   const result = draft.result;
   const tab = draft.tab;
+  const scope = draft.scope;
   const translations = draft.translations;
   const translatedAnswer = draft.translatedAnswer;
   const showKorean = draft.showKorean;
@@ -95,6 +98,10 @@ export function SearchPanel() {
   function setTab(next: SetStateAction<Tab>) {
     const value = typeof next === "function" ? next(getDraftSnapshot().tab) : next;
     patchStoredDraft({ tab: value });
+  }
+
+  function setScope(next: SearchScope) {
+    patchStoredDraft({ scope: next });
   }
   const canTranslate = useMemo(
     () =>
@@ -155,11 +162,17 @@ export function SearchPanel() {
       const response = await fetch("/api/search", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ query: trimmed }),
+        body: JSON.stringify({
+          query: trimmed,
+          scope: getDraftSnapshot().scope,
+        }),
       });
-      const body = (await response.json()) as SearchResponse & { error?: string };
+      const body = (await response.json()) as SearchResponse & {
+        error?: string;
+        code?: string;
+      };
       if (!response.ok) {
-        setErrorKind(classifySearchFailure(response.status));
+        setErrorKind(classifySearchFailure(response.status, body.code));
         setError(body.error ?? "검색에 실패했습니다.");
         patchStoredDraft({
           result: null,
@@ -344,6 +357,36 @@ export function SearchPanel() {
               />
             </TextField>
             <div>
+              <p className="text-muted mb-3 text-xs tracking-wide">검색 범위</p>
+              <div
+                className="flex flex-wrap gap-2"
+                aria-label="검색 범위"
+                data-testid="search-scope"
+              >
+                {SEARCH_SCOPES.map((item) => {
+                  const active = item.id === scope;
+                  return (
+                    <Button
+                      key={item.id}
+                      type="button"
+                      size="sm"
+                      variant={active ? "primary" : "secondary"}
+                      aria-pressed={active}
+                      isDisabled={loading}
+                      className="preset-chip"
+                      data-testid={`scope-${item.id}`}
+                      onPress={() => setScope(item.id)}
+                    >
+                      {item.label}
+                    </Button>
+                  );
+                })}
+              </div>
+              <p className="text-muted mt-2 text-xs leading-5">
+                {SEARCH_SCOPES.find((item) => item.id === scope)?.hint}
+              </p>
+            </div>
+            <div>
               <p className="text-muted mb-3 text-xs tracking-wide">자주 찾는 질문</p>
               <div className="flex flex-wrap gap-3" data-testid="preset-list">
                 {PRESET_QUERIES.map((preset) => {
@@ -427,7 +470,11 @@ export function SearchPanel() {
         <RetryNotice
           {...searchFailureCopy(errorKind, error ?? undefined)}
           busy={loading}
-          pulseBar={errorKind === "network" || errorKind === "server"}
+          pulseBar={
+            errorKind === "network" ||
+            errorKind === "server" ||
+            errorKind === "unavailable"
+          }
           onRetry={
             searchFailureCopy(errorKind).retry ? () => void runSearch(query) : undefined
           }

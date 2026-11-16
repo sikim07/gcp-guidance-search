@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { getStore } from "@/lib/db/store";
+import { isStoreUnavailableError } from "@/lib/db/supabase-errors";
 import { clientIp, enforceRateLimit, RateLimitError } from "@/lib/cost/rate-limit";
 import { hashIp } from "@/lib/pipeline/hasher";
 import {
@@ -17,7 +18,7 @@ export async function POST(request: Request) {
   try {
     const json: unknown = await request.json();
     const { query, scope = "all" } = Body.parse(json);
-    const store = await getStore();
+    const store = getStore();
     const ip = clientIp(request.headers);
     const cached = await peekExactSearchCache(store, query, scope);
     if (cached) {
@@ -34,6 +35,16 @@ export async function POST(request: Request) {
       return Response.json(
         { error: "질문을 두 글자 이상 입력해 주세요." },
         { status: 400 },
+      );
+    }
+    if (isStoreUnavailableError(error)) {
+      return Response.json(
+        {
+          error:
+            "검색 저장소를 잠시 쓸 수 없습니다. 문서 목록에서 조항을 직접 열어 보세요.",
+          code: "store_unavailable",
+        },
+        { status: 503 },
       );
     }
     const message = error instanceof Error ? error.message : "search failed";

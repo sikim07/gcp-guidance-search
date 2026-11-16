@@ -80,12 +80,14 @@ describe("search draft storage", () => {
       query: "전자기록 감사추적은?",
       result,
       tab: "original",
+      scope: "domestic",
       translations: { c1: "감사추적" },
       translatedAnswer: "감사추적을 남겨야 합니다.",
       showKorean: true,
     });
     expect(saved.query).toBe("전자기록 감사추적은?");
     expect(saved.tab).toBe("original");
+    expect(saved.scope).toBe("domestic");
     expect(getDraftSnapshot()).toEqual(saved);
     expect(getDraftSnapshot().result?.answer).toBe("감사추적을 남겨야 합니다.");
     expect(session.get(DRAFT_STORAGE_KEY)).toBeTruthy();

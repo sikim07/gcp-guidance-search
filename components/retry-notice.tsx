@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { Button } from "@heroui/react";
 
 export function RetryNotice({
@@ -9,6 +10,7 @@ export function RetryNotice({
   retryLabel = "다시 시도",
   busy = false,
   pulseBar = false,
+  documentsHref,
   className,
 }: {
   title: string;
@@ -17,6 +19,7 @@ export function RetryNotice({
   retryLabel?: string;
   busy?: boolean;
   pulseBar?: boolean;
+  documentsHref?: string;
   className?: string;
 }) {
   return (
@@ -32,17 +35,27 @@ export function RetryNotice({
       />
       <p className="text-ink text-sm font-medium">{title}</p>
       <p className="text-muted mt-1 text-sm leading-6">{detail}</p>
-      {onRetry ? (
-        <Button
-          className="mt-3"
-          size="sm"
-          isPending={busy}
-          data-testid="retry-action"
-          onPress={onRetry}
-        >
-          {retryLabel}
-        </Button>
-      ) : null}
+      <div className="mt-3 flex flex-wrap items-center gap-3">
+        {onRetry ? (
+          <Button
+            size="sm"
+            isPending={busy}
+            data-testid="retry-action"
+            onPress={onRetry}
+          >
+            {retryLabel}
+          </Button>
+        ) : null}
+        {documentsHref ? (
+          <Link
+            href={documentsHref}
+            className="text-fda text-sm underline underline-offset-4"
+            data-testid="retry-documents"
+          >
+            문서 목록 열기
+          </Link>
+        ) : null}
+      </div>
     </div>
   );
 }

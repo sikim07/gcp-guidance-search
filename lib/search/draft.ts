@@ -1,3 +1,5 @@
+import type { SearchScope } from "@/lib/retrieval/rank";
+import { parseSearchScope } from "@/lib/search/scopes";
 import type { Passage, SearchResponse } from "@/lib/types";
 
 export const DRAFT_STORAGE_KEY = "gcp-search-draft";
@@ -8,6 +10,7 @@ export type SearchDraft = {
   query: string;
   result: SearchResponse | null;
   tab: SearchTab;
+  scope: SearchScope;
   translations: Record<string, string> | null;
   translatedAnswer: string | null;
   showKorean: boolean;
@@ -17,6 +20,7 @@ export const EMPTY_SEARCH_DRAFT: SearchDraft = {
   query: "",
   result: null,
   tab: "answer",
+  scope: "all",
   translations: null,
   translatedAnswer: null,
   showKorean: false,
@@ -35,6 +39,7 @@ export function parseStoredDraft(raw: string | null): SearchDraft {
       query: row.query,
       result: isSearchResponse(row.result) ? row.result : null,
       tab: row.tab === "original" ? "original" : "answer",
+      scope: parseSearchScope(row.scope),
       translations: isStringRecord(row.translations) ? row.translations : null,
       translatedAnswer:
         typeof row.translatedAnswer === "string" ? row.translatedAnswer : null,

@@ -31,6 +31,25 @@ export function asStoreError(error: unknown): Error {
   return new Error(String(error));
 }
 
+/** Quota, pause, network, or auth failures that make the store unusable for search. */
+export function isStoreUnavailableError(error: unknown): boolean {
+  const message =
+    error instanceof Error
+      ? error.message
+      : error && typeof error === "object" && "message" in error
+        ? String((error as { message?: unknown }).message ?? "")
+        : String(error ?? "");
+  const code =
+    error && typeof error === "object" && "code" in error
+      ? String((error as { code?: unknown }).code ?? "")
+      : "";
+  return (
+    /egress|bandwidth|quota|over[_ ]?limit|overage|project (is )?paused|payment required|ENOTFOUND|ECONNREFUSED|ETIMEDOUT|fetch failed|Failed to fetch|JWT|PGRST301|PGRST303|statement timeout|57014|53300|522|521|1020/i.test(
+      `${code} ${message}`,
+    )
+  );
+}
+
 export function throwUnlessMissingRelation(
   error: StoreError | null | undefined,
 ): void {
