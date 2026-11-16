@@ -1,6 +1,9 @@
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { recordRevalidation } from "@/lib/cache/revalidate-log";
-import { collectRevalidatePaths } from "@/lib/cache/revalidate-pages";
+import {
+  PUBLIC_CATALOG_TAG,
+  collectRevalidatePaths,
+} from "@/lib/cache/revalidate-pages";
 
 export async function revalidateGuidelinePages(input: {
   reason: string;
@@ -8,6 +11,7 @@ export async function revalidateGuidelinePages(input: {
   statuteIds: string[];
 }): Promise<{ paths: string[] }> {
   const targets = collectRevalidatePaths(input);
+  revalidateTag(PUBLIC_CATALOG_TAG, { expire: 0 });
   for (const target of targets) {
     revalidatePath(target.path, target.type);
   }

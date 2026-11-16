@@ -1,4 +1,7 @@
-export const PAGE_REVALIDATE_SECONDS = 3600;
+/** One day: guideline/statute pages barely change; cron still busts via revalidatePath. */
+export const PAGE_REVALIDATE_SECONDS = 86_400;
+
+export const PUBLIC_CATALOG_TAG = "public-catalog";
 
 export type RevalidateTarget = {
   path: string;

@@ -7,9 +7,13 @@ import {
 } from "@/lib/text/change-copy";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
-import { getStore } from "@/lib/db/store";
-
-export const revalidate = 3600;
+import {
+  listCachedChangeLogs,
+  listCachedDocuments,
+  listCachedStatutes,
+} from "@/lib/cache/public-catalog";
+/** Keep in sync with `PAGE_REVALIDATE_SECONDS` — Next requires a literal. */
+export const revalidate = 86_400;
 
 export const metadata: Metadata = {
   title: "개정 피드",
@@ -19,10 +23,12 @@ export const metadata: Metadata = {
 };
 
 export default async function UpdatesPage() {
-  const store = await getStore();
-  const logs = publicRevisionFeed(await store.listChangeLogs());
-  const documents = await store.listDocuments();
-  const statutes = await store.listStatutes();
+  const [changeLogs, documents, statutes] = await Promise.all([
+    listCachedChangeLogs(),
+    listCachedDocuments(),
+    listCachedStatutes(),
+  ]);
+  const logs = publicRevisionFeed(changeLogs);
   const byId = new Map(documents.map((d) => [d.id, d]));
   const statutesById = new Map(statutes.map((s) => [s.id, s]));
 

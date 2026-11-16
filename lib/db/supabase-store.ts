@@ -3,6 +3,13 @@ import {
   mapRevalidationLogRows,
   throwUnlessMissingRelation,
 } from "@/lib/db/supabase-errors";
+import {
+  CHUNK_PUBLIC_COLUMNS,
+  CHUNK_SEARCH_COLUMNS,
+  DOCUMENT_VERSION_LIST_COLUMNS,
+  STATUTE_ARTICLE_PUBLIC_COLUMNS,
+  STATUTE_ARTICLE_SEARCH_COLUMNS,
+} from "@/lib/db/select-columns";
 import type { AppStore } from "@/lib/db/types";
 import type {
   ChangeLogRecord,
@@ -82,7 +89,7 @@ export const supabaseStore: AppStore = {
   async listVersions(documentId) {
     const { data, error } = await client()
       .from("document_versions")
-      .select("*")
+      .select(DOCUMENT_VERSION_LIST_COLUMNS)
       .eq("document_id", documentId)
       .order("created_at", { ascending: false });
     if (error) throw error;
@@ -92,7 +99,7 @@ export const supabaseStore: AppStore = {
       versionLabel: row.version_label,
       issuedDate: row.issued_date,
       fileHash: row.file_hash,
-      extractedText: row.extracted_text,
+      extractedText: "",
       parseStatus: row.parse_status,
       diffSummary: row.diff_summary,
       createdAt: row.created_at,
@@ -133,20 +140,10 @@ export const supabaseStore: AppStore = {
     if (error) throw error;
   },
   async currentChunks() {
-    const { data, error } = await client()
-      .from("chunks")
-      .select("*")
-      .eq("is_current", true);
-    if (error) throw error;
-    return (data ?? []).map((row): ChunkRecord => ({
-      id: row.id,
-      versionId: row.version_id,
-      documentId: row.document_id,
-      section: row.section,
-      text: row.text,
-      embedding: row.embedding as number[],
-      isCurrent: row.is_current,
-    }));
+    return listCurrentChunks(CHUNK_PUBLIC_COLUMNS, false);
+  },
+  async currentChunksWithEmbeddings() {
+    return listCurrentChunks(CHUNK_SEARCH_COLUMNS, true);
   },
   async replaceCurrentChunks(documentId, chunks) {
     const sb = client();
@@ -482,12 +479,10 @@ export const supabaseStore: AppStore = {
     if (error) throw error;
   },
   async currentStatuteArticles() {
-    const { data, error } = await client()
-      .from("statute_articles")
-      .select("*")
-      .eq("is_current", true);
-    if (error) throw error;
-    return (data ?? []).map(mapStatuteArticle);
+    return listCurrentStatuteArticles(STATUTE_ARTICLE_PUBLIC_COLUMNS, false);
+  },
+  async currentStatuteArticlesWithEmbeddings() {
+    return listCurrentStatuteArticles(STATUTE_ARTICLE_SEARCH_COLUMNS, true);
   },
   async replaceCurrentStatuteArticles(statuteId, articles) {
     const sb = client();
@@ -579,7 +574,10 @@ function mapStatuteRevision(row: Record<string, unknown>): StatuteRevision {
   };
 }
 
-function mapStatuteArticle(row: Record<string, unknown>): StatuteArticle {
+function mapStatuteArticle(
+  row: Record<string, unknown>,
+  includeEmbedding: boolean,
+): StatuteArticle {
   return {
     id: String(row.id),
     statuteId: String(row.statute_id),
@@ -587,8 +585,42 @@ function mapStatuteArticle(row: Record<string, unknown>): StatuteArticle {
     articleKey: String(row.article_key),
     section: String(row.section),
     text: String(row.text),
-    embedding: row.embedding as number[],
+    embedding: includeEmbedding ? ((row.embedding as number[]) ?? []) : [],
     isCurrent: Boolean(row.is_current),
     kind: (row.kind as StatuteArticle["kind"]) ?? "article",
   };
+}
+
+async function listCurrentChunks(
+  columns: string,
+  includeEmbedding: boolean,
+): Promise<ChunkRecord[]> {
+  const { data, error } = await client()
+    .from("chunks")
+    .select(columns)
+    .eq("is_current", true);
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+  return rows.map((row) => ({
+    id: String(row.id),
+    versionId: String(row.version_id),
+    documentId: String(row.document_id),
+    section: String(row.section),
+    text: String(row.text),
+    embedding: includeEmbedding ? ((row.embedding as number[]) ?? []) : [],
+    isCurrent: Boolean(row.is_current),
+  }));
+}
+
+async function listCurrentStatuteArticles(
+  columns: string,
+  includeEmbedding: boolean,
+): Promise<StatuteArticle[]> {
+  const { data, error } = await client()
+    .from("statute_articles")
+    .select(columns)
+    .eq("is_current", true);
+  if (error) throw error;
+  const rows = (data ?? []) as unknown as Array<Record<string, unknown>>;
+  return rows.map((row) => mapStatuteArticle(row, includeEmbedding));
 }

@@ -38,6 +38,9 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
     async currentChunks() {
       return snap.chunks.filter((c) => c.isCurrent);
     },
+    async currentChunksWithEmbeddings() {
+      return snap.chunks.filter((c) => c.isCurrent);
+    },
     async replaceCurrentChunks(documentId: string, chunks: ChunkRecord[]) {
       for (const chunk of snap.chunks) {
         if (chunk.documentId === documentId) chunk.isCurrent = false;
@@ -102,6 +105,9 @@ function makeStore(initial?: Partial<StoreSnapshot>): AppStore {
       snap.statuteRevisions.push(row);
     },
     async currentStatuteArticles() {
+      return (snap.statuteArticles ?? []).filter((a) => a.isCurrent);
+    },
+    async currentStatuteArticlesWithEmbeddings() {
       return (snap.statuteArticles ?? []).filter((a) => a.isCurrent);
     },
     async replaceCurrentStatuteArticles(statuteId, articles) {

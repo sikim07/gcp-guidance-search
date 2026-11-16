@@ -108,10 +108,10 @@ export async function searchGuidelines(
   const activeStatuteIds = new Set(
     statutes.filter((s) => s.status === "active").map((s) => s.id),
   );
-  const chunks = (await store.currentChunks()).filter(
+  const chunks = (await store.currentChunksWithEmbeddings()).filter(
     (c) => c.embedding.length > 0 && activeDocIds.has(c.documentId),
   );
-  const articles = (await store.currentStatuteArticles()).filter(
+  const articles = (await store.currentStatuteArticlesWithEmbeddings()).filter(
     (a) => a.embedding.length > 0 && activeStatuteIds.has(a.statuteId),
   );
   const pool: Retrieved[] = filterByScope(

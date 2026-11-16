@@ -105,6 +105,9 @@ export const memoryStore: AppStore = {
     traceStoreRead("currentChunks", rows.length);
     return rows;
   },
+  async currentChunksWithEmbeddings() {
+    return this.currentChunks();
+  },
   async replaceCurrentChunks(documentId: string, chunks: ChunkRecord[]) {
     const snap = await load();
     for (const chunk of snap.chunks) {
@@ -224,6 +227,9 @@ export const memoryStore: AppStore = {
   },
   async currentStatuteArticles() {
     return (await load()).statuteArticles.filter((row) => row.isCurrent);
+  },
+  async currentStatuteArticlesWithEmbeddings() {
+    return this.currentStatuteArticles();
   },
   async replaceCurrentStatuteArticles(statuteId: string, articles: StatuteArticle[]) {
     const snap = await load();

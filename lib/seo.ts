@@ -193,19 +193,32 @@ export function pickPresetSummaries(
   });
 }
 
-export async function clausePoolFromStore(store: AppStore): Promise<ClausePoolItem[]> {
-  const documents = await store.listDocuments();
-  const statutes = await store.listStatutes();
+export async function clausePoolFromCatalog(input: {
+  documents: Array<{ id: string; status: string; title: string }>;
+  statutes: Array<{ id: string; status: string; title: string }>;
+  chunks: Array<{
+    id: string;
+    documentId: string;
+    section: string;
+    text: string;
+  }>;
+  articles: Array<{
+    id: string;
+    statuteId: string;
+    section: string;
+    text: string;
+  }>;
+}): Promise<ClausePoolItem[]> {
   const activeDocs = new Set(
-    documents.filter((row) => row.status === "active").map((row) => row.id),
+    input.documents.filter((row) => row.status === "active").map((row) => row.id),
   );
   const activeStatutes = new Set(
-    statutes.filter((row) => row.status === "active").map((row) => row.id),
+    input.statutes.filter((row) => row.status === "active").map((row) => row.id),
   );
   const pool: ClausePoolItem[] = [];
-  for (const chunk of await store.currentChunks()) {
+  for (const chunk of input.chunks) {
     if (!activeDocs.has(chunk.documentId)) continue;
-    const doc = documents.find((row) => row.id === chunk.documentId);
+    const doc = input.documents.find((row) => row.id === chunk.documentId);
     pool.push({
       id: chunk.id,
       entityId: chunk.documentId,
@@ -215,9 +228,9 @@ export async function clausePoolFromStore(store: AppStore): Promise<ClausePoolIt
       kind: "guideline",
     });
   }
-  for (const article of await store.currentStatuteArticles()) {
+  for (const article of input.articles) {
     if (!activeStatutes.has(article.statuteId)) continue;
-    const statute = statutes.find((row) => row.id === article.statuteId);
+    const statute = input.statutes.find((row) => row.id === article.statuteId);
     pool.push({
       id: article.id,
       entityId: article.statuteId,
@@ -228,4 +241,13 @@ export async function clausePoolFromStore(store: AppStore): Promise<ClausePoolIt
     });
   }
   return pool;
+}
+
+export async function clausePoolFromStore(store: AppStore): Promise<ClausePoolItem[]> {
+  return clausePoolFromCatalog({
+    documents: await store.listDocuments(),
+    statutes: await store.listStatutes(),
+    chunks: await store.currentChunks(),
+    articles: await store.currentStatuteArticles(),
+  });
 }

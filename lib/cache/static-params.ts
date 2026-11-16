@@ -4,7 +4,7 @@ export function isSafeStaticSection(section: string): boolean {
 }
 
 /**
- * Document detail pages stay ISR (`revalidate = 3600`, `dynamicParams = true`)
+ * Document detail pages stay ISR (`PAGE_REVALIDATE_SECONDS`, `dynamicParams = true`)
  * and are listed in sitemap.xml. Prerendering them at build talks to the live
  * store (Supabase) and can abort `next build` on statement timeout.
  */
@@ -13,9 +13,9 @@ export async function documentStaticParams(): Promise<Array<{ id: string }>> {
 }
 
 /**
- * Clause pages stay ISR (`revalidate = 3600`, `dynamicParams = true`) and are
- * listed in sitemap.xml. Prerendering every section at build pulled ~1,000
- * pages and the full embedding table through `currentChunks()`.
+ * Clause pages stay ISR (`PAGE_REVALIDATE_SECONDS`, `dynamicParams = true`) and
+ * are listed in sitemap.xml. Prerendering every section at build pulled ~1,000
+ * pages; public reads use light selects (no embeddings) via the catalog cache.
  */
 export async function clauseStaticParams(): Promise<
   Array<{ id: string; section: string }>

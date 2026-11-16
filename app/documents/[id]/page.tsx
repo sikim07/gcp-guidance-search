@@ -3,11 +3,16 @@ import { notFound } from "next/navigation";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import { ClauseToc } from "@/components/clause-toc";
-import { getStore } from "@/lib/db/store";
+import {
+  listCachedCurrentChunks,
+  listCachedCurrentStatuteArticles,
+} from "@/lib/cache/public-catalog";
 import { documentStaticParams } from "@/lib/cache/static-params";
+import { getStore } from "@/lib/db/store";
 import { humanizeChangeSummary } from "@/lib/text/change-copy";
 
-export const revalidate = 3600;
+/** Keep in sync with `PAGE_REVALIDATE_SECONDS` — Next requires a literal. */
+export const revalidate = 86_400;
 export const dynamicParams = true;
 
 export function generateStaticParams() {
@@ -20,7 +25,7 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const store = await getStore();
+  const store = getStore();
   const doc = await store.getDocument(id);
   const statute = doc ? undefined : await store.getStatute(id);
   const title = doc?.title ?? statute?.title ?? "문서";
@@ -37,13 +42,14 @@ export default async function DocumentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const store = await getStore();
+  const store = getStore();
   const doc = await store.getDocument(id);
   const statute = doc ? undefined : await store.getStatute(id);
   if (!doc && !statute) notFound();
 
   if (statute) {
     const revisions = await store.listStatuteRevisions(statute.id);
+    const articles = await listCachedCurrentStatuteArticles();
     return (
       <div className="space-y-6">
         <div>
@@ -82,7 +88,7 @@ export default async function DocumentDetailPage({
         </ol>
         <ClauseToc
           entityId={statute.id}
-          clauses={(await store.currentStatuteArticles())
+          clauses={articles
             .filter((row) => row.statuteId === statute.id && row.isCurrent)
             .map((row) => ({ section: row.section, text: row.text }))}
         />
@@ -92,6 +98,7 @@ export default async function DocumentDetailPage({
 
   if (!doc) notFound();
   const versions = await store.listVersions(id);
+  const chunks = await listCachedCurrentChunks();
 
   return (
     <div className="space-y-6">
@@ -126,7 +133,7 @@ export default async function DocumentDetailPage({
       </ol>
       <ClauseToc
         entityId={doc.id}
-        clauses={(await store.currentChunks())
+        clauses={chunks
           .filter((row) => row.documentId === doc.id && row.isCurrent)
           .map((row) => ({ section: row.section, text: row.text }))}
       />

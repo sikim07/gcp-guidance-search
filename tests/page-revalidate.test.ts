@@ -5,8 +5,21 @@ import {
 } from "@/lib/cache/revalidate-pages";
 
 describe("ISR page revalidation", () => {
-  it("uses a one-hour revalidate window", () => {
-    expect(PAGE_REVALIDATE_SECONDS).toBe(3600);
+  it("uses a one-day revalidate window matching page literals", async () => {
+    expect(PAGE_REVALIDATE_SECONDS).toBe(86_400);
+    const { readFile } = await import("node:fs/promises");
+    const pages = [
+      "app/page.tsx",
+      "app/documents/page.tsx",
+      "app/documents/[id]/page.tsx",
+      "app/documents/[id]/[section]/page.tsx",
+      "app/updates/page.tsx",
+      "app/sitemap.ts",
+    ];
+    for (const file of pages) {
+      const source = await readFile(file, "utf8");
+      expect(source).toMatch(/export const revalidate = 86_400/);
+    }
   });
 
   it("busts home, feed, catalog, sitemap, and the changed document trees", () => {

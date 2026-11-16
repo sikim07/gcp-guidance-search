@@ -209,7 +209,9 @@ async function writeNewVersion(
   const versionId = randomUUID();
   const clauses = chunkByClause(text, catalog.title);
   const previousChunks = existingId
-    ? (await store.currentChunks()).filter((c) => c.documentId === existingId)
+    ? (await store.currentChunksWithEmbeddings()).filter(
+        (c) => c.documentId === existingId,
+      )
     : [];
   const previousBySection = new Map(previousChunks.map((c) => [c.section, c]));
 

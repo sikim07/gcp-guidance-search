@@ -2,9 +2,12 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
-import { getStore } from "@/lib/db/store";
-
-export const revalidate = 3600;
+import {
+  listCachedDocuments,
+  listCachedStatutes,
+} from "@/lib/cache/public-catalog";
+/** Keep in sync with `PAGE_REVALIDATE_SECONDS` — Next requires a literal. */
+export const revalidate = 86_400;
 
 export const metadata: Metadata = {
   title: "문서 카탈로그",
@@ -14,9 +17,10 @@ export const metadata: Metadata = {
 };
 
 export default async function DocumentsPage() {
-  const store = await getStore();
-  const documents = await store.listDocuments();
-  const statutes = await store.listStatutes();
+  const [documents, statutes] = await Promise.all([
+    listCachedDocuments(),
+    listCachedStatutes(),
+  ]);
 
   return (
     <div className="space-y-6">

@@ -1,6 +1,11 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
+import {
+  listCachedCurrentChunks,
+  listCachedCurrentStatuteArticles,
+} from "@/lib/cache/public-catalog";
+import { clauseStaticParams } from "@/lib/cache/static-params";
 import { getStore } from "@/lib/db/store";
 import {
   clauseHref,
@@ -12,9 +17,9 @@ import { SITE_NAME } from "@/lib/site";
 import { humanizeChangeSummary } from "@/lib/text/change-copy";
 import { readableText } from "@/lib/text/readable";
 import { sourceLabel } from "@/lib/utils";
-import { clauseStaticParams } from "@/lib/cache/static-params";
 
-export const revalidate = 3600;
+/** Keep in sync with `PAGE_REVALIDATE_SECONDS` — Next requires a literal. */
+export const revalidate = 86_400;
 export const dynamicParams = true;
 
 export function generateStaticParams() {
@@ -23,10 +28,10 @@ export function generateStaticParams() {
 
 async function loadClause(id: string, rawSection: string) {
   const section = decodeClauseSection(rawSection);
-  const store = await getStore();
+  const store = getStore();
   const doc = await store.getDocument(id);
   if (doc) {
-    const chunk = (await store.currentChunks()).find(
+    const chunk = (await listCachedCurrentChunks()).find(
       (row) => row.documentId === id && row.section === section,
     );
     if (!chunk) return null;
@@ -52,7 +57,7 @@ async function loadClause(id: string, rawSection: string) {
   }
   const statute = await store.getStatute(id);
   if (!statute) return null;
-  const article = (await store.currentStatuteArticles()).find(
+  const article = (await listCachedCurrentStatuteArticles()).find(
     (row) => row.statuteId === id && row.section === section,
   );
   if (!article) return null;

@@ -88,7 +88,9 @@ export async function ingestParsedStatute(
   const revisionId = randomUUID();
   const expanded = expandArticles(input.articles);
   const previousArticles = input.existing
-    ? (await store.currentStatuteArticles()).filter((row) => row.statuteId === statuteId)
+    ? (await store.currentStatuteArticlesWithEmbeddings()).filter(
+        (row) => row.statuteId === statuteId,
+      )
     : [];
   const previousByKey = new Map(previousArticles.map((row) => [row.articleKey, row]));
   const changes: SectionChange[] = diffArticles(previousArticles, expanded);

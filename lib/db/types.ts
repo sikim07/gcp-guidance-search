@@ -37,7 +37,10 @@ export interface AppStore {
   listVersions(documentId: string): Promise<DocumentVersion[]>;
   getVersion(id: string): Promise<DocumentVersion | undefined>;
   addVersion(version: DocumentVersion): Promise<void>;
+  /** Public/catalog read — embeddings may be empty to cut egress. */
   currentChunks(): Promise<ChunkRecord[]>;
+  /** Search + revision reuse — always includes embeddings when present. */
+  currentChunksWithEmbeddings(): Promise<ChunkRecord[]>;
   replaceCurrentChunks(documentId: string, chunks: ChunkRecord[]): Promise<void>;
   addChunks(chunks: ChunkRecord[]): Promise<void>;
   addChangeLog(log: ChangeLogRecord): Promise<void>;
@@ -60,7 +63,10 @@ export interface AppStore {
   upsertStatute(row: StatuteRecord): Promise<void>;
   listStatuteRevisions(statuteId?: string): Promise<StatuteRevision[]>;
   addStatuteRevision(row: StatuteRevision): Promise<void>;
+  /** Public/catalog read — embeddings may be empty to cut egress. */
   currentStatuteArticles(): Promise<StatuteArticle[]>;
+  /** Search + revision reuse — always includes embeddings when present. */
+  currentStatuteArticlesWithEmbeddings(): Promise<StatuteArticle[]>;
   replaceCurrentStatuteArticles(
     statuteId: string,
     articles: StatuteArticle[],
