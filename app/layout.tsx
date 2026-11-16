@@ -1,10 +1,12 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
+import Script from "next/script";
 import { SiteHeader } from "@/components/site-header";
 import { SiteBottomNav } from "@/components/site-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
 import { OverlayScrollbar } from "@/components/overlay-scrollbar";
+import { adsenseClientId } from "@/lib/ads";
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const sans = Noto_Sans_KR({
@@ -69,7 +71,10 @@ export const viewport: Viewport = {
   viewportFit: "cover",
 };
 
-export default function RootLayout({ children }: LayoutProps<"/">) {
+export default function RootLayout({
+  children,
+}: Readonly<{ children: React.ReactNode }>) {
+  const adsClient = adsenseClientId();
   return (
     <html
       lang="ko"
@@ -80,6 +85,15 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           type="application/ld+json"
           dangerouslySetInnerHTML={{ __html: JSON.stringify(jsonLd) }}
         />
+        {adsClient ? (
+          <Script
+            id="adsense"
+            async
+            src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsClient}`}
+            crossOrigin="anonymous"
+            strategy="afterInteractive"
+          />
+        ) : null}
         <div className="app-chrome">
           <SiteHeader />
           <div className="app-frame">
