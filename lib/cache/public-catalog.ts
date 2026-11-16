@@ -3,7 +3,26 @@ import {
   PAGE_REVALIDATE_SECONDS,
   PUBLIC_CATALOG_TAG,
 } from "@/lib/cache/revalidate-pages";
+import { getFallbackStore } from "@/lib/db/fallback-store";
 import { getStore } from "@/lib/db/store";
+import { isStoreUnavailableError } from "@/lib/db/supabase-errors";
+import type { AppStore } from "@/lib/db/types";
+
+/**
+ * Public pages must survive Supabase Fair Use / egress lockouts during
+ * `next build` prerender and ISR. Prefer the live store; on quota/pause/
+ * network failures, answer from the in-process seed corpus.
+ */
+export async function readPublicStore<T>(
+  run: (store: AppStore) => Promise<T>,
+): Promise<T> {
+  try {
+    return await run(getStore());
+  } catch (error) {
+    if (!isStoreUnavailableError(error)) throw error;
+    return run(await getFallbackStore());
+  }
+}
 
 /**
  * Cache only small catalog tables. Full chunk/article text exceeds Vercel’s
@@ -11,48 +30,52 @@ import { getStore } from "@/lib/db/store";
  * and use document-scoped queries on clause pages instead.
  */
 export const listCachedDocuments = unstable_cache(
-  async () => getStore().listDocuments(),
+  async () => readPublicStore((store) => store.listDocuments()),
   ["public-documents"],
   { revalidate: PAGE_REVALIDATE_SECONDS, tags: [PUBLIC_CATALOG_TAG] },
 );
 
 export const listCachedStatutes = unstable_cache(
-  async () => getStore().listStatutes(),
+  async () => readPublicStore((store) => store.listStatutes()),
   ["public-statutes"],
   { revalidate: PAGE_REVALIDATE_SECONDS, tags: [PUBLIC_CATALOG_TAG] },
 );
 
 export const listCachedChangeLogs = unstable_cache(
-  async () => getStore().listChangeLogs(),
+  async () => readPublicStore((store) => store.listChangeLogs()),
   ["public-change-logs"],
   { revalidate: PAGE_REVALIDATE_SECONDS, tags: [PUBLIC_CATALOG_TAG] },
 );
 
 /** Not Data-Cached — full text can exceed 2MB. Prefer document-scoped helpers. */
 export async function listPublicCurrentChunks() {
-  return getStore().currentChunks();
+  return readPublicStore((store) => store.currentChunks());
 }
 
 export async function listPublicCurrentStatuteArticles() {
-  return getStore().currentStatuteArticles();
+  return readPublicStore((store) => store.currentStatuteArticles());
 }
 
 export const listCachedChunkIndex = unstable_cache(
-  async () => getStore().currentChunkIndex(),
+  async () => readPublicStore((store) => store.currentChunkIndex()),
   ["public-chunk-index"],
   { revalidate: PAGE_REVALIDATE_SECONDS, tags: [PUBLIC_CATALOG_TAG] },
 );
 
 export const listCachedStatuteArticleIndex = unstable_cache(
-  async () => getStore().currentStatuteArticleIndex(),
+  async () => readPublicStore((store) => store.currentStatuteArticleIndex()),
   ["public-statute-article-index"],
   { revalidate: PAGE_REVALIDATE_SECONDS, tags: [PUBLIC_CATALOG_TAG] },
 );
 
 export async function listPublicChunksForDocument(documentId: string) {
-  return getStore().listCurrentChunksByDocument(documentId);
+  return readPublicStore((store) =>
+    store.listCurrentChunksByDocument(documentId),
+  );
 }
 
 export async function listPublicArticlesForStatute(statuteId: string) {
-  return getStore().listCurrentArticlesByStatute(statuteId);
+  return readPublicStore((store) =>
+    store.listCurrentArticlesByStatute(statuteId),
+  );
 }
