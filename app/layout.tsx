@@ -6,7 +6,7 @@ import { SiteHeader } from "@/components/site-header";
 import { SiteBottomNav } from "@/components/site-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
 import { OverlayScrollbar } from "@/components/overlay-scrollbar";
-import { adsenseClientId } from "@/lib/ads";
+import { ADSENSE_PUBLISHER_ID, adsenseClientId } from "@/lib/ads";
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const sans = Noto_Sans_KR({
@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     google: "eQX-mYKL7NbRiG-_s3jBOZlxHkFjDkpN9v-Y_Yot258",
   },
   other: {
-    "google-adsense-account": "ca-pub-9321980978046322",
+    "google-adsense-account": ADSENSE_PUBLISHER_ID,
   },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],

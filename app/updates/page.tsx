@@ -5,6 +5,7 @@ import {
   humanizeChangeSummary,
   publicRevisionFeed,
 } from "@/lib/text/change-copy";
+import { AdSlot } from "@/components/ad-slot";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import {
@@ -76,6 +77,7 @@ export default async function UpdatesPage() {
           })}
         </ol>
       )}
+      <AdSlot placement="updates" />
     </div>
   );
 }
