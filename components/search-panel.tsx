@@ -23,7 +23,6 @@ import {
   TextField,
 } from "@heroui/react";
 import { Copy, ThumbsDown, ThumbsUp, X } from "lucide-react";
-import { AdSlot } from "@/components/ad-slot";
 import { RetryNotice } from "@/components/retry-notice";
 import {
   classifySearchFailure,
@@ -550,7 +549,6 @@ export function SearchPanel() {
         </ResultSlot>
       ) : null}
 
-      {result || errorKind ? <AdSlot placement="search-result" /> : null}
     </div>
   );
 }

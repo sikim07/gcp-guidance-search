@@ -1,6 +1,5 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { AdSlot } from "@/components/ad-slot";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import {
@@ -77,7 +76,6 @@ export default async function DocumentsPage() {
           ))}
         </ul>
       )}
-      <AdSlot placement="documents" />
     </div>
   );
 }
