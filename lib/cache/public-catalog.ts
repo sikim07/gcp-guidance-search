@@ -7,15 +7,19 @@ import { getFallbackStore } from "@/lib/db/fallback-store";
 import { getStore } from "@/lib/db/store";
 import { isStoreUnavailableError } from "@/lib/db/supabase-errors";
 import type { AppStore } from "@/lib/db/types";
+import { isNextProductionBuild } from "@/lib/runtime/next-phase";
 
 /**
- * Public pages must survive Supabase Fair Use / egress lockouts during
- * `next build` prerender and ISR. Prefer the live store; on quota/pause/
- * network failures, answer from the in-process seed corpus.
+ * Public catalog reads for pages/sitemap.
+ * - `next build`: seed corpus only — deploy must not depend on Supabase.
+ * - runtime: live store first; on quota/pause/network, seed fallback.
  */
 export async function readPublicStore<T>(
   run: (store: AppStore) => Promise<T>,
 ): Promise<T> {
+  if (isNextProductionBuild()) {
+    return run(await getFallbackStore());
+  }
   try {
     return await run(getStore());
   } catch (error) {
