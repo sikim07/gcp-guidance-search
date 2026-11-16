@@ -9,7 +9,10 @@ import {
 } from "@/lib/cache/public-catalog";
 import { documentStaticParams } from "@/lib/cache/static-params";
 import { getStore } from "@/lib/db/store";
-import { humanizeChangeSummary } from "@/lib/text/change-copy";
+import {
+  humanizeChangeSummary,
+  publicDocumentVersions,
+} from "@/lib/text/change-copy";
 
 /** Keep in sync with `PAGE_REVALIDATE_SECONDS` — Next requires a literal. */
 export const revalidate = 86_400;
@@ -97,7 +100,10 @@ export default async function DocumentDetailPage({
   }
 
   if (!doc) notFound();
-  const versions = await store.listVersions(id);
+  const versions = publicDocumentVersions(
+    await store.listVersions(id),
+    doc.currentVersionId,
+  );
   const chunks = await listCachedCurrentChunks();
 
   return (

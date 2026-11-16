@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { seedNeedsRefresh } from "@/lib/pipeline/seed/bootstrap";
+import { sameSectionSet, seedNeedsRefresh } from "@/lib/pipeline/seed/bootstrap";
 
 describe("seedNeedsRefresh", () => {
   it("refreshes only when the stored text is still the seed and clause cuts changed", () => {
@@ -41,6 +41,20 @@ describe("seedNeedsRefresh", () => {
         seedHash: "h",
         currentSections: ["7일 보고"],
         nextSections: ["7일 보고"],
+      }),
+    ).toBe(false);
+  });
+
+  it("does not treat Supabase row-order shuffle as a clause-boundary change", () => {
+    expect(sameSectionSet(["15일", "7일", "Follow-up"], ["Follow-up", "15일", "7일"])).toBe(
+      true,
+    );
+    expect(
+      seedNeedsRefresh({
+        fileHash: "h",
+        seedHash: "h",
+        currentSections: ["15일", "7일", "Follow-up"],
+        nextSections: ["Follow-up", "15일", "7일"],
       }),
     ).toBe(false);
   });

@@ -19,6 +19,14 @@ export function isShortExcerptUpgrade(currentCount: number, nextCount: number): 
   );
 }
 
+/** Order-independent: Supabase `currentChunks()` has no ORDER BY, so index compare false-triggers. */
+export function sameSectionSet(a: string[], b: string[]): boolean {
+  if (a.length !== b.length) return false;
+  const left = [...a].sort();
+  const right = [...b].sort();
+  return left.every((section, i) => section === right[i]);
+}
+
 export function seedNeedsRefresh(opts: {
   fileHash: string | null;
   seedHash: string;
@@ -26,8 +34,7 @@ export function seedNeedsRefresh(opts: {
   nextSections: string[];
 }): boolean {
   if (opts.fileHash === opts.seedHash) {
-    if (opts.currentSections.length !== opts.nextSections.length) return true;
-    return opts.currentSections.some((section, i) => section !== opts.nextSections[i]);
+    return !sameSectionSet(opts.currentSections, opts.nextSections);
   }
   // 발췌 시드를 전문 시드로 바꿀 때만 덮는다. PDF 적재본(청크가 이미 많음)은 유지.
   return isShortExcerptUpgrade(opts.currentSections.length, opts.nextSections.length);

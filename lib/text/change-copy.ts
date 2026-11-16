@@ -211,3 +211,17 @@ export function publicRevisionFeed<T extends { documentId: string; summary: stri
 ): T[] {
   return collapseRepeatedFeedItems(logs.filter((log) => !isInternalPipelineChange(log.summary)));
 }
+
+/**
+ * Document/clause history: keep the current row, drop older internal re-chunk
+ * versions that only exist because seed refresh rewrote clause boundaries.
+ */
+export function publicDocumentVersions<
+  T extends { id: string; summary?: string | null; diffSummary?: string | null },
+>(versions: T[], currentVersionId: string | null): T[] {
+  return versions.filter((version) => {
+    if (version.id === currentVersionId) return true;
+    const summary = version.diffSummary ?? version.summary ?? "";
+    return !isInternalReseed(summary);
+  });
+}

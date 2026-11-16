@@ -6,6 +6,7 @@ import {
   feedKindLabel,
   humanizeChangeSummary,
   prettySectionLabel,
+  publicDocumentVersions,
   publicRevisionFeed,
 } from "@/lib/text/change-copy";
 
@@ -80,6 +81,26 @@ describe("collapseRepeatedFeedItems", () => {
     ];
     const out = collapseRepeatedFeedItems(logs);
     expect(out.map((row) => row.id)).toEqual(["1", "3"]);
+  });
+});
+
+describe("publicDocumentVersions", () => {
+  it("keeps the current version even when it is an internal re-chunk", () => {
+    const versions = [
+      {
+        id: "current",
+        diffSummary: "검색에 쓰는 조항 경계를 다시 맞췄습니다. 공식 개정은 아닙니다.",
+      },
+      {
+        id: "old-rechunk",
+        diffSummary: "검색에 쓰는 조항 경계를 다시 맞췄습니다. 공식 개정은 아닙니다.",
+      },
+      { id: "seed", diffSummary: "초기 적재 (시드 코퍼스)" },
+    ];
+    expect(publicDocumentVersions(versions, "current").map((row) => row.id)).toEqual([
+      "current",
+      "seed",
+    ]);
   });
 });
 

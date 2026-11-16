@@ -14,7 +14,10 @@ import {
   decodeClauseSection,
 } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site";
-import { humanizeChangeSummary } from "@/lib/text/change-copy";
+import {
+  humanizeChangeSummary,
+  publicDocumentVersions,
+} from "@/lib/text/change-copy";
 import { readableText } from "@/lib/text/readable";
 import { sourceLabel } from "@/lib/utils";
 
@@ -35,7 +38,10 @@ async function loadClause(id: string, rawSection: string) {
       (row) => row.documentId === id && row.section === section,
     );
     if (!chunk) return null;
-    const versions = await store.listVersions(id);
+    const versions = publicDocumentVersions(
+      await store.listVersions(id),
+      doc.currentVersionId,
+    );
     return {
       kind: "guideline" as const,
       title: doc.title,
