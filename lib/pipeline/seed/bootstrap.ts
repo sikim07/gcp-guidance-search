@@ -1,8 +1,7 @@
-import { randomUUID } from "node:crypto";
 import type { AppStore } from "@/lib/db/types";
 import { chunkByClause } from "@/lib/pipeline/chunk";
 import { embedTexts } from "@/lib/pipeline/embed";
-import { sha256 } from "@/lib/pipeline/hasher";
+import { sha256, stableUuid } from "@/lib/pipeline/hasher";
 import { SEED_CORPUS, type SeedDoc } from "@/lib/pipeline/seed/corpus";
 import { SEED_STATUTES } from "@/lib/pipeline/seed/statutes";
 import { ingestParsedStatute } from "@/lib/pipeline/statute-runner";
@@ -84,6 +83,7 @@ export async function ensureSeeded(store: AppStore): Promise<void> {
 export async function seedStatutes(store: AppStore): Promise<void> {
   for (const seed of SEED_STATUTES) {
     await ingestParsedStatute(store, {
+      id: stableUuid(`statute:${seed.lawId}`),
       lawId: seed.lawId,
       mst: seed.mst,
       title: seed.title,
@@ -104,6 +104,7 @@ async function refreshSeedStatutes(store: AppStore): Promise<void> {
   const existing = (await store.listStatutes()).find((row) => row.lawId === seed.lawId);
   if (!existing) {
     await ingestParsedStatute(store, {
+      id: stableUuid(`statute:${seed.lawId}`),
       lawId: seed.lawId,
       mst: seed.mst,
       title: seed.title,
@@ -143,7 +144,7 @@ function buildChunks(
 ): ChunkRecord[] {
   const clauses = chunkByClause(seed.text, seed.title);
   return clauses.map((clause, i) => ({
-    id: randomUUID(),
+    id: stableUuid(`chunk:${seed.externalId}:${clause.section}`),
     versionId,
     documentId,
     section: clause.section,
@@ -155,8 +156,8 @@ function buildChunks(
 
 export async function seedOneDocument(store: AppStore, seed: SeedDoc): Promise<void> {
   const now = new Date().toISOString();
-  const documentId = randomUUID();
-  const versionId = randomUUID();
+  const documentId = stableUuid(`doc:${seed.externalId}`);
+  const versionId = stableUuid(`docver:${seed.externalId}:initial`);
   const clauses = chunkByClause(seed.text, seed.title);
   const embeddings = await embedTexts(clauses.map((c) => `${c.section}\n${c.text}`));
   const version: DocumentVersion = {
@@ -187,7 +188,7 @@ export async function seedOneDocument(store: AppStore, seed: SeedDoc): Promise<v
   await store.addVersion(version);
   await store.addChunks(buildChunks(seed, documentId, versionId, embeddings));
   await store.addChangeLog({
-    id: randomUUID(),
+    id: stableUuid(`clog:${seed.externalId}:initial`),
     documentId,
     fromVersionId: null,
     toVersionId: versionId,
@@ -203,7 +204,7 @@ export async function refreshSeedDocument(
   seed: SeedDoc,
 ): Promise<void> {
   const now = new Date().toISOString();
-  const versionId = randomUUID();
+  const versionId = stableUuid(`docver:${seed.externalId}:${sha256(seed.text).slice(0, 12)}`);
   const clauses = chunkByClause(seed.text, seed.title);
   const embeddings = await embedTexts(clauses.map((c) => `${c.section}\n${c.text}`));
   const hash = sha256(seed.text);
@@ -233,7 +234,7 @@ export async function refreshSeedDocument(
     buildChunks(seed, existing.id, versionId, embeddings),
   );
   await store.addChangeLog({
-    id: randomUUID(),
+    id: stableUuid(`clog:${seed.externalId}:${hash.slice(0, 12)}`),
     documentId: existing.id,
     fromVersionId: existing.currentVersionId,
     toVersionId: versionId,

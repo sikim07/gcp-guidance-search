@@ -11,7 +11,8 @@ export default defineConfig({
     environment: "node",
     include: ["tests/**/*.test.ts"],
     fileParallelism: false,
-    isolate: false,
+    // Module mocks (supabase-store, getStore) must not leak across files.
+    isolate: true,
     maxWorkers: 1,
   },
 });

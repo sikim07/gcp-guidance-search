@@ -1,5 +1,8 @@
-import { afterEach, describe, expect, it, vi } from "vitest";
+import { unlink } from "node:fs/promises";
+import path from "node:path";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { resetFallbackStoreForTests } from "@/lib/db/fallback-store";
+import { resetMemoryStoreForTests } from "@/lib/db/memory-store";
 
 vi.mock("@/lib/pipeline/embed", () => ({
   embedTexts: vi.fn(async (texts: string[]) => texts.map(() => [1, 0, 0])),
@@ -7,9 +10,9 @@ vi.mock("@/lib/pipeline/embed", () => ({
 
 const listDocuments = vi.fn();
 
-vi.mock("@/lib/db/store", () => ({
-  getStore: () => ({
-    listDocuments,
+vi.mock("@/lib/db/supabase-store", () => ({
+  supabaseStore: {
+    listDocuments: (...args: unknown[]) => listDocuments(...args),
     listStatutes: vi.fn(),
     listChangeLogs: vi.fn(),
     currentChunks: vi.fn(),
@@ -18,14 +21,33 @@ vi.mock("@/lib/db/store", () => ({
     currentStatuteArticleIndex: vi.fn(),
     listCurrentChunksByDocument: vi.fn(),
     listCurrentArticlesByStatute: vi.fn(),
-  }),
-  usingSupabase: () => true,
+  },
 }));
 
-afterEach(() => {
+async function clearLocalStoreFile() {
+  try {
+    await unlink(path.join(process.cwd(), ".data", "store.json"));
+  } catch {
+    /* missing is fine */
+  }
+}
+
+beforeEach(async () => {
+  process.env.SUPABASE_URL = "https://example.supabase.co";
+  process.env.SUPABASE_SERVICE_ROLE_KEY = "service-role";
+  delete process.env.NEXT_PHASE;
   listDocuments.mockReset();
   resetFallbackStoreForTests();
-  vi.restoreAllMocks();
+  resetMemoryStoreForTests();
+  await clearLocalStoreFile();
+});
+
+afterEach(() => {
+  delete process.env.SUPABASE_URL;
+  delete process.env.SUPABASE_SERVICE_ROLE_KEY;
+  listDocuments.mockReset();
+  resetFallbackStoreForTests();
+  resetMemoryStoreForTests();
 });
 
 describe("readPublicStore", () => {

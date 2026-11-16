@@ -1,25 +1,16 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import {
-  listPublicArticlesForStatute,
-  listPublicChunksForDocument,
-} from "@/lib/cache/public-catalog";
 import { clauseStaticParams } from "@/lib/cache/static-params";
-import { getStore } from "@/lib/db/store";
+import { loadPublicClause } from "@/lib/documents/load-public-clause";
 import {
   clauseHref,
   clausePageDescription,
   clausePageTitle,
-  decodeClauseSection,
 } from "@/lib/seo";
 import { SITE_NAME } from "@/lib/site";
-import {
-  humanizeChangeSummary,
-  publicDocumentVersions,
-} from "@/lib/text/change-copy";
+import { humanizeChangeSummary } from "@/lib/text/change-copy";
 import { readableText } from "@/lib/text/readable";
-import { sourceLabel } from "@/lib/utils";
 
 /** Keep in sync with `PAGE_REVALIDATE_SECONDS` — Next requires a literal. */
 export const revalidate = 86_400;
@@ -29,72 +20,13 @@ export function generateStaticParams() {
   return clauseStaticParams();
 }
 
-async function loadClause(id: string, rawSection: string) {
-  const section = decodeClauseSection(rawSection);
-  const store = getStore();
-  const doc = await store.getDocument(id);
-  if (doc) {
-    const chunk = (await listPublicChunksForDocument(id)).find(
-      (row) => row.section === section,
-    );
-    if (!chunk) return null;
-    const versions = publicDocumentVersions(
-      await store.listVersions(id),
-      doc.currentVersionId,
-    );
-    return {
-      kind: "guideline" as const,
-      title: doc.title,
-      section: chunk.section,
-      text: chunk.text,
-      url: doc.url,
-      sourceLabel: sourceLabel(doc.source),
-      issuedDate: doc.issuedDate,
-      currentMst: null as string | null,
-      effectiveDate: null as string | null,
-      promulgatedDate: null as string | null,
-      versions: versions.map((version) => ({
-        id: version.id,
-        label: version.versionLabel,
-        current: version.id === doc.currentVersionId,
-        summary: version.diffSummary,
-      })),
-    };
-  }
-  const statute = await store.getStatute(id);
-  if (!statute) return null;
-  const article = (await listPublicArticlesForStatute(id)).find(
-    (row) => row.section === section,
-  );
-  if (!article) return null;
-  const revisions = await store.listStatuteRevisions(statute.id);
-  return {
-    kind: "statute" as const,
-    title: statute.title,
-    section: article.section,
-    text: article.text,
-    url: statute.url,
-    sourceLabel: sourceLabel("statute"),
-    issuedDate: null as string | null,
-    currentMst: statute.currentMst,
-    effectiveDate: statute.effectiveDate,
-    promulgatedDate: statute.promulgatedDate,
-    versions: revisions.map((version) => ({
-      id: version.id,
-      label: version.promulgatedDate ?? version.mst,
-      current: version.id === statute.currentRevisionId,
-      summary: version.diffSummary,
-    })),
-  };
-}
-
 export async function generateMetadata({
   params,
 }: {
   params: Promise<{ id: string; section: string }>;
 }): Promise<Metadata> {
   const { id, section } = await params;
-  const clause = await loadClause(id, section);
+  const clause = await loadPublicClause(id, section);
   if (!clause) {
     return { title: "조항", robots: { index: false, follow: true } };
   }
@@ -112,7 +44,7 @@ export default async function ClausePage({
   params: Promise<{ id: string; section: string }>;
 }) {
   const { id, section } = await params;
-  const clause = await loadClause(id, section);
+  const clause = await loadPublicClause(id, section);
   if (!clause) notFound();
 
   return (

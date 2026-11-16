@@ -25,6 +25,12 @@ type GlobalStore = {
 
 const g = globalThis as GlobalStore;
 
+/** Test helper — drop in-memory snapshot so the next load re-reads or reseeds. */
+export function resetMemoryStoreForTests(): void {
+  g.__gcpStore = undefined;
+  g.__gcpStoreLoaded = false;
+}
+
 function traceStoreRead(name: string, count: number): void {
   if (process.env.STORE_QUERY_LOG === "1") {
     console.info(`[store] ${name} (${count})`);

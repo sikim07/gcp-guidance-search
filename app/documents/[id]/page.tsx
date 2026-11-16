@@ -3,16 +3,9 @@ import { notFound } from "next/navigation";
 import { SourceBadge } from "@/components/source-badge";
 import { StaticCard } from "@/components/static-card";
 import { ClauseToc } from "@/components/clause-toc";
-import {
-  listPublicArticlesForStatute,
-  listPublicChunksForDocument,
-} from "@/lib/cache/public-catalog";
 import { documentStaticParams } from "@/lib/cache/static-params";
-import { getStore } from "@/lib/db/store";
-import {
-  humanizeChangeSummary,
-  publicDocumentVersions,
-} from "@/lib/text/change-copy";
+import { loadPublicDocumentDetail } from "@/lib/documents/load-public-document";
+import { humanizeChangeSummary } from "@/lib/text/change-copy";
 
 /** Keep in sync with `PAGE_REVALIDATE_SECONDS` — Next requires a literal. */
 export const revalidate = 86_400;
@@ -28,10 +21,13 @@ export async function generateMetadata({
   params: Promise<{ id: string }>;
 }): Promise<Metadata> {
   const { id } = await params;
-  const store = getStore();
-  const doc = await store.getDocument(id);
-  const statute = doc ? undefined : await store.getStatute(id);
-  const title = doc?.title ?? statute?.title ?? "문서";
+  const detail = await loadPublicDocumentDetail(id);
+  const title =
+    detail?.kind === "guideline"
+      ? detail.doc.title
+      : detail?.kind === "statute"
+        ? detail.statute.title
+        : "문서";
   return {
     title,
     description: `${title}의 적재된 조항 원문과 개정 요약을 봅니다. 공식본은 원문 링크입니다.`,
@@ -45,14 +41,11 @@ export default async function DocumentDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const store = getStore();
-  const doc = await store.getDocument(id);
-  const statute = doc ? undefined : await store.getStatute(id);
-  if (!doc && !statute) notFound();
+  const detail = await loadPublicDocumentDetail(id);
+  if (!detail) notFound();
 
-  if (statute) {
-    const revisions = await store.listStatuteRevisions(statute.id);
-    const articles = await listPublicArticlesForStatute(statute.id);
+  if (detail.kind === "statute") {
+    const { statute, revisions, articles } = detail;
     return (
       <div className="space-y-6">
         <div>
@@ -79,11 +72,11 @@ export default async function DocumentDetailPage({
             <li key={version.id}>
               <StaticCard>
                 <p className="text-sm font-medium">
-                  {version.id === statute.currentRevisionId ? "현행" : "이전 본"}
+                  {version.current ? "현행" : "이전 본"}
                   {version.promulgatedDate ? ` · 공포 ${version.promulgatedDate}` : ""}
                 </p>
                 <p className="text-ink/70 mt-1 text-sm leading-6">
-                  {humanizeChangeSummary(version.diffSummary ?? "")}
+                  {version.summaryLabel}
                 </p>
               </StaticCard>
             </li>
@@ -99,13 +92,7 @@ export default async function DocumentDetailPage({
     );
   }
 
-  if (!doc) notFound();
-  const versions = publicDocumentVersions(
-    await store.listVersions(id),
-    doc.currentVersionId,
-  );
-  const chunks = await listPublicChunksForDocument(doc.id);
-
+  const { doc, versions, chunks } = detail;
   return (
     <div className="space-y-6">
       <div>

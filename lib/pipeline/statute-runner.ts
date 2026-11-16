@@ -2,6 +2,7 @@ import { randomUUID } from "node:crypto";
 import type { AppStore } from "@/lib/db/types";
 import { chunkByClause } from "@/lib/pipeline/chunk";
 import { embedTexts } from "@/lib/pipeline/embed";
+import { stableUuid } from "@/lib/pipeline/hasher";
 import { fetchLawBody, fetchLawSearch, getLawOc } from "@/lib/pipeline/law-client";
 import { detectStatuteRevision } from "@/lib/pipeline/statute-detector";
 import {
@@ -72,6 +73,8 @@ export async function ingestParsedStatute(
   store: AppStore,
   input: {
     existing?: StatuteRecord;
+    /** Prefer for seed corpora so IDs stay stable across cold starts. */
+    id?: string;
     lawId: string;
     mst: string;
     title: string;
@@ -84,8 +87,10 @@ export async function ingestParsedStatute(
   },
 ): Promise<string> {
   const now = new Date().toISOString();
-  const statuteId = input.existing?.id ?? randomUUID();
-  const revisionId = randomUUID();
+  const statuteId = input.existing?.id ?? input.id ?? randomUUID();
+  const revisionId = input.id
+    ? stableUuid(`statute-rev:${input.lawId}:${input.mst}:initial`)
+    : randomUUID();
   const expanded = expandArticles(input.articles);
   const previousArticles = input.existing
     ? (await store.currentStatuteArticlesWithEmbeddings()).filter(
@@ -110,7 +115,9 @@ export async function ingestParsedStatute(
     const reused = previousByKey.get(article.articleKey);
     const changed = toEmbed.some((row) => row.articleKey === article.articleKey);
     return {
-      id: randomUUID(),
+      id: input.id
+        ? stableUuid(`statute-article:${input.lawId}:${article.articleKey}`)
+        : randomUUID(),
       statuteId,
       revisionId,
       articleKey: article.articleKey,
