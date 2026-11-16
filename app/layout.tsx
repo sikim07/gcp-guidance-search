@@ -1,12 +1,11 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
-import Script from "next/script";
 import { SiteHeader } from "@/components/site-header";
 import { SiteBottomNav } from "@/components/site-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
 import { OverlayScrollbar } from "@/components/overlay-scrollbar";
-import { ADSENSE_PUBLISHER_ID, adsenseClientId } from "@/lib/ads";
+import { ADSENSE_PUBLISHER_ID } from "@/lib/ads";
 import { SITE_DESCRIPTION, SITE_KEYWORDS, SITE_NAME, SITE_URL } from "@/lib/site";
 
 const sans = Noto_Sans_KR({
@@ -77,21 +76,17 @@ export const viewport: Viewport = {
 export default function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  // Always load with the site publisher ID so AdSense site preview / Auto ads
-  // can detect placements. Slot env vars only affect manual <ins> units.
-  const adsClient = adsenseClientId() ?? ADSENSE_PUBLISHER_ID;
   return (
     <html
       lang="ko"
       className={`${sans.variable} bg-paper h-full antialiased`}
     >
       <head>
-        <Script
-          id="adsense"
+        {/* AdSense Auto ads — exact snippet Google asks for in <head> on every page. */}
+        <script
           async
-          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${adsClient}`}
+          src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_PUBLISHER_ID}`}
           crossOrigin="anonymous"
-          strategy="beforeInteractive"
         />
       </head>
       <body className="bg-paper text-ink h-full font-sans">
