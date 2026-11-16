@@ -25,4 +25,14 @@ describe("shouldBootstrapSeed", () => {
     expect(shouldBootstrapSeed({ NEXT_RUNTIME: "edge" })).toBe(false);
     expect(shouldBootstrapSeed({})).toBe(true);
   });
+
+  it("skips process bootstrap when Supabase is configured (cron owns seeding)", async () => {
+    const { shouldBootstrapSeed } = await import("@/lib/pipeline/seed/dev-bootstrap");
+    expect(
+      shouldBootstrapSeed({
+        SUPABASE_URL: "https://example.supabase.co",
+        SUPABASE_SERVICE_ROLE_KEY: "service-role",
+      }),
+    ).toBe(false);
+  });
 });
