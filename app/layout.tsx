@@ -49,6 +49,9 @@ export const metadata: Metadata = {
   verification: {
     google: "eQX-mYKL7NbRiG-_s3jBOZlxHkFjDkpN9v-Y_Yot258",
   },
+  other: {
+    "google-adsense-account": "ca-pub-9321980978046322",
+  },
   icons: {
     icon: [{ url: "/favicon.svg", type: "image/svg+xml" }],
   },
