@@ -124,6 +124,9 @@ body {
 body {
   background: var(--background);
   color: var(--foreground);
+  /* Hangul: wrap on spaces/punctuation, not between syllables. */
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .search-sheet,
@@ -135,7 +138,8 @@ body {
 }
 
 .clause-body {
-  overflow-wrap: anywhere;
+  word-break: keep-all;
+  overflow-wrap: break-word;
 }
 
 .search-sheet .textarea {
