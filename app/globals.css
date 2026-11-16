@@ -186,13 +186,20 @@ body {
 }
 
 .chip-preset.is-active {
-  background: color-mix(in oklab, var(--ink) 9%, var(--sheet)) !important;
-  color: var(--ink) !important;
-  border-color: color-mix(in oklab, var(--ink) 28%, var(--rule)) !important;
-  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--ink) 12%, transparent);
+  background: color-mix(in oklab, var(--seal) 20%, var(--sheet)) !important;
+  color: var(--seal) !important;
+  border-color: color-mix(in oklab, var(--seal) 48%, var(--rule)) !important;
+  font-weight: 600;
+  opacity: 1 !important;
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--seal) 28%, transparent);
 }
 
-.chip-preset:hover {
+.chip-preset.is-active[data-disabled="true"],
+.chip-preset.is-active[aria-disabled="true"] {
+  opacity: 1 !important;
+}
+
+.chip-preset:hover:not(.is-active) {
   background: color-mix(in oklab, var(--ink) 7%, var(--sheet)) !important;
 }
 

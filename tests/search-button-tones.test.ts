@@ -20,6 +20,8 @@ describe("search control color roles", () => {
     expect(panel).toContain("chip-scope");
     expect(panel).toContain("chip-preset");
     expect(panel).toContain("chip-recent");
+    expect(panel).toMatch(/aria-pressed=\{active\}/);
+    expect(panel).not.toMatch(/isDisabled=\{loading \|\| active\}/);
     const retry = readFileSync(
       path.join(process.cwd(), "components/retry-notice.tsx"),
       "utf8",

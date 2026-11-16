@@ -416,12 +416,16 @@ export function SearchPanel() {
                       type="button"
                       size="sm"
                       variant="secondary"
-                      isDisabled={loading || active}
+                      isDisabled={loading}
+                      aria-pressed={active}
                       aria-busy={searchingThis}
                       className={`preset-chip chip-preset gap-2${active ? " is-active" : ""}`}
                       data-testid={`preset-${preset.id}`}
                       data-busy={searchingThis ? "true" : "false"}
-                      onPress={() => void runSearch(preset.query)}
+                      onPress={() => {
+                        if (active) return;
+                        void runSearch(preset.query);
+                      }}
                     >
                       {searchingThis ? <Spinner color="current" size="sm" /> : null}
                       {preset.label}
