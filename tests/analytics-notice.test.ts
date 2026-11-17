@@ -45,6 +45,16 @@ describe("analytics notice placement", () => {
     expect(ga).toContain("NEXT_PUBLIC_GA_MEASUREMENT_ID");
     expect(ga).not.toMatch(/G-[A-Z0-9]{6,}/);
   });
+
+  it("reads the measurement id with a static process.env member access", () => {
+    const ga = read("lib/analytics/ga.ts");
+    // Regression: `env = process.env` + `env.NEXT_PUBLIC_…` is not inlined
+    // into client bundles, so CookieNotice never sees an ID.
+    expect(ga).toMatch(/process\.env\.NEXT_PUBLIC_GA_MEASUREMENT_ID/);
+    expect(ga).not.toMatch(
+      /getMeasurementId\([^)]*=\s*process\.env/,
+    );
+  });
 });
 
 describe("analytics event wiring", () => {

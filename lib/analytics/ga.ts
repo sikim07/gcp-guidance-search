@@ -23,9 +23,16 @@ export type GaEventName =
   | "retry_click";
 
 export function getMeasurementId(
-  env: Record<string, string | undefined> = process.env,
+  env?: Record<string, string | undefined>,
 ): string | undefined {
-  const value = env.NEXT_PUBLIC_GA_MEASUREMENT_ID?.trim();
+  // Next.js only inlines the literal `process.env.NEXT_PUBLIC_*` access into
+  // client bundles. Passing `process.env` as a default object and reading a
+  // property off it leaves the value undefined in the browser.
+  const value = (
+    env
+      ? env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+      : process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID
+  )?.trim();
   if (!value || !/^G-[A-Z0-9]+$/i.test(value)) return undefined;
   return value;
 }
