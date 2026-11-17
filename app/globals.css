@@ -648,20 +648,48 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
   white-space: inherit;
 }
 
-/* In-flow only — never fixed to viewport bottom/sides (AdSense rails/anchors). */
+/* Floating overlay — inset from edges so AdSense rails/anchors stay clear. */
+@keyframes analytics-notice-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(0.65rem);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
 .analytics-notice {
-  position: relative;
-  z-index: 1;
+  position: fixed;
+  z-index: 40;
+  left: 50%;
+  bottom: calc(var(--liquid-tabbar-space) + 4.5rem);
+  width: min(26rem, calc(100vw - 2rem));
   display: flex;
   flex-wrap: wrap;
   align-items: center;
   justify-content: space-between;
   gap: 0.75rem 1rem;
-  margin: 0 0 1.25rem;
-  padding: 0.75rem 1rem;
+  margin: 0;
+  padding: 0.85rem 1rem;
   border: 1px solid color-mix(in oklab, var(--rule) 80%, transparent);
-  border-radius: 0.85rem;
-  background: color-mix(in oklab, var(--sheet) 92%, var(--paper));
+  border-radius: 0.95rem;
+  background: color-mix(in oklab, var(--sheet) 94%, var(--paper));
+  box-shadow:
+    0 10px 28px color-mix(in oklab, var(--ink) 12%, transparent),
+    0 1px 0 color-mix(in oklab, var(--rule) 70%, transparent);
+  transform: translateX(-50%);
+  animation: analytics-notice-in 220ms ease-out;
+  transition:
+    opacity 180ms ease,
+    transform 180ms ease;
+}
+
+.analytics-notice[data-leaving="true"] {
+  opacity: 0;
+  transform: translateX(-50%) translateY(0.5rem);
+  pointer-events: none;
 }
 
 .analytics-notice-copy {

@@ -7,27 +7,26 @@ function read(rel: string) {
 }
 
 describe("analytics notice placement", () => {
-  it("keeps the notice in-flow inside main, not fixed to bottom or sides", () => {
+  it("renders a floating overlay outside main, not edge-stuck", () => {
     const layout = read("app/layout.tsx");
     expect(layout).toContain("<CookieNotice />");
     expect(layout).toContain("<AnalyticsLoader />");
     const mainBlock = layout.slice(layout.indexOf("<main"), layout.indexOf("</main>"));
-    expect(mainBlock).toContain("<CookieNotice />");
-    expect(mainBlock.indexOf("<CookieNotice />")).toBeLessThan(
-      mainBlock.indexOf("{children}"),
-    );
+    expect(mainBlock).not.toContain("<CookieNotice />");
+    expect(layout.indexOf("</main>")).toBeLessThan(layout.indexOf("<CookieNotice />"));
 
     const notice = read("components/cookie-notice.tsx");
     expect(notice).toContain('className="analytics-notice"');
-    expect(notice).not.toMatch(/className=\{?["'`][^"'`]*\bfixed\b/);
-    expect(notice).not.toMatch(/style=\{\{[^}]*position:\s*["']fixed["']/);
+    expect(notice).toContain('role="dialog"');
+    expect(notice).toContain('aria-modal="false"');
     expect(notice).not.toMatch(/bottom-0|left-0|right-0|inset-x-0/);
 
     const css = read("app/globals.css");
     const rule = css.match(/\.analytics-notice\s*\{[^}]+\}/);
-    expect(rule?.[0]).toMatch(/position:\s*relative/);
-    expect(rule?.[0]).not.toMatch(/position:\s*fixed|position:\s*sticky/);
-    expect(rule?.[0]).not.toMatch(/\bbottom\s*:|\bleft\s*:|\bright\s*:/);
+    expect(rule?.[0]).toMatch(/position:\s*fixed/);
+    expect(rule?.[0]).toMatch(/left:\s*50%/);
+    expect(rule?.[0]).toMatch(/bottom:\s*calc\(var\(--liquid-tabbar-space\)/);
+    expect(rule?.[0]).not.toMatch(/bottom:\s*0|left:\s*0|right:\s*0/);
   });
 
   it("documents GA-only consent vs AdSense on about", () => {

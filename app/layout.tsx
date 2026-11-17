@@ -101,7 +101,6 @@ export default function RootLayout({
           <div className="app-frame">
             <PageTransition>
               <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
-                <CookieNotice />
                 {children}
               </main>
             </PageTransition>
@@ -109,6 +108,7 @@ export default function RootLayout({
         </div>
         <SiteBottomNav />
         <OverlayScrollbar />
+        <CookieNotice />
         <AnalyticsLoader />
       </body>
     </html>

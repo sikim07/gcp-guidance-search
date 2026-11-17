@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import { useSyncExternalStore } from "react";
+import { useState, useSyncExternalStore } from "react";
 import { Button } from "@heroui/react";
 import {
   hasResponded,
@@ -22,11 +22,10 @@ function subscribeConsent(onStoreChange: () => void) {
 }
 
 /**
- * In-flow analytics notice inside <main>. Never position:fixed to bottom/sides
- * so AdSense Auto ads anchors and side rails stay clear.
+ * Floating analytics notice (overlay). Not in document flow so dismiss does not
+ * shift page content. Inset from viewport edges so AdSense rails/anchors stay clear.
  */
 export function CookieNotice() {
-  // Client-only: avoid SSR flash / hydration mismatch with localStorage.
   const mounted = useSyncExternalStore(
     () => () => {},
     () => true,
@@ -37,11 +36,14 @@ export function CookieNotice() {
     readConsent,
     () => null,
   );
+  const [leaving, setLeaving] = useState(false);
   const measurementId = getMeasurementId();
 
-  if (!mounted || !measurementId || hasResponded(consent)) return null;
+  if (!mounted || !measurementId) return null;
+  if (hasResponded(consent) && !leaving) return null;
 
   function decide(next: AnalyticsConsent) {
+    setLeaving(true);
     writeConsent(next);
     if (next === "granted") loadGaIfGranted();
   }
@@ -49,9 +51,15 @@ export function CookieNotice() {
   return (
     <section
       className="analytics-notice"
-      role="region"
+      role="dialog"
+      aria-modal="false"
       aria-label="분석 쿠키 안내"
       data-testid="analytics-notice"
+      data-leaving={leaving ? "true" : undefined}
+      onTransitionEnd={(event) => {
+        if (event.target !== event.currentTarget) return;
+        if (leaving) setLeaving(false);
+      }}
     >
       <p className="analytics-notice-copy">
         서비스 개선을 위해 방문·검색 통계(Google Analytics)를 수집합니다.{" "}
