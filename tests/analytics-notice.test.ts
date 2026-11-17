@@ -19,6 +19,9 @@ describe("analytics notice placement", () => {
     expect(notice).toContain('className="analytics-notice"');
     expect(notice).toContain('role="dialog"');
     expect(notice).toContain('aria-modal="false"');
+    expect(notice).toContain("data-animate");
+    expect(notice).toContain("data-leaving");
+    expect(notice).toContain("analytics-notice-title");
     expect(notice).not.toMatch(/bottom-0|left-0|right-0|inset-x-0/);
 
     const css = read("app/globals.css");
@@ -27,6 +30,13 @@ describe("analytics notice placement", () => {
     expect(rule?.[0]).toMatch(/left:\s*50%/);
     expect(rule?.[0]).toMatch(/bottom:\s*calc\(var\(--liquid-tabbar-space\)/);
     expect(rule?.[0]).not.toMatch(/bottom:\s*0|left:\s*0|right:\s*0/);
+    expect(rule?.[0]).toMatch(/view-transition-name:\s*analytics-consent-notice/);
+    expect(css).toMatch(/\.analytics-notice\[data-animate="in"\]/);
+    expect(css).toMatch(/\.analytics-notice\[data-leaving="true"\]/);
+
+    const about = read("app/about/page.tsx");
+    expect(about).toContain("HashScroll");
+    expect(about).toMatch(/id="analytics"[^>]*scroll-mt-32/);
   });
 
   it("documents GA-only consent vs AdSense on about", () => {

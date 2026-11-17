@@ -21,6 +21,9 @@ function subscribeConsent(onStoreChange: () => void) {
   };
 }
 
+/** Skip the entrance animation if the notice already played in this tab. */
+let noticeEnteredThisSession = false;
+
 /**
  * Floating analytics notice (overlay). Not in document flow so dismiss does not
  * shift page content. Inset from viewport edges so AdSense rails/anchors stay clear.
@@ -53,20 +56,34 @@ export function CookieNotice() {
       className="analytics-notice"
       role="dialog"
       aria-modal="false"
+      aria-labelledby="analytics-notice-title"
       aria-label="분석 쿠키 안내"
       data-testid="analytics-notice"
+      data-animate={noticeEnteredThisSession ? "persist" : "in"}
       data-leaving={leaving ? "true" : undefined}
+      onAnimationEnd={(event) => {
+        if (event.target !== event.currentTarget) return;
+        noticeEnteredThisSession = true;
+      }}
       onTransitionEnd={(event) => {
         if (event.target !== event.currentTarget) return;
+        if (event.propertyName !== "opacity" && event.propertyName !== "transform") {
+          return;
+        }
         if (leaving) setLeaving(false);
       }}
     >
-      <p className="analytics-notice-copy">
-        서비스 개선을 위해 방문·검색 통계(Google Analytics)를 수집합니다.{" "}
-        <Link href="/about#analytics" className="analytics-notice-link">
-          안내
-        </Link>
-      </p>
+      <div className="analytics-notice-body">
+        <p id="analytics-notice-title" className="analytics-notice-title">
+          방문 통계 안내
+        </p>
+        <p className="analytics-notice-copy">
+          서비스 개선을 위해 방문·검색 통계(Google Analytics)를 수집합니다.{" "}
+          <Link href="/about#analytics" className="analytics-notice-link">
+            안내
+          </Link>
+        </p>
+      </div>
       <div className="analytics-notice-actions">
         <Button
           size="sm"

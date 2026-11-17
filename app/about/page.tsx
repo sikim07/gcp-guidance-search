@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { HashScroll } from "@/components/hash-scroll";
 
 export const metadata: Metadata = {
   title: "안내와 면책",
@@ -10,6 +11,7 @@ export const metadata: Metadata = {
 export default function AboutPage() {
   return (
     <article className="max-w-2xl space-y-4 text-sm leading-7">
+      <HashScroll />
       <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">안내와 면책</h1>
       <p>
         이 사이트는 필드 검증·감사추적 근거를 찾기 위해 만든 비공식 도구입니다. CRA/RA
@@ -35,7 +37,7 @@ export default function AboutPage() {
         답변은 적재된 청크에만 근거합니다. 항상 원문 PDF/법령 본문을 확인하세요. 스캔본
         PDF는 v1에서 OCR하지 않으며, 본문 미추출로 표시됩니다.
       </p>
-      <h2 id="analytics" className="text-xl font-semibold scroll-mt-24">
+      <h2 id="analytics" className="text-xl font-semibold scroll-mt-32">
         방문 통계와 쿠키
       </h2>
       <p>
