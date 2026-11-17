@@ -61,8 +61,11 @@ export function HashScroll() {
       );
     }
 
-    // After view transitions settle.
-    const start = window.setTimeout(runFocus, 40);
+    // Wait for page view-transition (~420ms) before top → section scroll.
+    const start = window.setTimeout(
+      runFocus,
+      prefersReducedMotion() ? 0 : 480,
+    );
     window.addEventListener("hashchange", runFocus);
     return () => {
       window.clearTimeout(start);

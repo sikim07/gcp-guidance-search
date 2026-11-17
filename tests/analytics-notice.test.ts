@@ -23,6 +23,8 @@ describe("analytics notice placement", () => {
     expect(notice).toContain("data-leaving");
     expect(notice).toContain("analytics-notice-title");
     expect(notice).toContain("markAnalyticsFocus");
+    expect(notice).toContain("NavLink");
+    expect(notice).toContain('href="/about#analytics"');
     expect(notice).not.toMatch(/bottom-0|left-0|right-0|inset-x-0/);
 
     const css = read("app/globals.css");

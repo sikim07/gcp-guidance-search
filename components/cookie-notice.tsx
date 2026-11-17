@@ -1,6 +1,5 @@
 "use client";
 
-import Link from "next/link";
 import { useState, useSyncExternalStore } from "react";
 import { Button } from "@heroui/react";
 import {
@@ -11,6 +10,7 @@ import {
 } from "@/lib/analytics/consent";
 import { getMeasurementId, loadGaIfGranted } from "@/lib/analytics/ga";
 import { markAnalyticsFocus } from "@/components/hash-scroll";
+import { NavLink } from "@/components/nav-link";
 
 function subscribeConsent(onStoreChange: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -82,13 +82,13 @@ export function CookieNotice() {
         </p>
         <p className="analytics-notice-copy">
           서비스 개선을 위해 방문·검색 통계(Google Analytics)를 수집합니다.{" "}
-          <Link
+          <NavLink
             href="/about#analytics"
             className="analytics-notice-link"
             onClick={() => markAnalyticsFocus()}
           >
             안내
-          </Link>
+          </NavLink>
         </p>
       </div>
       <div className="analytics-notice-actions">
