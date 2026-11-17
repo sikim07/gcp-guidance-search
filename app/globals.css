@@ -676,16 +676,13 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
 
 @keyframes analytics-hash-focus {
   0% {
-    background-color: color-mix(in oklab, var(--seal) 18%, transparent);
-    box-shadow: 0 0 0 0 color-mix(in oklab, var(--seal) 28%, transparent);
+    background-color: color-mix(in oklab, var(--seal) 16%, transparent);
   }
-  35% {
-    background-color: color-mix(in oklab, var(--seal) 12%, var(--sheet));
-    box-shadow: 0 0 0 4px color-mix(in oklab, var(--seal) 16%, transparent);
+  40% {
+    background-color: color-mix(in oklab, var(--seal) 10%, var(--sheet));
   }
   100% {
     background-color: transparent;
-    box-shadow: 0 0 0 0 transparent;
   }
 }
 
@@ -693,11 +690,12 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
   border-radius: 0.85rem;
   margin-inline: -0.65rem;
   padding: 0.65rem;
+  /* Background-only flash — no box-shadow growth (looks like bottom gap on mobile). */
   transition: background-color 200ms ease;
 }
 
 .analytics-anchor.is-hash-focus {
-  animation: analytics-hash-focus 2.2s ease-out both;
+  animation: analytics-hash-focus 2s ease-out both;
 }
 
 .analytics-notice {

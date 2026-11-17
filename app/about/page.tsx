@@ -39,7 +39,7 @@ export default function AboutPage() {
       </p>
       <section
         id="analytics"
-        className="analytics-anchor scroll-mt-32 space-y-4"
+        className="analytics-anchor space-y-4"
         data-testid="analytics-section"
       >
         <h2 className="text-xl font-semibold">방문 통계와 쿠키</h2>

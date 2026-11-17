@@ -50,6 +50,9 @@ describe("analytics notice placement", () => {
     expect(hash).toContain('scrollTo({ top: 0');
     expect(hash).toContain("is-hash-focus");
     expect(hash).toContain("markAnalyticsFocus");
+    expect(hash).toContain("gcp-focus-analytics");
+    expect(hash).toContain("maxScrollTop");
+    expect(hash).not.toContain("scrollIntoView");
   });
 
   it("documents GA-only consent vs AdSense on about", () => {
