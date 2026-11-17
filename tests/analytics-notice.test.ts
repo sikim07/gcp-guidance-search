@@ -48,13 +48,16 @@ describe("analytics notice placement", () => {
     expect(about).toContain("analytics-anchor");
 
     const hash = read("components/hash-scroll.tsx");
-    expect(hash).toContain('scrollTo({ top: 0');
+    expect(hash).toContain("smoothScrollToY");
+    expect(hash).toContain("scrollend");
     expect(hash).toContain("is-hash-focus");
     expect(hash).toContain("markAnalyticsFocus");
     expect(hash).toContain("gcp-focus-analytics");
     expect(hash).toContain("maxScrollTop");
     expect(hash).not.toContain("scrollIntoView");
     expect(hash).not.toMatch(/addEventListener\(\s*["']hashchange["']/);
+    // Avoid the hard cut: top must be smooth-chained, not behavior:"auto" jump.
+    expect(hash).not.toMatch(/scrollTo\(\{\s*top:\s*0,\s*behavior:\s*["']auto["']/);
   });
 
   it("keeps tabbar bottom padding through sm until md hides the tabbar", () => {
