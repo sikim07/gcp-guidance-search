@@ -1,6 +1,8 @@
 import "./globals.css";
 import type { Metadata, Viewport } from "next";
 import { Noto_Sans_KR } from "next/font/google";
+import { AnalyticsLoader } from "@/components/analytics-loader";
+import { CookieNotice } from "@/components/cookie-notice";
 import { SiteHeader } from "@/components/site-header";
 import { SiteBottomNav } from "@/components/site-bottom-nav";
 import { PageTransition } from "@/components/page-transition";
@@ -99,6 +101,7 @@ export default function RootLayout({
           <div className="app-frame">
             <PageTransition>
               <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
+                <CookieNotice />
                 {children}
               </main>
             </PageTransition>
@@ -106,6 +109,7 @@ export default function RootLayout({
         </div>
         <SiteBottomNav />
         <OverlayScrollbar />
+        <AnalyticsLoader />
       </body>
     </html>
   );

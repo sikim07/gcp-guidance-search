@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { Button } from "@heroui/react";
+import { trackEvent } from "@/lib/analytics/ga";
 
 export function RetryNotice({
   title,
@@ -12,6 +13,7 @@ export function RetryNotice({
   pulseBar = false,
   documentsHref,
   className,
+  retryKind = "generic",
 }: {
   title: string;
   detail: string;
@@ -21,6 +23,7 @@ export function RetryNotice({
   pulseBar?: boolean;
   documentsHref?: string;
   className?: string;
+  retryKind?: string;
 }) {
   return (
     <div
@@ -43,7 +46,10 @@ export function RetryNotice({
             className="retry-action"
             isPending={busy}
             data-testid="retry-action"
-            onPress={onRetry}
+            onPress={() => {
+              trackEvent("retry_click", { kind: retryKind });
+              onRetry();
+            }}
           >
             {retryLabel}
           </Button>

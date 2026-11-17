@@ -647,3 +647,51 @@ html[data-nav-dir="back"]::view-transition-new(page-content) {
 .preset-chip span {
   white-space: inherit;
 }
+
+/* In-flow only — never fixed to viewport bottom/sides (AdSense rails/anchors). */
+.analytics-notice {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem 1rem;
+  margin: 0 0 1.25rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid color-mix(in oklab, var(--rule) 80%, transparent);
+  border-radius: 0.85rem;
+  background: color-mix(in oklab, var(--sheet) 92%, var(--paper));
+}
+
+.analytics-notice-copy {
+  margin: 0;
+  flex: 1 1 14rem;
+  color: color-mix(in oklab, var(--ink) 82%, var(--muted));
+  font-size: 0.8125rem;
+  line-height: 1.55;
+}
+
+.analytics-notice-link {
+  color: var(--fda);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.analytics-notice-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.analytics-notice-accept {
+  background: var(--seal) !important;
+  color: var(--accent-foreground) !important;
+  border-color: transparent !important;
+}
+
+.analytics-notice-deny {
+  background: color-mix(in oklab, var(--ink) 5%, var(--sheet)) !important;
+  color: color-mix(in oklab, var(--ink) 78%, var(--muted)) !important;
+  border: 1px solid color-mix(in oklab, var(--rule) 85%, transparent) !important;
+}

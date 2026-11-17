@@ -24,6 +24,7 @@ import {
 } from "@heroui/react";
 import { Copy, ThumbsDown, ThumbsUp, X } from "lucide-react";
 import { RetryNotice } from "@/components/retry-notice";
+import { trackEvent } from "@/lib/analytics/ga";
 import {
   classifySearchFailure,
   feedbackFailureCopy,
@@ -102,6 +103,7 @@ export function SearchPanel() {
 
   function setScope(next: SearchScope) {
     patchStoredDraft({ scope: next });
+    trackEvent("scope_change", { scope: next });
   }
   const canTranslate = useMemo(
     () =>
@@ -138,9 +140,21 @@ export function SearchPanel() {
     writeStoredRecents(removeRecentQuery(nextQuery, recents));
   }
 
-  async function runSearch(nextQuery: string) {
+  async function runSearch(nextQuery: string, source: "form" | "preset" | "recent" | "retry" = "form") {
     const trimmed = nextQuery.trim();
     if (!trimmed) return;
+    const scope = getDraftSnapshot().scope;
+    const preset = PRESET_QUERIES.find(
+      (row) => normalizeQuery(row.query) === normalizeQuery(trimmed),
+    );
+    if (source === "preset" && preset) {
+      trackEvent("preset_click", { preset_id: preset.id });
+    }
+    trackEvent("search_submit", {
+      scope,
+      source,
+      preset_id: preset?.id,
+    });
     patchStoredDraft({
       query: nextQuery,
       tab: "answer",
@@ -164,7 +178,7 @@ export function SearchPanel() {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           query: trimmed,
-          scope: getDraftSnapshot().scope,
+          scope,
         }),
       });
       const contentType = response.headers.get("content-type") ?? "";
@@ -260,10 +274,12 @@ export function SearchPanel() {
   async function toggleTranslation() {
     if (!result || !canTranslate) return;
     if (showKorean) {
+      trackEvent("translate_toggle", { mode: "original" });
       patchStoredDraft({ showKorean: false });
       return;
     }
     if (translations) {
+      trackEvent("translate_toggle", { mode: "korean" });
       patchStoredDraft({ showKorean: true });
       return;
     }
@@ -295,6 +311,7 @@ export function SearchPanel() {
         translatedAnswer: body.translatedAnswer ?? null,
         showKorean: true,
       });
+      trackEvent("translate_toggle", { mode: "korean" });
     } catch {
       setTranslateNote("번역 요청 중 네트워크 오류가 났습니다.");
     } finally {
@@ -324,6 +341,7 @@ export function SearchPanel() {
       }
       setFeedbackSent(rating);
       setShowDownForm(false);
+      trackEvent("feedback", { rating });
     } catch {
       setFeedbackError(true);
     } finally {
@@ -340,6 +358,7 @@ export function SearchPanel() {
     try {
       await navigator.clipboard.writeText(text);
       setCopied(true);
+      trackEvent("copy_citations", { source_count: result.sources.length });
       window.setTimeout(() => setCopied(false), 1600);
     } catch {
       setCopied(false);
@@ -424,7 +443,7 @@ export function SearchPanel() {
                       data-busy={searchingThis ? "true" : "false"}
                       onPress={() => {
                         if (active) return;
-                        void runSearch(preset.query);
+                        void runSearch(preset.query, "preset");
                       }}
                     >
                       {searchingThis ? <Spinner color="current" size="sm" /> : null}
@@ -447,7 +466,7 @@ export function SearchPanel() {
                         className="preset-chip chip-recent min-w-0 gap-2"
                         isDisabled={loading}
                         aria-busy={loading && item === query}
-                        onPress={() => void runSearch(item)}
+                        onPress={() => void runSearch(item, "recent")}
                       >
                         {loading && item === query ? (
                           <Spinner color="current" size="sm" />
@@ -502,8 +521,11 @@ export function SearchPanel() {
             errorKind === "server" ||
             errorKind === "unavailable"
           }
+          retryKind="search"
           onRetry={
-            searchFailureCopy(errorKind).retry ? () => void runSearch(query) : undefined
+            searchFailureCopy(errorKind).retry
+              ? () => void runSearch(query, "retry")
+              : undefined
           }
         />
       ) : null}
@@ -809,6 +831,7 @@ function AnswerCard({
             retryLabel="한국어 다시 시도"
             busy={translating}
             pulseBar={translating || translateNote.includes("네트워크")}
+            retryKind="translate"
             onRetry={() => void toggleTranslation()}
           />
         ) : null}
@@ -909,6 +932,7 @@ function AnswerCard({
               busy={feedbackBusy}
               pulseBar={feedbackBusy}
               retryLabel="의견 다시 보내기"
+              retryKind="feedback"
               onRetry={() => void sendFeedback(showDownForm ? "down" : "up", downComment)}
             />
           ) : null}
