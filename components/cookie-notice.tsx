@@ -10,6 +10,7 @@ import {
   type AnalyticsConsent,
 } from "@/lib/analytics/consent";
 import { getMeasurementId, loadGaIfGranted } from "@/lib/analytics/ga";
+import { markAnalyticsFocus } from "@/components/hash-scroll";
 
 function subscribeConsent(onStoreChange: () => void) {
   if (typeof window === "undefined") return () => {};
@@ -40,6 +41,9 @@ export function CookieNotice() {
     () => null,
   );
   const [leaving, setLeaving] = useState(false);
+  const [animate, setAnimate] = useState<"in" | "persist">(() =>
+    noticeEnteredThisSession ? "persist" : "in",
+  );
   const measurementId = getMeasurementId();
 
   if (!mounted || !measurementId) return null;
@@ -59,17 +63,16 @@ export function CookieNotice() {
       aria-labelledby="analytics-notice-title"
       aria-label="분석 쿠키 안내"
       data-testid="analytics-notice"
-      data-animate={noticeEnteredThisSession ? "persist" : "in"}
+      data-animate={animate}
       data-leaving={leaving ? "true" : undefined}
       onAnimationEnd={(event) => {
         if (event.target !== event.currentTarget) return;
         noticeEnteredThisSession = true;
+        setAnimate("persist");
       }}
       onTransitionEnd={(event) => {
         if (event.target !== event.currentTarget) return;
-        if (event.propertyName !== "opacity" && event.propertyName !== "transform") {
-          return;
-        }
+        if (event.propertyName !== "opacity") return;
         if (leaving) setLeaving(false);
       }}
     >
@@ -79,7 +82,11 @@ export function CookieNotice() {
         </p>
         <p className="analytics-notice-copy">
           서비스 개선을 위해 방문·검색 통계(Google Analytics)를 수집합니다.{" "}
-          <Link href="/about#analytics" className="analytics-notice-link">
+          <Link
+            href="/about#analytics"
+            className="analytics-notice-link"
+            onClick={() => markAnalyticsFocus()}
+          >
             안내
           </Link>
         </p>

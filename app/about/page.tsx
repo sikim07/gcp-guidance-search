@@ -37,18 +37,23 @@ export default function AboutPage() {
         답변은 적재된 청크에만 근거합니다. 항상 원문 PDF/법령 본문을 확인하세요. 스캔본
         PDF는 v1에서 OCR하지 않으며, 본문 미추출로 표시됩니다.
       </p>
-      <h2 id="analytics" className="text-xl font-semibold scroll-mt-32">
-        방문 통계와 쿠키
-      </h2>
-      <p>
-        서비스 개선을 위해 Google Analytics 4로 페이지 조회·검색·버튼 사용 통계를 수집할
-        수 있습니다. 동의는 이 브라우저의 저장소에만 남으며, 거부하면 GA 스크립트를
-        불러오지 않습니다. 검색어 원문·의견 본문은 Analytics로 보내지 않습니다.
-      </p>
-      <p>
-        광고(Google AdSense)는 분석 동의와 별도로 동작하며, 현재는 광고 스크립트에 대한
-        동의 게이트가 없습니다. 거부해도 AdSense는 로드될 수 있습니다.
-      </p>
+      <section
+        id="analytics"
+        className="analytics-anchor scroll-mt-32 space-y-4"
+        data-testid="analytics-section"
+      >
+        <h2 className="text-xl font-semibold">방문 통계와 쿠키</h2>
+        <p>
+          서비스 개선을 위해 Google Analytics 4로 페이지 조회·검색·버튼 사용 통계를
+          수집할 수 있습니다. 동의는 이 브라우저의 저장소에만 남으며, 거부하면 GA
+          스크립트를 불러오지 않습니다. 검색어 원문·의견 본문은 Analytics로 보내지
+          않습니다.
+        </p>
+        <p>
+          광고(Google AdSense)는 분석 동의와 별도로 동작하며, 현재는 광고 스크립트에
+          대한 동의 게이트가 없습니다. 거부해도 AdSense는 로드될 수 있습니다.
+        </p>
+      </section>
     </article>
   );
 }
