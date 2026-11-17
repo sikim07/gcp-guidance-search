@@ -100,7 +100,7 @@ export default function RootLayout({
           <SiteHeader />
           <div className="app-frame">
             <PageTransition>
-              <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:py-8 md:pb-8">
+              <main className="mx-auto w-full max-w-3xl flex-1 px-4 py-5 pb-[var(--liquid-tabbar-space)] sm:max-w-5xl sm:pt-8 md:pb-8">
                 {children}
               </main>
             </PageTransition>

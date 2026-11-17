@@ -84,6 +84,7 @@ export function CookieNotice() {
           서비스 개선을 위해 방문·검색 통계(Google Analytics)를 수집합니다.{" "}
           <NavLink
             href="/about#analytics"
+            scroll={false}
             className="analytics-notice-link"
             onClick={() => markAnalyticsFocus()}
           >

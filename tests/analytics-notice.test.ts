@@ -25,6 +25,7 @@ describe("analytics notice placement", () => {
     expect(notice).toContain("markAnalyticsFocus");
     expect(notice).toContain("NavLink");
     expect(notice).toContain('href="/about#analytics"');
+    expect(notice).toContain("scroll={false}");
     expect(notice).not.toMatch(/bottom-0|left-0|right-0|inset-x-0/);
 
     const css = read("app/globals.css");
@@ -53,6 +54,15 @@ describe("analytics notice placement", () => {
     expect(hash).toContain("gcp-focus-analytics");
     expect(hash).toContain("maxScrollTop");
     expect(hash).not.toContain("scrollIntoView");
+    expect(hash).not.toMatch(/addEventListener\(\s*["']hashchange["']/);
+  });
+
+  it("keeps tabbar bottom padding through sm until md hides the tabbar", () => {
+    const layout = read("app/layout.tsx");
+    expect(layout).toContain("pb-[var(--liquid-tabbar-space)]");
+    expect(layout).toContain("sm:pt-8");
+    expect(layout).toContain("md:pb-8");
+    expect(layout).not.toMatch(/sm:py-8/);
   });
 
   it("documents GA-only consent vs AdSense on about", () => {

@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { usePathname } from "next/navigation";
 
 const FOCUS_FLAG = "gcp-focus-analytics";
@@ -27,61 +27,77 @@ function scrollToAnalytics(el: HTMLElement, behavior: ScrollBehavior) {
   });
 }
 
-function runAnalyticsFocus() {
-  const forced = sessionStorage.getItem(FOCUS_FLAG) === "1";
-  const hashId = window.location.hash.replace(/^#/, "");
-  if (!forced && hashId !== TARGET_ID) return false;
-  sessionStorage.removeItem(FOCUS_FLAG);
-
-  const el = document.getElementById(TARGET_ID);
-  if (!el) return false;
-
-  const reduced = prefersReducedMotion();
-  // Land at the top first, then ease to the section without overscrolling
-  // past the document end (avoids a growing empty gap above the tab bar).
-  window.scrollTo({ top: 0, behavior: "auto" });
-
-  el.classList.remove("is-hash-focus");
-  void el.offsetWidth;
-  el.classList.add("is-hash-focus");
-
-  window.setTimeout(
-    () => {
-      scrollToAnalytics(el, reduced ? "auto" : "smooth");
-    },
-    reduced ? 0 : 280,
-  );
-
-  window.setTimeout(
-    () => {
-      el.classList.remove("is-hash-focus");
-    },
-    reduced ? 900 : 2200,
-  );
-
-  return true;
-}
-
 /**
  * For /about#analytics (and 안내 clicks): jump to top, highlight the section,
- * then smooth-scroll into place without forcing empty space below.
+ * then smooth-scroll into place once — never chained with native hash scrolling.
  */
 export function HashScroll() {
   const pathname = usePathname();
+  const timersRef = useRef<number[]>([]);
 
   useEffect(() => {
     if (pathname !== "/about") return;
 
+    function clearTimers() {
+      for (const id of timersRef.current) window.clearTimeout(id);
+      timersRef.current = [];
+    }
+
+    function runAnalyticsFocus() {
+      const forced = sessionStorage.getItem(FOCUS_FLAG) === "1";
+      const hashId = window.location.hash.replace(/^#/, "");
+      if (!forced && hashId !== TARGET_ID) return;
+      sessionStorage.removeItem(FOCUS_FLAG);
+
+      const el = document.getElementById(TARGET_ID);
+      if (!el) return;
+
+      clearTimers();
+      const reduced = prefersReducedMotion();
+      window.scrollTo({ top: 0, behavior: "auto" });
+
+      el.classList.remove("is-hash-focus");
+      void el.offsetWidth;
+      el.classList.add("is-hash-focus");
+
+      timersRef.current.push(
+        window.setTimeout(
+          () => {
+            scrollToAnalytics(el, reduced ? "auto" : "smooth");
+          },
+          reduced ? 0 : 280,
+        ),
+      );
+
+      timersRef.current.push(
+        window.setTimeout(
+          () => {
+            el.classList.remove("is-hash-focus");
+          },
+          reduced ? 900 : 2200,
+        ),
+      );
+    }
+
     let startTimer = 0;
+    let focusing = false;
 
     function schedule(delayMs: number) {
       window.clearTimeout(startTimer);
       startTimer = window.setTimeout(() => {
+        if (focusing) return;
+        focusing = true;
         runAnalyticsFocus();
+        // Allow a later explicit 안내 click after the choreography settles.
+        timersRef.current.push(
+          window.setTimeout(() => {
+            focusing = false;
+          }, 1500),
+        );
       }, delayMs);
     }
 
-    // Cross-route entry: wait for page view-transition (~420ms).
+    // Cross-route / deep-link entry only (flag or existing hash on mount).
     if (
       sessionStorage.getItem(FOCUS_FLAG) === "1" ||
       window.location.hash.replace(/^#/, "") === TARGET_ID
@@ -90,16 +106,18 @@ export function HashScroll() {
     }
 
     function onFocusEvent() {
-      // Already on /about — no page transition, run promptly.
+      // Same-page 안내 click — no view transition wait.
+      focusing = false;
       schedule(prefersReducedMotion() ? 0 : 40);
     }
 
+    // Ignore native hash updates after NavLink — they re-trigger focus and
+    // cause a second end-of-page scroll on mobile.
     window.addEventListener(FOCUS_EVENT, onFocusEvent);
-    window.addEventListener("hashchange", onFocusEvent);
     return () => {
       window.clearTimeout(startTimer);
+      clearTimers();
       window.removeEventListener(FOCUS_EVENT, onFocusEvent);
-      window.removeEventListener("hashchange", onFocusEvent);
     };
   }, [pathname]);
 
