@@ -8,7 +8,9 @@ const FOCUS_EVENT = "gcp-focus-analytics";
 const TARGET_ID = "analytics";
 /** Sticky header clearance when scrolling the analytics section into view. */
 const HEADER_OFFSET_PX = 88;
-const TOP_EPSILON_PX = 12;
+const NEAR_PX = 8;
+/** Match page view-transition duration in globals.css (~420ms). */
+const PAGE_TRANSITION_MS = 450;
 
 function prefersReducedMotion() {
   return window.matchMedia("(prefers-reduced-motion: reduce)").matches;
@@ -29,52 +31,13 @@ function sectionScrollTop(el: HTMLElement) {
   );
 }
 
-/** Rough duration so we can chain smooth scrolls without a hard cut. */
 function smoothScrollMs(distancePx: number) {
-  return Math.min(850, Math.max(220, Math.abs(distancePx) * 0.45 + 160));
-}
-
-function wait(ms: number) {
-  return new Promise<void>((resolve) => {
-    window.setTimeout(resolve, ms);
-  });
-}
-
-function scrollToY(top: number, behavior: ScrollBehavior) {
-  window.scrollTo({ top, behavior });
-}
-
-async function smoothScrollToY(top: number, reduced: boolean) {
-  const from = window.scrollY;
-  const distance = Math.abs(from - top);
-  if (distance <= TOP_EPSILON_PX) {
-    scrollToY(top, "auto");
-    return;
-  }
-  if (reduced) {
-    scrollToY(top, "auto");
-    return;
-  }
-
-  scrollToY(top, "smooth");
-
-  await new Promise<void>((resolve) => {
-    let settled = false;
-    const finish = () => {
-      if (settled) return;
-      settled = true;
-      window.removeEventListener("scrollend", finish);
-      resolve();
-    };
-    window.addEventListener("scrollend", finish, { once: true });
-    window.setTimeout(finish, smoothScrollMs(distance));
-  });
+  return Math.min(800, Math.max(240, Math.abs(distancePx) * 0.4 + 180));
 }
 
 /**
- * For /about#analytics (and 안내 clicks):
- * page settle → (if needed) smooth to top → highlight → smooth to section.
- * No instant jump / dead freeze between the two scrolls.
+ * After the horizontal page transition, run exactly one vertical scroll to the
+ * analytics section (plus highlight). No top-detour, no chained scrolls.
  */
 export function HashScroll() {
   const pathname = usePathname();
@@ -89,7 +52,7 @@ export function HashScroll() {
       timersRef.current = [];
     }
 
-    async function runAnalyticsFocus() {
+    function runAnalyticsFocus() {
       const forced = sessionStorage.getItem(FOCUS_FLAG) === "1";
       const hashId = window.location.hash.replace(/^#/, "");
       if (!forced && hashId !== TARGET_ID) return;
@@ -101,23 +64,21 @@ export function HashScroll() {
       const runId = ++runIdRef.current;
       clearTimers();
       const reduced = prefersReducedMotion();
+      const target = sectionScrollTop(el);
+
+      // Stop any in-flight native/Next scroll so we don't stack animations.
+      window.scrollTo({ top: window.scrollY, behavior: "auto" });
 
       el.classList.remove("is-hash-focus");
-
-      // 1) Reach the top smoothly when we are scrolled down — never hard-cut.
-      if (window.scrollY > TOP_EPSILON_PX) {
-        await smoothScrollToY(0, reduced);
-        if (runId !== runIdRef.current) return;
-        // Tiny beat so the eye registers the top before the section move.
-        if (!reduced) await wait(90);
-        if (runId !== runIdRef.current) return;
-      }
-
-      // 2) Highlight as the section scroll begins (not during a pause at top).
       void el.offsetWidth;
       el.classList.add("is-hash-focus");
-      await smoothScrollToY(sectionScrollTop(el), reduced);
-      if (runId !== runIdRef.current) return;
+
+      const distance = Math.abs(window.scrollY - target);
+      if (distance <= NEAR_PX || reduced) {
+        window.scrollTo({ top: target, behavior: "auto" });
+      } else {
+        window.scrollTo({ top: target, behavior: "smooth" });
+      }
 
       timersRef.current.push(
         window.setTimeout(
@@ -125,7 +86,7 @@ export function HashScroll() {
             if (runId !== runIdRef.current) return;
             el.classList.remove("is-hash-focus");
           },
-          reduced ? 700 : 1600,
+          reduced ? 800 : Math.max(1600, smoothScrollMs(distance) + 900),
         ),
       );
     }
@@ -138,33 +99,30 @@ export function HashScroll() {
       startTimer = window.setTimeout(() => {
         if (focusing) return;
         focusing = true;
-        void runAnalyticsFocus().finally(() => {
-          timersRef.current.push(
-            window.setTimeout(() => {
-              focusing = false;
-            }, 400),
-          );
-        });
+        runAnalyticsFocus();
+        timersRef.current.push(
+          window.setTimeout(() => {
+            focusing = false;
+          }, 1200),
+        );
       }, delayMs);
     }
 
-    // Cross-route / deep-link entry only (flag or existing hash on mount).
+    // Cross-route / deep-link: wait for horizontal page transition, then one scroll.
     if (
       sessionStorage.getItem(FOCUS_FLAG) === "1" ||
       window.location.hash.replace(/^#/, "") === TARGET_ID
     ) {
-      schedule(prefersReducedMotion() ? 0 : 480);
+      schedule(prefersReducedMotion() ? 0 : PAGE_TRANSITION_MS);
     }
 
     function onFocusEvent() {
-      // Same-page 안내 click — no view transition wait.
       focusing = false;
       runIdRef.current += 1;
-      schedule(prefersReducedMotion() ? 0 : 40);
+      // Same-page: no page transition — scroll once immediately.
+      schedule(prefersReducedMotion() ? 0 : 30);
     }
 
-    // Ignore native hash updates after NavLink — they re-trigger focus and
-    // cause a second end-of-page scroll on mobile.
     window.addEventListener(FOCUS_EVENT, onFocusEvent);
     return () => {
       runIdRef.current += 1;

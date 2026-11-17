@@ -24,7 +24,7 @@ describe("analytics notice placement", () => {
     expect(notice).toContain("analytics-notice-title");
     expect(notice).toContain("markAnalyticsFocus");
     expect(notice).toContain("NavLink");
-    expect(notice).toContain('href="/about#analytics"');
+    expect(notice).toContain('href="/about"');
     expect(notice).toContain("scroll={false}");
     expect(notice).not.toMatch(/bottom-0|left-0|right-0|inset-x-0/);
 
@@ -48,16 +48,16 @@ describe("analytics notice placement", () => {
     expect(about).toContain("analytics-anchor");
 
     const hash = read("components/hash-scroll.tsx");
-    expect(hash).toContain("smoothScrollToY");
-    expect(hash).toContain("scrollend");
     expect(hash).toContain("is-hash-focus");
     expect(hash).toContain("markAnalyticsFocus");
     expect(hash).toContain("gcp-focus-analytics");
     expect(hash).toContain("maxScrollTop");
+    expect(hash).toContain("PAGE_TRANSITION_MS");
     expect(hash).not.toContain("scrollIntoView");
     expect(hash).not.toMatch(/addEventListener\(\s*["']hashchange["']/);
-    // Avoid the hard cut: top must be smooth-chained, not behavior:"auto" jump.
-    expect(hash).not.toMatch(/scrollTo\(\{\s*top:\s*0,\s*behavior:\s*["']auto["']/);
+    // One vertical move only — no top-detour choreography.
+    expect(hash).not.toMatch(/smoothScrollToY\(0/);
+    expect(hash).not.toMatch(/scrollTo\(\{\s*top:\s*0/);
   });
 
   it("keeps tabbar bottom padding through sm until md hides the tabbar", () => {
